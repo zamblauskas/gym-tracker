@@ -20,7 +20,7 @@ export function useAutoSaveNotes({
   enabled,
   debounceMs = 500
 }: UseAutoSaveNotesProps) {
-  const timeoutRef = useRef<number | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!enabled) return

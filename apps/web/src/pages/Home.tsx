@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { PersonStanding, RefreshCw, ScrollText, Play, SkipForward } from 'lucide-react'
+import { PersonStanding, RefreshCw, ScrollText, Play, SkipForward, LogIn, LogOut } from 'lucide-react'
+import { Drawer } from 'vaul'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { Program } from '@/types/program'
 import { Routine } from '@/types/routine'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface HomeProps {
   onNavigateToPrograms: () => void
@@ -26,7 +28,9 @@ export default function Home({
   nextRoutine,
   currentProgram
 }: HomeProps) {
+  const { user, loading, signInWithGoogle, signOut } = useAuth()
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const handleSkipClick = () => {
     setShowSkipConfirmation(true)
@@ -40,6 +44,23 @@ export default function Home({
 
   const handleCancelSkip = () => {
     // Dialog will close automatically
+  }
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithGoogle()
+    } catch (error) {
+      console.error('Failed to sign in:', error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      setShowProfileMenu(false)
+    } catch (error) {
+      console.error('Failed to sign out:', error)
+    }
   }
 
   const navigationCards = [
@@ -73,10 +94,38 @@ export default function Home({
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold mb-2">Gym Tracker</h1>
-        <p className="text-[hsl(var(--color-muted-foreground))]">
-          Track your workout progress
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Gym Tracker</h1>
+            <p className="text-[hsl(var(--color-muted-foreground))]">
+              Track your workout progress
+            </p>
+          </div>
+          {!loading && (
+            <div className="flex items-center gap-3">
+              {user ? (
+                <>
+                  {user.user_metadata?.avatar_url && (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt={user.user_metadata?.full_name || 'User'}
+                      className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setShowProfileMenu(true)}
+                    />
+                  )}
+                </>
+              ) : (
+                <Button
+                  onClick={handleSignIn}
+                  className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign in with Google
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </motion.div>
 
       {nextRoutine && onStartWorkout && (
@@ -168,6 +217,48 @@ export default function Home({
         variant="default"
         showWarningIcon={false}
       />
+
+      <Drawer.Root open={showProfileMenu} onOpenChange={setShowProfileMenu}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50" />
+          <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-auto mt-24 fixed bottom-0 left-0 right-0 z-50">
+            <div className="p-6 bg-[hsl(var(--color-background))] rounded-t-[10px]">
+              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-6" />
+
+              <Drawer.Title className="sr-only">Profile Menu</Drawer.Title>
+              <Drawer.Description className="sr-only">
+                Account options and sign out
+              </Drawer.Description>
+
+              <div className="flex flex-col items-center gap-4 mb-6">
+                {user?.user_metadata?.avatar_url && (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt={user.user_metadata?.full_name || 'User'}
+                    className="w-20 h-20 rounded-full"
+                  />
+                )}
+                {user?.user_metadata?.full_name && (
+                  <h3 className="text-xl font-semibold">{user.user_metadata.full_name}</h3>
+                )}
+                {user?.email && (
+                  <p className="text-sm text-[hsl(var(--color-muted-foreground))]">{user.email}</p>
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={handleSignOut}
+                className="w-full gap-2"
+                size="lg"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </div>
   )
 }
