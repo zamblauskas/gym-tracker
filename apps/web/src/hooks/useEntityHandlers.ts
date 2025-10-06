@@ -3,6 +3,16 @@ import { ExerciseType } from '@/types/exerciseType'
 import { Exercise, CreateExerciseInput } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
 import { Program, CreateProgramInput } from '@/types/program'
+import {
+  createExerciseType,
+  createExercise,
+  createRoutine,
+  createProgram,
+  updateEntity,
+  updateInArray,
+  removeFromArray,
+  addToArray,
+} from '@/lib/entityFactory'
 
 export interface UseEntityHandlersProps {
   exerciseTypes: ExerciseType[]
@@ -27,13 +37,8 @@ export function useEntityHandlers({
 }: UseEntityHandlersProps) {
   // Exercise Type handlers
   const handleCreateExerciseType = useCallback((name: string) => {
-    const newExerciseType: ExerciseType = {
-      id: crypto.randomUUID(),
-      name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    setExerciseTypes([...exerciseTypes, newExerciseType])
+    const newExerciseType = createExerciseType(name)
+    setExerciseTypes(addToArray(exerciseTypes, newExerciseType))
     return newExerciseType
   }, [exerciseTypes, setExerciseTypes])
 
@@ -41,59 +46,53 @@ export function useEntityHandlers({
     const existingExerciseType = exerciseTypes.find(et => et.id === id)
     if (!existingExerciseType) return false
 
-    const updatedExerciseType: ExerciseType = {
-      ...existingExerciseType,
-      name,
-      updatedAt: new Date(),
-    }
-    setExerciseTypes(exerciseTypes.map(et => et.id === id ? updatedExerciseType : et))
+    setExerciseTypes(
+      updateInArray(exerciseTypes, id, (et) =>
+        updateEntity({ ...et, name })
+      )
+    )
     return true
   }, [exerciseTypes, setExerciseTypes])
 
   const handleDeleteExerciseType = useCallback((exerciseTypeId: string) => {
     // Remove exercise type
-    setExerciseTypes(exerciseTypes.filter(et => et.id !== exerciseTypeId))
+    setExerciseTypes(removeFromArray(exerciseTypes, exerciseTypeId))
 
     // CASCADE: Remove all exercises belonging to this exercise type
     setExercises(exercises.filter(ex => ex.exerciseTypeId !== exerciseTypeId))
 
     // Remove from routines
-    setRoutines(routines.map(routine => ({
-      ...routine,
-      exerciseTypeIds: routine.exerciseTypeIds.filter(id => id !== exerciseTypeId),
-      updatedAt: new Date(),
-    })))
+    setRoutines(
+      routines.map(routine =>
+        updateEntity({
+          ...routine,
+          exerciseTypeIds: routine.exerciseTypeIds.filter(id => id !== exerciseTypeId),
+        })
+      )
+    )
   }, [exerciseTypes, exercises, routines, setExerciseTypes, setExercises, setRoutines])
 
   // Exercise handlers
   const handleCreateExercise = useCallback((input: CreateExerciseInput) => {
-    const newExercise: Exercise = {
-      id: crypto.randomUUID(),
-      ...input,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    setExercises([...exercises, newExercise])
+    const newExercise = createExercise(input)
+    setExercises(addToArray(exercises, newExercise))
     return newExercise
   }, [exercises, setExercises])
 
   const handleUpdateExercise = useCallback((updatedExercise: Exercise) => {
-    setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex))
+    setExercises(
+      updateInArray(exercises, updatedExercise.id, () => updatedExercise)
+    )
   }, [exercises, setExercises])
 
   const handleDeleteExercise = useCallback((exerciseId: string) => {
-    setExercises(exercises.filter(ex => ex.id !== exerciseId))
+    setExercises(removeFromArray(exercises, exerciseId))
   }, [exercises, setExercises])
 
   // Routine handlers
   const handleCreateRoutine = useCallback((input: CreateRoutineInput) => {
-    const newRoutine: Routine = {
-      id: crypto.randomUUID(),
-      ...input,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    setRoutines([...routines, newRoutine])
+    const newRoutine = createRoutine(input)
+    setRoutines(addToArray(routines, newRoutine))
     return newRoutine
   }, [routines, setRoutines])
 
@@ -101,59 +100,52 @@ export function useEntityHandlers({
     const existingRoutine = routines.find(r => r.id === id)
     if (!existingRoutine) return false
 
-    const updatedRoutine: Routine = {
-      ...existingRoutine,
-      name,
-      updatedAt: new Date(),
-    }
-    setRoutines(routines.map(r => r.id === id ? updatedRoutine : r))
+    setRoutines(
+      updateInArray(routines, id, (r) => updateEntity({ ...r, name }))
+    )
     return true
   }, [routines, setRoutines])
 
   const handleAddExerciseTypeToRoutine = useCallback((routineId: string, exerciseTypeId: string) => {
-    const routine = routines.find(r => r.id === routineId)
-    if (!routine) return
-
-    const updatedRoutine = {
-      ...routine,
-      exerciseTypeIds: [...routine.exerciseTypeIds, exerciseTypeId],
-      updatedAt: new Date(),
-    }
-    setRoutines(routines.map(r => r.id === updatedRoutine.id ? updatedRoutine : r))
+    setRoutines(
+      updateInArray(routines, routineId, (r) =>
+        updateEntity({
+          ...r,
+          exerciseTypeIds: addToArray(r.exerciseTypeIds, exerciseTypeId),
+        })
+      )
+    )
   }, [routines, setRoutines])
 
   const handleRemoveExerciseTypeFromRoutine = useCallback((routineId: string, exerciseTypeId: string) => {
-    const routine = routines.find(r => r.id === routineId)
-    if (!routine) return
-
-    const updatedRoutine = {
-      ...routine,
-      exerciseTypeIds: routine.exerciseTypeIds.filter(id => id !== exerciseTypeId),
-      updatedAt: new Date(),
-    }
-    setRoutines(routines.map(r => r.id === updatedRoutine.id ? updatedRoutine : r))
+    setRoutines(
+      updateInArray(routines, routineId, (r) =>
+        updateEntity({
+          ...r,
+          exerciseTypeIds: r.exerciseTypeIds.filter(id => id !== exerciseTypeId),
+        })
+      )
+    )
   }, [routines, setRoutines])
 
   const handleDeleteRoutine = useCallback((routineId: string) => {
-    setRoutines(routines.filter(r => r.id !== routineId))
+    setRoutines(removeFromArray(routines, routineId))
 
     // Remove from programs
-    setPrograms(programs.map(program => ({
-      ...program,
-      routineIds: program.routineIds.filter(id => id !== routineId),
-      updatedAt: new Date(),
-    })))
+    setPrograms(
+      programs.map(program =>
+        updateEntity({
+          ...program,
+          routineIds: program.routineIds.filter(id => id !== routineId),
+        })
+      )
+    )
   }, [routines, programs, setRoutines, setPrograms])
 
   // Program handlers
   const handleCreateProgram = useCallback((input: CreateProgramInput) => {
-    const newProgram: Program = {
-      id: crypto.randomUUID(),
-      ...input,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    setPrograms([...programs, newProgram])
+    const newProgram = createProgram(input)
+    setPrograms(addToArray(programs, newProgram))
     return newProgram
   }, [programs, setPrograms])
 
@@ -161,41 +153,36 @@ export function useEntityHandlers({
     const existingProgram = programs.find(p => p.id === id)
     if (!existingProgram) return false
 
-    const updatedProgram: Program = {
-      ...existingProgram,
-      name,
-      updatedAt: new Date(),
-    }
-    setPrograms(programs.map(p => p.id === id ? updatedProgram : p))
+    setPrograms(
+      updateInArray(programs, id, (p) => updateEntity({ ...p, name }))
+    )
     return true
   }, [programs, setPrograms])
 
   const handleAddRoutineToProgram = useCallback((programId: string, routineId: string) => {
-    const program = programs.find(p => p.id === programId)
-    if (!program) return
-
-    const updatedProgram = {
-      ...program,
-      routineIds: [...program.routineIds, routineId],
-      updatedAt: new Date(),
-    }
-    setPrograms(programs.map(p => p.id === updatedProgram.id ? updatedProgram : p))
+    setPrograms(
+      updateInArray(programs, programId, (p) =>
+        updateEntity({
+          ...p,
+          routineIds: addToArray(p.routineIds, routineId),
+        })
+      )
+    )
   }, [programs, setPrograms])
 
   const handleRemoveRoutineFromProgram = useCallback((programId: string, routineId: string) => {
-    const program = programs.find(p => p.id === programId)
-    if (!program) return
-
-    const updatedProgram = {
-      ...program,
-      routineIds: program.routineIds.filter(id => id !== routineId),
-      updatedAt: new Date(),
-    }
-    setPrograms(programs.map(p => p.id === updatedProgram.id ? updatedProgram : p))
+    setPrograms(
+      updateInArray(programs, programId, (p) =>
+        updateEntity({
+          ...p,
+          routineIds: p.routineIds.filter(id => id !== routineId),
+        })
+      )
+    )
   }, [programs, setPrograms])
 
   const handleDeleteProgram = useCallback((programId: string) => {
-    setPrograms(programs.filter(p => p.id !== programId))
+    setPrograms(removeFromArray(programs, programId))
   }, [programs, setPrograms])
 
   return {

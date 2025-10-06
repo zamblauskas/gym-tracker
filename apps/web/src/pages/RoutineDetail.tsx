@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, X, Trash2, Edit, ChevronRight, Dumbbell } from 'lucide-react'
-import { Routine } from '../types/routine'
-import { ExerciseType } from '../types/exerciseType'
+import { Routine } from '@/types/routine'
+import { ExerciseType } from '@/types/exerciseType'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import Breadcrumb, { BreadcrumbItem } from '@/components/Breadcrumb'
 import { useState } from 'react'
 import { Exercise } from '@/types/exercise'
+import { useExercisesByType } from '@/hooks/useExercisesByType'
 
 interface RoutineDetailProps {
   routine: Routine
@@ -46,12 +47,6 @@ export default function RoutineDetail({
 
   const handleConfirmDelete = () => {
     onDelete(routine.id)
-  }
-
-  const getExerciseNames = (exerciseType: ExerciseType) => {
-    return exercises
-      .filter(exercise => exercise.exerciseTypeId === exerciseType.id)
-      .map(exercise => exercise.name)
   }
 
   return (
@@ -105,8 +100,7 @@ export default function RoutineDetail({
             </motion.div>
           ) : (
             exerciseTypes.map((exerciseType, index) => {
-              const exerciseNames = getExerciseNames(exerciseType)
-              const exerciseCount = exerciseNames.length
+              const { count, names } = useExercisesByType(exercises, exerciseType.id)
 
               return <motion.div
                 key={exerciseType.id}
@@ -136,7 +130,7 @@ export default function RoutineDetail({
                         </h3>
                       </div>
                       <p className="text-sm text-[hsl(var(--color-muted-foreground))] ml-10">
-                        {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
+                        {count} {count === 1 ? 'exercise' : 'exercises'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -158,9 +152,9 @@ export default function RoutineDetail({
                   {onSelectExerciseType && (
                     <div className="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
                   )}
-                  {exerciseNames.length > 0 && (
+                  {names.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {exerciseNames.map((exerciseName, idx) => (
+                      {names.map((exerciseName, idx) => (
                         <Badge key={idx} variant="secondary">
                           {exerciseName}
                         </Badge>

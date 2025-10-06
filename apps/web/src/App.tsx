@@ -1,61 +1,53 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ExerciseType } from './types/exerciseType'
-import { Exercise } from './types/exercise'
-import { Routine } from './types/routine'
-import { Program } from './types/program'
-import { WorkoutSession } from './types/workoutSession'
-import { usePersistedState } from './hooks/usePersistedState'
-import { useEntityHandlers } from './hooks/useEntityHandlers'
-import { useWorkoutLogic } from './hooks/useWorkoutLogic'
-import { AppRouter } from './components/AppRouter'
-import { DrawerManager } from './components/DrawerManager'
-import {
-  createExerciseTypeRepository,
-  createExerciseRepository,
-  createRoutineRepository,
-  createProgramRepository,
-  createWorkoutSessionRepository,
-} from './lib/repositories'
+import { ExerciseType } from '@/types/exerciseType'
+import { Exercise, CreateExerciseInput } from '@/types/exercise'
+import { Routine, CreateRoutineInput } from '@/types/routine'
+import { Program, CreateProgramInput } from '@/types/program'
+import { WorkoutSession } from '@/types/workoutSession'
+import { useAppState } from '@/contexts/AppStateContext'
+import { AppRouter } from '@/components/AppRouter'
+import { DrawerManager } from '@/components/DrawerManager'
 
 function App() {
-  // Create repository instances (memoized to avoid recreating on every render)
-  const exerciseTypeRepo = useMemo(() => createExerciseTypeRepository(), [])
-  const exerciseRepo = useMemo(() => createExerciseRepository(), [])
-  const routineRepo = useMemo(() => createRoutineRepository(), [])
-  const programRepo = useMemo(() => createProgramRepository(), [])
-  const workoutSessionRepo = useMemo(() => createWorkoutSessionRepository(), [])
-
   const navigate = useNavigate()
-
-  // Use persisted state instead of regular useState
-  const [exerciseTypes, setExerciseTypes, isLoadingExerciseTypes] = usePersistedState<ExerciseType>(exerciseTypeRepo)
-  const [exercises, setExercises, isLoadingExercises] = usePersistedState<Exercise>(exerciseRepo)
-  const [routines, setRoutines, isLoadingRoutines] = usePersistedState<Routine>(routineRepo)
-  const [programs, setPrograms, isLoadingPrograms] = usePersistedState<Program>(programRepo)
-  const [workoutSessions, setWorkoutSessions, isLoadingWorkoutSessions] = usePersistedState<WorkoutSession>(workoutSessionRepo)
-
-  const isLoading = isLoadingExerciseTypes || isLoadingExercises || isLoadingRoutines || isLoadingPrograms || isLoadingWorkoutSessions
-
-  // Entity handlers
-  const entityHandlers = useEntityHandlers({
+  const {
+    // Entity data
     exerciseTypes,
     exercises,
     routines,
     programs,
-    setExerciseTypes,
-    setExercises,
-    setRoutines,
-    setPrograms,
-  })
-
-  // Workout logic
-  const workoutLogic = useWorkoutLogic({
-    programs,
-    routines,
     workoutSessions,
-    setWorkoutSessions,
-  })
+    isLoading,
+
+    // Workout state
+    activeSession,
+    nextWorkoutInfo,
+
+    // Entity handlers
+    handleCreateExerciseType,
+    handleEditExerciseType,
+    handleDeleteExerciseType,
+    handleCreateExercise,
+    handleUpdateExercise,
+    handleDeleteExercise,
+    handleCreateRoutine,
+    handleEditRoutine,
+    handleAddExerciseTypeToRoutine,
+    handleRemoveExerciseTypeFromRoutine,
+    handleDeleteRoutine,
+    handleCreateProgram,
+    handleEditProgram,
+    handleAddRoutineToProgram,
+    handleRemoveRoutineFromProgram,
+    handleDeleteProgram,
+
+    // Workout handlers
+    handleStartWorkout,
+    handleSkipWorkout,
+    handleUpdateWorkoutSession,
+    handleFinishWorkout,
+    handleCancelWorkout,
+  } = useAppState()
 
   // Navigation handlers
   const handleSelectExerciseType = (exerciseType: ExerciseType) => {
@@ -78,7 +70,11 @@ function App() {
     navigate(`/programs/${programId}/routines/${routine.id}`)
   }
 
-  const handleSelectExerciseTypeFromRoutine = (routineId: string, exerciseType: ExerciseType, programId?: string) => {
+  const handleSelectExerciseTypeFromRoutine = (
+    routineId: string,
+    exerciseType: ExerciseType,
+    programId?: string
+  ) => {
     if (programId) {
       navigate(`/programs/${programId}/routines/${routineId}/exercise-types/${exerciseType.id}`)
     } else {
@@ -86,72 +82,72 @@ function App() {
     }
   }
 
-  // Wrapped handlers that navigate
-  const handleCreateExerciseType = (name: string) => {
-    entityHandlers.handleCreateExerciseType(name)
+  // Wrapped handlers that navigate after entity operations
+  const handleCreateExerciseTypeWithNav = (name: string) => {
+    handleCreateExerciseType(name)
     navigate('/exercise-types')
   }
 
-  const handleEditExerciseType = (id: string, name: string) => {
-    if (entityHandlers.handleEditExerciseType(id, name)) {
+  const handleEditExerciseTypeWithNav = (id: string, name: string) => {
+    if (handleEditExerciseType(id, name)) {
       navigate(-1)
     }
   }
 
-  const handleCreateExercise = (input: any) => {
-    entityHandlers.handleCreateExercise(input)
+  const handleCreateExerciseWithNav = (input: CreateExerciseInput) => {
+    handleCreateExercise(input)
     navigate(-1)
   }
 
-  const handleCreateRoutine = (input: any) => {
-    entityHandlers.handleCreateRoutine(input)
+  const handleCreateRoutineWithNav = (input: CreateRoutineInput) => {
+    handleCreateRoutine(input)
     navigate('/routines')
   }
 
-  const handleEditRoutine = (id: string, name: string) => {
-    if (entityHandlers.handleEditRoutine(id, name)) {
+  const handleEditRoutineWithNav = (id: string, name: string) => {
+    if (handleEditRoutine(id, name)) {
       navigate(-1)
     }
   }
 
-  const handleCreateProgram = (input: any) => {
-    entityHandlers.handleCreateProgram(input)
+  const handleCreateProgramWithNav = (input: CreateProgramInput) => {
+    handleCreateProgram(input)
     navigate('/programs')
   }
 
-  const handleEditProgram = (id: string, name: string) => {
-    if (entityHandlers.handleEditProgram(id, name)) {
+  const handleEditProgramWithNav = (id: string, name: string) => {
+    if (handleEditProgram(id, name)) {
       navigate(-1)
     }
   }
 
-  const handleDeleteExercise = (exerciseId: string, exerciseTypeId: string) => {
-    entityHandlers.handleDeleteExercise(exerciseId)
+  const handleDeleteExerciseWithNav = (exerciseId: string, exerciseTypeId: string) => {
+    handleDeleteExercise(exerciseId)
     navigate(`/exercise-types/${exerciseTypeId}`)
   }
 
-  const handleDeleteExerciseType = (exerciseTypeId: string) => {
-    entityHandlers.handleDeleteExerciseType(exerciseTypeId)
+  const handleDeleteExerciseTypeWithNav = (exerciseTypeId: string) => {
+    handleDeleteExerciseType(exerciseTypeId)
     navigate('/exercise-types')
   }
 
-  const handleDeleteRoutine = (routineId: string) => {
-    entityHandlers.handleDeleteRoutine(routineId)
+  const handleDeleteRoutineWithNav = (routineId: string) => {
+    handleDeleteRoutine(routineId)
     navigate('/routines')
   }
 
-  const handleDeleteProgram = (programId: string) => {
-    entityHandlers.handleDeleteProgram(programId)
+  const handleDeleteProgramWithNav = (programId: string) => {
+    handleDeleteProgram(programId)
     navigate('/programs')
   }
 
-  const handleStartWorkout = () => {
-    workoutLogic.handleStartWorkout()
+  const handleStartWorkoutWithNav = () => {
+    handleStartWorkout()
     navigate('/workout/active')
   }
 
-  const handleFinishWorkout = (session: WorkoutSession) => {
-    workoutLogic.handleFinishWorkout(session)
+  const handleFinishWorkoutWithNav = (session: WorkoutSession) => {
+    handleFinishWorkout(session)
     navigate('/')
   }
 
@@ -163,8 +159,8 @@ function App() {
         exercises={exercises}
         routines={routines}
         programs={programs}
-        activeSession={workoutLogic.activeSession}
-        nextWorkoutInfo={workoutLogic.nextWorkoutInfo}
+        activeSession={activeSession}
+        nextWorkoutInfo={nextWorkoutInfo}
         workoutSessions={workoutSessions}
         onSelectExerciseType={handleSelectExerciseType}
         onSelectExercise={handleSelectExercise}
@@ -172,33 +168,33 @@ function App() {
         onSelectProgram={handleSelectProgram}
         onSelectRoutineFromProgram={handleSelectRoutineFromProgram}
         onSelectExerciseTypeFromRoutine={handleSelectExerciseTypeFromRoutine}
-        onDeleteExercise={handleDeleteExercise}
-        onDeleteExerciseType={handleDeleteExerciseType}
-        onDeleteRoutine={handleDeleteRoutine}
-        onDeleteProgram={handleDeleteProgram}
-        onUpdateExercise={entityHandlers.handleUpdateExercise}
-        onAddExerciseTypeToRoutine={entityHandlers.handleAddExerciseTypeToRoutine}
-        onRemoveExerciseTypeFromRoutine={entityHandlers.handleRemoveExerciseTypeFromRoutine}
-        onAddRoutineToProgram={entityHandlers.handleAddRoutineToProgram}
-        onRemoveRoutineFromProgram={entityHandlers.handleRemoveRoutineFromProgram}
-        onStartWorkout={handleStartWorkout}
-        onSkipWorkout={workoutLogic.handleSkipWorkout}
-        onUpdateWorkoutSession={workoutLogic.handleUpdateWorkoutSession}
-        onFinishWorkout={handleFinishWorkout}
-        onCancelWorkout={workoutLogic.handleCancelWorkout}
+        onDeleteExercise={handleDeleteExerciseWithNav}
+        onDeleteExerciseType={handleDeleteExerciseTypeWithNav}
+        onDeleteRoutine={handleDeleteRoutineWithNav}
+        onDeleteProgram={handleDeleteProgramWithNav}
+        onUpdateExercise={handleUpdateExercise}
+        onAddExerciseTypeToRoutine={handleAddExerciseTypeToRoutine}
+        onRemoveExerciseTypeFromRoutine={handleRemoveExerciseTypeFromRoutine}
+        onAddRoutineToProgram={handleAddRoutineToProgram}
+        onRemoveRoutineFromProgram={handleRemoveRoutineFromProgram}
+        onStartWorkout={handleStartWorkoutWithNav}
+        onSkipWorkout={handleSkipWorkout}
+        onUpdateWorkoutSession={handleUpdateWorkoutSession}
+        onFinishWorkout={handleFinishWorkoutWithNav}
+        onCancelWorkout={handleCancelWorkout}
       />
 
       <DrawerManager
         exerciseTypes={exerciseTypes}
         routines={routines}
         programs={programs}
-        onCreateExerciseType={handleCreateExerciseType}
-        onEditExerciseType={handleEditExerciseType}
-        onCreateExercise={handleCreateExercise}
-        onCreateRoutine={handleCreateRoutine}
-        onEditRoutine={handleEditRoutine}
-        onCreateProgram={handleCreateProgram}
-        onEditProgram={handleEditProgram}
+        onCreateExerciseType={handleCreateExerciseTypeWithNav}
+        onEditExerciseType={handleEditExerciseTypeWithNav}
+        onCreateExercise={handleCreateExerciseWithNav}
+        onCreateRoutine={handleCreateRoutineWithNav}
+        onEditRoutine={handleEditRoutineWithNav}
+        onCreateProgram={handleCreateProgramWithNav}
+        onEditProgram={handleEditProgramWithNav}
       />
     </div>
   )

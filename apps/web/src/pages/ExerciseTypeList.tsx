@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, ChevronRight, PersonStanding } from 'lucide-react'
-import { ExerciseType } from '../types/exerciseType'
-import { Exercise } from '../types/exercise'
+import { ExerciseType } from '@/types/exerciseType'
+import { Exercise } from '@/types/exercise'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useExercisesByType } from '@/hooks/useExercisesByType'
 
 interface ExerciseTypeListProps {
   exerciseTypes: ExerciseType[]
@@ -13,17 +14,74 @@ interface ExerciseTypeListProps {
   onSelect: (exerciseType: ExerciseType) => void
 }
 
-export default function ExerciseTypeList({ exerciseTypes, exercises, onAdd, onSelect }: ExerciseTypeListProps) {
-  const getExerciseNames = (exerciseTypeId: string) => {
-    return exercises
-      .filter(ex => ex.exerciseTypeId === exerciseTypeId)
-      .map(ex => ex.name)
-      .slice(0, 3) // Show first 3
-  }
+function ExerciseTypeCard({
+  exerciseType,
+  exercises,
+  index,
+  onSelect,
+}: {
+  exerciseType: ExerciseType
+  exercises: Exercise[]
+  index: number
+  onSelect: (exerciseType: ExerciseType) => void
+}) {
+  const { count, firstThreeNames, hasMore } = useExercisesByType(exercises, exerciseType.id)
 
-  const getExerciseCount = (exerciseTypeId: string) => {
-    return exercises.filter(ex => ex.exerciseTypeId === exerciseTypeId).length
-  }
+  return (
+    <motion.div
+      key={exerciseType.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      transition={{
+        delay: index * 0.05,
+        type: "spring",
+        stiffness: 300,
+        damping: 24
+      }}
+      layout
+    >
+      <Card
+        className="p-4 hover:shadow-lg transition-all group relative overflow-hidden cursor-pointer"
+        onClick={() => onSelect(exerciseType)}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-purple-500 bg-opacity-10 flex items-center justify-center">
+                <PersonStanding className="h-4 w-4 text-current" />
+              </div>
+              <h3 className="text-lg font-medium">
+                {exerciseType.name}
+              </h3>
+            </div>
+            <p className="text-sm text-[hsl(var(--color-muted-foreground))] ml-10">
+              {count} {count === 1 ? 'exercise' : 'exercises'}
+            </p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-[hsl(var(--color-muted-foreground))] group-hover:translate-x-1 transition-transform flex-shrink-0" />
+        </div>
+        <div className="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
+        {firstThreeNames.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {firstThreeNames.map((name, idx) => (
+              <Badge key={idx} variant="secondary">
+                {name}
+              </Badge>
+            ))}
+            {hasMore && (
+              <Badge variant="outline">
+                +{count - 3} more
+              </Badge>
+            )}
+          </div>
+        )}
+      </Card>
+    </motion.div>
+  )
+}
+
+export default function ExerciseTypeList({ exerciseTypes, exercises, onAdd, onSelect }: ExerciseTypeListProps) {
   return (
     <div className="max-w-2xl mx-auto p-4 pb-8">
       <motion.div
@@ -65,64 +123,15 @@ export default function ExerciseTypeList({ exerciseTypes, exercises, onAdd, onSe
               </Card>
             </motion.div>
           ) : (
-            exerciseTypes.map((exerciseType, index) => {
-              const exerciseNames = getExerciseNames(exerciseType.id)
-              const exerciseCount = getExerciseCount(exerciseType.id)
-              const hasMore = exerciseCount > 3
-
-              return (
-                <motion.div
-                  key={exerciseType.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{
-                    delay: index * 0.05,
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 24
-                  }}
-                  layout
-                >
-                  <Card
-                    className="p-4 hover:shadow-lg transition-all group relative overflow-hidden cursor-pointer"
-                    onClick={() => onSelect(exerciseType)}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-lg bg-purple-500 bg-opacity-10 flex items-center justify-center">
-                            <PersonStanding className="h-4 w-4 text-current" />
-                          </div>
-                          <h3 className="text-lg font-medium">
-                            {exerciseType.name}
-                          </h3>
-                        </div>
-                        <p className="text-sm text-[hsl(var(--color-muted-foreground))] ml-10">
-                          {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-[hsl(var(--color-muted-foreground))] group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                    </div>
-                    <div className="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
-                    {exerciseNames.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {exerciseNames.map((name, idx) => (
-                          <Badge key={idx} variant="secondary">
-                            {name}
-                          </Badge>
-                        ))}
-                        {hasMore && (
-                          <Badge variant="outline">
-                            +{exerciseCount - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </Card>
-                </motion.div>
-              )
-            })
+            exerciseTypes.map((exerciseType, index) => (
+              <ExerciseTypeCard
+                key={exerciseType.id}
+                exerciseType={exerciseType}
+                exercises={exercises}
+                index={index}
+                onSelect={onSelect}
+              />
+            ))
           )}
         </AnimatePresence>
       </div>
