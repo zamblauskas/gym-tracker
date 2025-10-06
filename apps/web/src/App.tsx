@@ -29,11 +29,13 @@ function App() {
   const navigate = useNavigate()
 
   // Use persisted state instead of regular useState
-  const [exerciseTypes, setExerciseTypes] = usePersistedState<ExerciseType>(exerciseTypeRepo)
-  const [exercises, setExercises] = usePersistedState<Exercise>(exerciseRepo)
-  const [routines, setRoutines] = usePersistedState<Routine>(routineRepo)
-  const [programs, setPrograms] = usePersistedState<Program>(programRepo)
-  const [workoutSessions, setWorkoutSessions] = usePersistedState<WorkoutSession>(workoutSessionRepo)
+  const [exerciseTypes, setExerciseTypes, isLoadingExerciseTypes] = usePersistedState<ExerciseType>(exerciseTypeRepo)
+  const [exercises, setExercises, isLoadingExercises] = usePersistedState<Exercise>(exerciseRepo)
+  const [routines, setRoutines, isLoadingRoutines] = usePersistedState<Routine>(routineRepo)
+  const [programs, setPrograms, isLoadingPrograms] = usePersistedState<Program>(programRepo)
+  const [workoutSessions, setWorkoutSessions, isLoadingWorkoutSessions] = usePersistedState<WorkoutSession>(workoutSessionRepo)
+
+  const isLoading = isLoadingExerciseTypes || isLoadingExercises || isLoadingRoutines || isLoadingPrograms || isLoadingWorkoutSessions
 
   // Entity handlers
   const entityHandlers = useEntityHandlers({
@@ -156,6 +158,7 @@ function App() {
   return (
     <div className="min-h-screen">
       <AppRouter
+        isLoading={isLoading}
         exerciseTypes={exerciseTypes}
         exercises={exercises}
         routines={routines}

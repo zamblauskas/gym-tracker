@@ -8,9 +8,9 @@ import { IDataRepository } from '@/lib/repositories'
  */
 export function usePersistedState<T extends { id: string }>(
   repository: IDataRepository<T>
-): [T[], (items: T[]) => void] {
+): [T[], (items: T[]) => void, boolean] {
   const [items, setItemsState] = useState<T[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const previousItemsRef = useRef<Map<string, T>>(new Map())
 
   // Load initial data from repository
@@ -18,7 +18,7 @@ export function usePersistedState<T extends { id: string }>(
     const loadData = async () => {
       const data = await repository.getAll()
       setItemsState(data)
-      setIsLoaded(true)
+      setIsLoading(false)
 
       // Initialize previous items map for delta tracking
       const itemsMap = new Map<string, T>()
@@ -38,7 +38,7 @@ export function usePersistedState<T extends { id: string }>(
       setItemsState(newItems)
 
       // Save to repository (async, but we don't wait)
-      if (isLoaded) {
+      if (!isLoading) {
         saveToRepository(newItems, previousItems)
 
         // Update the previous items map
@@ -47,7 +47,7 @@ export function usePersistedState<T extends { id: string }>(
         previousItemsRef.current = newItemsMap
       }
     },
-    [isLoaded, repository]
+    [isLoading, repository]
   )
 
   const saveToRepository = async (newItems: T[], previousItems: Map<string, T>) => {
@@ -90,5 +90,5 @@ export function usePersistedState<T extends { id: string }>(
     }
   }
 
-  return [items, setItems]
+  return [items, setItems, isLoading]
 }

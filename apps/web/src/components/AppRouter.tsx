@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom'
 import Home from '@/pages/Home'
 import ExerciseTypeList from '@/pages/ExerciseTypeList'
@@ -15,8 +14,11 @@ import { Routine } from '@/types/routine'
 import { Program } from '@/types/program'
 import { WorkoutSession } from '@/types/workoutSession'
 import { NextWorkoutInfo } from '@/hooks/useWorkoutLogic'
+import { HomeSkeleton } from '@/components/LoadingSkeletons'
+import { useRouteEntity } from '@/hooks/useRouteEntity'
 
 export interface AppRouterProps {
+  isLoading: boolean
   exerciseTypes: ExerciseType[]
   exercises: Exercise[]
   routines: Routine[]
@@ -47,6 +49,7 @@ export interface AppRouterProps {
 }
 
 export function AppRouter({
+  isLoading,
   exerciseTypes,
   exercises,
   routines,
@@ -77,16 +80,18 @@ export function AppRouter({
 }: AppRouterProps) {
   const navigate = useNavigate()
 
+  // Show loading skeleton while data is loading
+  if (isLoading) {
+    return <HomeSkeleton />
+  }
+
   // Route wrapper components that fetch data based on URL params
   const ExerciseTypeDetailRoute = () => {
     const { id } = useParams<{ id: string }>()
-    const exerciseType = exerciseTypes.find(et => et.id === id)
-
-    useEffect(() => {
-      if (!exerciseType) {
-        navigate('/exercise-types')
-      }
-    }, [exerciseType])
+    const exerciseType = useRouteEntity(
+      exerciseTypes.find(et => et.id === id),
+      '/exercise-types'
+    )
 
     if (!exerciseType) return null
 
@@ -95,11 +100,11 @@ export function AppRouter({
       <ExerciseList
         exerciseType={exerciseType}
         exercises={filteredExercises}
-        onAdd={() => navigate(`/exercise-types/${id}/exercises/new`)}
+        onAdd={() => navigate(`?drawer=createExercise&exerciseTypeId=${id}`)}
         onSelect={(exercise) => onSelectExercise(exercise, id!)}
         onDelete={(exerciseId) => onDeleteExercise(exerciseId, id!)}
         onDeleteExerciseType={onDeleteExerciseType}
-        onEdit={() => navigate(`/exercise-types/${id}/edit`)}
+        onEdit={() => navigate(`?drawer=editExerciseType&id=${id}`)}
         breadcrumbs={[
           { label: 'Home', onClick: () => navigate('/') },
           { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
@@ -111,13 +116,10 @@ export function AppRouter({
 
   const ExerciseDetailRoute = () => {
     const { typeId, exerciseId } = useParams<{ typeId: string; exerciseId: string }>()
-    const exercise = exercises.find(ex => ex.id === exerciseId)
-
-    useEffect(() => {
-      if (!exercise) {
-        navigate(`/exercise-types/${typeId}`)
-      }
-    }, [exercise, typeId])
+    const exercise = useRouteEntity(
+      exercises.find(ex => ex.id === exerciseId),
+      `/exercise-types/${typeId}`
+    )
 
     if (!exercise) return null
 
@@ -132,13 +134,10 @@ export function AppRouter({
 
   const RoutineDetailRoute = () => {
     const { id } = useParams<{ id: string }>()
-    const routine = routines.find(r => r.id === id)
-
-    useEffect(() => {
-      if (!routine) {
-        navigate('/routines')
-      }
-    }, [routine])
+    const routine = useRouteEntity(
+      routines.find(r => r.id === id),
+      '/routines'
+    )
 
     if (!routine) return null
 
@@ -153,7 +152,7 @@ export function AppRouter({
         onAddExerciseType={(etId) => onAddExerciseTypeToRoutine(id!, etId)}
         onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(id!, etId)}
         onDelete={onDeleteRoutine}
-        onEdit={() => navigate(`/routines/${id}/edit`)}
+        onEdit={() => navigate(`?drawer=editRoutine&id=${id}`)}
         onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(id!, et)}
         breadcrumbs={[
           { label: 'Home', onClick: () => navigate('/') },
@@ -166,13 +165,10 @@ export function AppRouter({
 
   const ProgramDetailRoute = () => {
     const { id } = useParams<{ id: string }>()
-    const program = programs.find(p => p.id === id)
-
-    useEffect(() => {
-      if (!program) {
-        navigate('/programs')
-      }
-    }, [program])
+    const program = useRouteEntity(
+      programs.find(p => p.id === id),
+      '/programs'
+    )
 
     if (!program) return null
 
@@ -187,7 +183,7 @@ export function AppRouter({
         onAddRoutine={(rId) => onAddRoutineToProgram(id!, rId)}
         onRemoveRoutine={(rId) => onRemoveRoutineFromProgram(id!, rId)}
         onDelete={onDeleteProgram}
-        onEdit={() => navigate(`/programs/${id}/edit`)}
+        onEdit={() => navigate(`?drawer=editProgram&id=${id}`)}
         onSelectRoutine={(r) => onSelectRoutineFromProgram(id!, r)}
         breadcrumbs={[
           { label: 'Home', onClick: () => navigate('/') },
@@ -200,14 +196,14 @@ export function AppRouter({
 
   const ProgramRoutineDetailRoute = () => {
     const { programId, routineId } = useParams<{ programId: string; routineId: string }>()
-    const program = programs.find(p => p.id === programId)
-    const routine = routines.find(r => r.id === routineId)
-
-    useEffect(() => {
-      if (!program || !routine) {
-        navigate('/programs')
-      }
-    }, [program, routine])
+    const program = useRouteEntity(
+      programs.find(p => p.id === programId),
+      '/programs'
+    )
+    const routine = useRouteEntity(
+      routines.find(r => r.id === routineId),
+      '/programs'
+    )
 
     if (!program || !routine) return null
 
@@ -222,7 +218,7 @@ export function AppRouter({
         onAddExerciseType={(etId) => onAddExerciseTypeToRoutine(routineId!, etId)}
         onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(routineId!, etId)}
         onDelete={onDeleteRoutine}
-        onEdit={() => navigate(`/programs/${programId}/routines/${routineId}/edit`)}
+        onEdit={() => navigate(`?drawer=editRoutine&id=${routineId}`)}
         onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(routineId!, et, programId)}
         breadcrumbs={[
           { label: 'Home', onClick: () => navigate('/') },
@@ -235,15 +231,15 @@ export function AppRouter({
   }
 
   const ActiveWorkoutRoute = () => {
-    const routine = activeSession ? routines.find(r => r.id === activeSession.routineId) : null
+    const routine = useRouteEntity(
+      activeSession ? routines.find(r => r.id === activeSession.routineId) : undefined,
+      '/'
+    )
 
-    useEffect(() => {
-      if (!activeSession || !nextWorkoutInfo || !routine) {
-        navigate('/')
-      }
-    }, [activeSession, nextWorkoutInfo, routine])
-
-    if (!activeSession || !nextWorkoutInfo || !routine) return null
+    if (!activeSession || !nextWorkoutInfo || !routine) {
+      navigate('/')
+      return null
+    }
 
     const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
     return (
@@ -277,60 +273,31 @@ export function AppRouter({
         <ExerciseTypeList
           exerciseTypes={exerciseTypes}
           exercises={exercises}
-          onAdd={() => navigate('/exercise-types/new')}
-          onSelect={onSelectExerciseType}
-        />
-      } />
-      <Route path="/exercise-types/new" element={
-        <ExerciseTypeList
-          exerciseTypes={exerciseTypes}
-          exercises={exercises}
-          onAdd={() => navigate('/exercise-types/new')}
+          onAdd={() => navigate('?drawer=createExerciseType')}
           onSelect={onSelectExerciseType}
         />
       } />
       <Route path="/exercise-types/:id" element={<ExerciseTypeDetailRoute />} />
-      <Route path="/exercise-types/:id/edit" element={<ExerciseTypeDetailRoute />} />
-      <Route path="/exercise-types/:id/exercises/new" element={<ExerciseTypeDetailRoute />} />
       <Route path="/exercise-types/:typeId/exercises/:exerciseId" element={<ExerciseDetailRoute />} />
       <Route path="/routines" element={
         <RoutineList
           routines={routines}
           exerciseTypes={exerciseTypes}
-          onAdd={() => navigate('/routines/new')}
-          onSelect={onSelectRoutine}
-        />
-      } />
-      <Route path="/routines/new" element={
-        <RoutineList
-          routines={routines}
-          exerciseTypes={exerciseTypes}
-          onAdd={() => navigate('/routines/new')}
+          onAdd={() => navigate('?drawer=createRoutine')}
           onSelect={onSelectRoutine}
         />
       } />
       <Route path="/routines/:id" element={<RoutineDetailRoute />} />
-      <Route path="/routines/:id/edit" element={<RoutineDetailRoute />} />
       <Route path="/programs" element={
         <ProgramList
           programs={programs}
           routines={routines}
-          onAdd={() => navigate('/programs/new')}
-          onSelect={onSelectProgram}
-        />
-      } />
-      <Route path="/programs/new" element={
-        <ProgramList
-          programs={programs}
-          routines={routines}
-          onAdd={() => navigate('/programs/new')}
+          onAdd={() => navigate('?drawer=createProgram')}
           onSelect={onSelectProgram}
         />
       } />
       <Route path="/programs/:id" element={<ProgramDetailRoute />} />
-      <Route path="/programs/:id/edit" element={<ProgramDetailRoute />} />
       <Route path="/programs/:programId/routines/:routineId" element={<ProgramRoutineDetailRoute />} />
-      <Route path="/programs/:programId/routines/:routineId/edit" element={<ProgramRoutineDetailRoute />} />
       <Route path="/workout/active" element={<ActiveWorkoutRoute />} />
     </Routes>
   )

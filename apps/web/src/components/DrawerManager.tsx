@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import CreateExerciseType from '@/pages/CreateExerciseType'
 import EditExerciseType from '@/pages/EditExerciseType'
@@ -12,7 +11,7 @@ import { ExerciseType } from '@/types/exerciseType'
 import { CreateExerciseInput } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
 import { Program, CreateProgramInput } from '@/types/program'
-import { DRAWER_ROUTES, DRAWER_HEIGHT_CLASS } from '@/lib/constants'
+import { DRAWER_HEIGHT_CLASS } from '@/lib/constants'
 
 export interface DrawerManagerProps {
   exerciseTypes: ExerciseType[]
@@ -39,74 +38,45 @@ export function DrawerManager({
   onCreateProgram,
   onEditProgram,
 }: DrawerManagerProps) {
-  const location = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
-  // Detect drawer state from URL
-  const isDrawerOpen = useMemo(() => {
-    const path = location.pathname
-    return !!(
-      path === DRAWER_ROUTES.CREATE_EXERCISE_TYPE ||
-      path.match(DRAWER_ROUTES.EDIT_EXERCISE_TYPE) ||
-      path.match(DRAWER_ROUTES.CREATE_EXERCISE) ||
-      path === DRAWER_ROUTES.CREATE_ROUTINE ||
-      path.match(DRAWER_ROUTES.EDIT_ROUTINE) ||
-      path.match(DRAWER_ROUTES.EDIT_PROGRAM_ROUTINE) ||
-      path === DRAWER_ROUTES.CREATE_PROGRAM ||
-      path.match(DRAWER_ROUTES.EDIT_PROGRAM)
-    )
-  }, [location.pathname])
+  // Detect drawer state from query params
+  const drawerMode = searchParams.get('drawer')
+  const entityId = searchParams.get('id')
+  const exerciseTypeId = searchParams.get('exerciseTypeId')
 
-  const getDrawerMode = () => {
-    const path = location.pathname
-    if (path === DRAWER_ROUTES.CREATE_EXERCISE_TYPE) return 'exerciseType'
-    if (path.match(DRAWER_ROUTES.EDIT_EXERCISE_TYPE)) return 'editExerciseType'
-    if (path.match(DRAWER_ROUTES.CREATE_EXERCISE)) return 'exercise'
-    if (path === DRAWER_ROUTES.CREATE_ROUTINE) return 'routine'
-    if (path.match(DRAWER_ROUTES.EDIT_ROUTINE)) return 'editRoutine'
-    if (path.match(DRAWER_ROUTES.EDIT_PROGRAM_ROUTINE)) return 'editRoutine'
-    if (path === DRAWER_ROUTES.CREATE_PROGRAM) return 'program'
-    if (path.match(DRAWER_ROUTES.EDIT_PROGRAM)) return 'editProgram'
-    return null
+  const isDrawerOpen = !!drawerMode
+
+  const closeDrawer = () => {
+    navigate(-1)
   }
 
-  // Get current entity for drawer based on URL
+  // Get current entity for drawer based on query params
   const getCurrentExerciseType = () => {
-    const pathParts = location.pathname.split('/')
-    if (pathParts[1] === 'exercise-types' && pathParts[2] && pathParts[2] !== 'new') {
-      return exerciseTypes.find(et => et.id === pathParts[2])
-    }
-    return null
+    if (!entityId) return null
+    return exerciseTypes.find(et => et.id === entityId)
   }
 
   const getCurrentRoutine = () => {
-    const pathParts = location.pathname.split('/')
-    if (pathParts[1] === 'routines' && pathParts[2] && pathParts[2] !== 'new') {
-      return routines.find(r => r.id === pathParts[2])
-    }
-    if (pathParts[1] === 'programs' && pathParts[4] === 'routines' && pathParts[5]) {
-      return routines.find(r => r.id === pathParts[5])
-    }
-    return null
+    if (!entityId) return null
+    return routines.find(r => r.id === entityId)
   }
 
   const getCurrentProgram = () => {
-    const pathParts = location.pathname.split('/')
-    if (pathParts[1] === 'programs' && pathParts[2] && pathParts[2] !== 'new') {
-      return programs.find(p => p.id === pathParts[2])
-    }
-    return null
+    if (!entityId) return null
+    return programs.find(p => p.id === entityId)
   }
 
   return (
-    <Drawer.Root open={isDrawerOpen} onOpenChange={(open) => !open && navigate(-1)}>
+    <Drawer.Root open={isDrawerOpen} onOpenChange={(open) => !open && closeDrawer()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className={`bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] ${DRAWER_HEIGHT_CLASS} mt-24 fixed bottom-0 left-0 right-0`}>
           <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
 
-            {getDrawerMode() === 'exerciseType' && (
+            {drawerMode === 'createExerciseType' && (
               <>
                 <Drawer.Title className="sr-only">Create Exercise Type</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -114,29 +84,26 @@ export function DrawerManager({
                 </Drawer.Description>
                 <CreateExerciseType
                   onSave={onCreateExerciseType}
-                  onCancel={() => navigate(-1)}
+                  onCancel={closeDrawer}
                 />
               </>
             )}
 
-            {getDrawerMode() === 'exercise' && (() => {
-              const exerciseType = getCurrentExerciseType()
-              return exerciseType ? (
-                <>
-                  <Drawer.Title className="sr-only">Create Exercise</Drawer.Title>
-                  <Drawer.Description className="sr-only">
-                    Add a new exercise to {exerciseType.name}
-                  </Drawer.Description>
-                  <CreateExercise
-                    exerciseTypeId={exerciseType.id}
-                    onSave={onCreateExercise}
-                    onCancel={() => navigate(-1)}
-                  />
-                </>
-              ) : null
-            })()}
+            {drawerMode === 'createExercise' && exerciseTypeId && (
+              <>
+                <Drawer.Title className="sr-only">Create Exercise</Drawer.Title>
+                <Drawer.Description className="sr-only">
+                  Add a new exercise
+                </Drawer.Description>
+                <CreateExercise
+                  exerciseTypeId={exerciseTypeId}
+                  onSave={onCreateExercise}
+                  onCancel={closeDrawer}
+                />
+              </>
+            )}
 
-            {getDrawerMode() === 'editExerciseType' && (() => {
+            {drawerMode === 'editExerciseType' && (() => {
               const exerciseType = getCurrentExerciseType()
               return exerciseType ? (
                 <>
@@ -147,13 +114,13 @@ export function DrawerManager({
                   <EditExerciseType
                     exerciseType={exerciseType}
                     onSave={onEditExerciseType}
-                    onCancel={() => navigate(-1)}
+                    onCancel={closeDrawer}
                   />
                 </>
               ) : null
             })()}
 
-            {getDrawerMode() === 'routine' && (
+            {drawerMode === 'createRoutine' && (
               <>
                 <Drawer.Title className="sr-only">Create Routine</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -162,12 +129,12 @@ export function DrawerManager({
                 <CreateRoutine
                   exerciseTypes={exerciseTypes}
                   onSave={onCreateRoutine}
-                  onCancel={() => navigate(-1)}
+                  onCancel={closeDrawer}
                 />
               </>
             )}
 
-            {getDrawerMode() === 'editRoutine' && (() => {
+            {drawerMode === 'editRoutine' && (() => {
               const routine = getCurrentRoutine()
               return routine ? (
                 <>
@@ -178,13 +145,13 @@ export function DrawerManager({
                   <EditRoutine
                     routine={routine}
                     onSave={onEditRoutine}
-                    onCancel={() => navigate(-1)}
+                    onCancel={closeDrawer}
                   />
                 </>
               ) : null
             })()}
 
-            {getDrawerMode() === 'program' && (
+            {drawerMode === 'createProgram' && (
               <>
                 <Drawer.Title className="sr-only">Create Program</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -193,12 +160,12 @@ export function DrawerManager({
                 <CreateProgram
                   routines={routines}
                   onSave={onCreateProgram}
-                  onCancel={() => navigate(-1)}
+                  onCancel={closeDrawer}
                 />
               </>
             )}
 
-            {getDrawerMode() === 'editProgram' && (() => {
+            {drawerMode === 'editProgram' && (() => {
               const program = getCurrentProgram()
               return program ? (
                 <>
@@ -209,7 +176,7 @@ export function DrawerManager({
                   <EditProgram
                     program={program}
                     onSave={onEditProgram}
-                    onCancel={() => navigate(-1)}
+                    onCancel={closeDrawer}
                   />
                 </>
               ) : null
