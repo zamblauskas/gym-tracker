@@ -13,6 +13,7 @@ type TableName = 'exercise_types' | 'exercises' | 'routines' | 'programs' | 'wor
  */
 export class SupabaseRepository<T extends { id: string }> implements IDataRepository<T> {
   private readonly tableName: TableName
+  private readonly caseConversionCache: Map<string, string> = new Map()
 
   constructor(tableName: TableName) {
     this.tableName = tableName
@@ -179,6 +180,78 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
     }
   }
 
+  async batchCreate(items: T[]): Promise<T[]> {
+    try {
+      const userId = await this.getCurrentUserId()
+
+      const serializedItems = items.map(item => ({
+        ...this.serializeForSupabase(item),
+        user_id: userId
+      }))
+
+      const { data, error } = await supabase
+        .from(this.tableName)
+        .insert(serializedItems)
+        .select()
+
+      if (error) {
+        console.error(`Error batch creating in ${this.tableName}:`, error)
+        throw error
+      }
+
+      return (data || []).map(item => this.deserializeDates(item))
+    } catch (error) {
+      console.error(`Error batch writing to Supabase (${this.tableName}):`, error)
+      throw error
+    }
+  }
+
+  async batchUpdate(items: T[]): Promise<T[]> {
+    try {
+      await this.getCurrentUserId()
+
+      // Supabase doesn't have native batch update, use upsert
+      const serializedItems = items.map(item => this.serializeForSupabase(item))
+
+      const { data, error } = await supabase
+        .from(this.tableName)
+        .upsert(serializedItems)
+        .select()
+
+      if (error) {
+        console.error(`Error batch updating in ${this.tableName}:`, error)
+        throw error
+      }
+
+      return (data || []).map(item => this.deserializeDates(item))
+    } catch (error) {
+      console.error(`Error batch updating in Supabase (${this.tableName}):`, error)
+      throw error
+    }
+  }
+
+  async batchDelete(ids: string[]): Promise<void> {
+    try {
+      await this.getCurrentUserId()
+
+      // Supabase doesn't have native batch delete, delete in parallel
+      const deletePromises = ids.map(id =>
+        supabase.from(this.tableName).delete().eq('id', id)
+      )
+
+      const results = await Promise.all(deletePromises)
+
+      const errors = results.filter(r => r.error).map(r => r.error)
+      if (errors.length > 0) {
+        console.error(`Error batch deleting from ${this.tableName}:`, errors)
+        throw new Error(`Failed to delete ${errors.length} items`)
+      }
+    } catch (error) {
+      console.error(`Error batch deleting from Supabase (${this.tableName}):`, error)
+      throw error
+    }
+  }
+
   /**
    * Serialize data for Supabase storage
    * Converts field names from camelCase to snake_case for database columns
@@ -242,16 +315,26 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
   }
 
   /**
-   * Convert camelCase to snake_case
+   * Convert camelCase to snake_case (memoized)
    */
   private camelToSnake(str: string): string {
-    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+    const cached = this.caseConversionCache.get(`c2s:${str}`)
+    if (cached) return cached
+
+    const result = str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+    this.caseConversionCache.set(`c2s:${str}`, result)
+    return result
   }
 
   /**
-   * Convert snake_case to camelCase
+   * Convert snake_case to camelCase (memoized)
    */
   private snakeToCamel(str: string): string {
-    return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    const cached = this.caseConversionCache.get(`s2c:${str}`)
+    if (cached) return cached
+
+    const result = str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    this.caseConversionCache.set(`s2c:${str}`, result)
+    return result
   }
 }

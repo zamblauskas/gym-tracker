@@ -11,7 +11,85 @@ export class LocalStorageRepository<T extends { id: string }> implements IDataRe
     this.storageKey = `gym-tracker:${storageKey}`
   }
 
-  async getAll(): Promise<T[]> {
+  getAll(): Promise<T[]> {
+    try {
+      const data = localStorage.getItem(this.storageKey)
+      if (!data) return Promise.resolve([])
+
+      const items = JSON.parse(data)
+      return Promise.resolve(items.map((item: any) => this.deserializeDates(item)))
+    } catch (error) {
+      console.error(`Error reading from localStorage (${this.storageKey}):`, error)
+      return Promise.resolve([])
+    }
+  }
+
+  getById(id: string): Promise<T | null> {
+    const items = this.getAllSync()
+    return Promise.resolve(items.find(item => item.id === id) || null)
+  }
+
+  create(item: T): Promise<T> {
+    const items = this.getAllSync()
+    items.push(item)
+    this.saveAllSync(items)
+    return Promise.resolve(item)
+  }
+
+  update(id: string, item: T): Promise<T> {
+    const items = this.getAllSync()
+    const index = items.findIndex(i => i.id === id)
+
+    if (index === -1) {
+      return Promise.reject(new Error(`Item with id ${id} not found`))
+    }
+
+    items[index] = item
+    this.saveAllSync(items)
+    return Promise.resolve(item)
+  }
+
+  delete(id: string): Promise<void> {
+    const items = this.getAllSync()
+    const filtered = items.filter(item => item.id !== id)
+    this.saveAllSync(filtered)
+    return Promise.resolve()
+  }
+
+  clear(): Promise<void> {
+    localStorage.removeItem(this.storageKey)
+    return Promise.resolve()
+  }
+
+  batchCreate(items: T[]): Promise<T[]> {
+    const existingItems = this.getAllSync()
+    const newItems = [...existingItems, ...items]
+    this.saveAllSync(newItems)
+    return Promise.resolve(items)
+  }
+
+  batchUpdate(items: T[]): Promise<T[]> {
+    const existingItems = this.getAllSync()
+    const itemMap = new Map(items.map(item => [item.id, item]))
+
+    const updatedItems = existingItems.map(existing =>
+      itemMap.has(existing.id) ? itemMap.get(existing.id)! : existing
+    )
+
+    this.saveAllSync(updatedItems)
+    return Promise.resolve(items)
+  }
+
+  batchDelete(ids: string[]): Promise<void> {
+    const existingItems = this.getAllSync()
+    const idsSet = new Set(ids)
+    const filtered = existingItems.filter(item => !idsSet.has(item.id))
+    this.saveAllSync(filtered)
+    return Promise.resolve()
+  }
+
+  // Synchronous private methods for internal use
+  private getAllSync(): T[] {
     try {
       const data = localStorage.getItem(this.storageKey)
       if (!data) return []
@@ -24,42 +102,7 @@ export class LocalStorageRepository<T extends { id: string }> implements IDataRe
     }
   }
 
-  async getById(id: string): Promise<T | null> {
-    const items = await this.getAll()
-    return items.find(item => item.id === id) || null
-  }
-
-  async create(item: T): Promise<T> {
-    const items = await this.getAll()
-    items.push(item)
-    await this.saveAll(items)
-    return item
-  }
-
-  async update(id: string, item: T): Promise<T> {
-    const items = await this.getAll()
-    const index = items.findIndex(i => i.id === id)
-
-    if (index === -1) {
-      throw new Error(`Item with id ${id} not found`)
-    }
-
-    items[index] = item
-    await this.saveAll(items)
-    return item
-  }
-
-  async delete(id: string): Promise<void> {
-    const items = await this.getAll()
-    const filtered = items.filter(item => item.id !== id)
-    await this.saveAll(filtered)
-  }
-
-  async clear(): Promise<void> {
-    localStorage.removeItem(this.storageKey)
-  }
-
-  private async saveAll(items: T[]): Promise<void> {
+  private saveAllSync(items: T[]): void {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(items))
     } catch (error) {

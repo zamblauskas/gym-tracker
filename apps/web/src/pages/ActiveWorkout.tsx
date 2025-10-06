@@ -14,6 +14,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useExerciseHistory } from '@/hooks/useExerciseHistory'
 import { useAutoSaveNotes } from '@/hooks/useAutoSaveNotes'
 import { finishWorkoutSession } from '@/lib/workoutCalculations'
+import { NOTES_AUTOSAVE_DEBOUNCE_MS } from '@/lib/constants'
 
 interface ActiveWorkoutProps {
   session: WorkoutSession
@@ -66,7 +67,7 @@ export default function ActiveWorkout({
     notes: currentNotes,
     onSave: handleUpdateNotes,
     enabled: !!selectedExercise,
-    debounceMs: 500
+    debounceMs: NOTES_AUTOSAVE_DEBOUNCE_MS
   })
 
   // Restore exercise selection when navigating

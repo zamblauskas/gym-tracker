@@ -32,4 +32,19 @@ export interface IDataRepository<T> {
    * Clear all items (useful for testing/reset)
    */
   clear(): Promise<void>
+
+  /**
+   * Batch create multiple items
+   */
+  batchCreate?(items: T[]): Promise<T[]>
+
+  /**
+   * Batch update multiple items
+   */
+  batchUpdate?(items: T[]): Promise<T[]>
+
+  /**
+   * Batch delete multiple items
+   */
+  batchDelete?(ids: string[]): Promise<void>
 }
