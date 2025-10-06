@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ChevronLeft, X, Trash2, Edit, ChevronRight, ScrollText } from 'lucide-react'
+import { Plus, X, Trash2, Edit, ChevronRight, ScrollText } from 'lucide-react'
 import { Program } from '../types/program'
 import { Routine } from '../types/routine'
 import { ExerciseType } from '../types/exerciseType'
@@ -20,7 +20,6 @@ interface ProgramDetailProps {
   onRemoveRoutine: (routineId: string) => void
   onDelete: (programId: string) => void
   onEdit: () => void
-  onBack: () => void
   onSelectRoutine?: (routine: Routine) => void
   breadcrumbs?: BreadcrumbItem[]
 }
@@ -34,7 +33,6 @@ export default function ProgramDetail({
   onRemoveRoutine,
   onDelete,
   onEdit,
-  onBack,
   onSelectRoutine,
   breadcrumbs = []
 }: ProgramDetailProps) {
@@ -64,17 +62,7 @@ export default function ProgramDetail({
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {breadcrumbs.length > 0 ? (
-          <Breadcrumb items={breadcrumbs} />
-        ) : (
-          <button
-            onClick={onBack}
-            className="flex items-center text-[hsl(var(--color-muted-foreground))] hover:text-[hsl(var(--color-foreground))] transition-colors mb-4"
-          >
-            <ChevronLeft className="h-5 w-5 mr-1" />
-            Back
-          </button>
-        )}
+        {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
 
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">

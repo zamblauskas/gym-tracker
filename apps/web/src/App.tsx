@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
-import { motion, AnimatePresence } from 'framer-motion'
 import Home from './pages/Home'
 import ExerciseTypeList from './pages/ExerciseTypeList'
 import ExerciseList from './pages/ExerciseList'
@@ -31,9 +31,6 @@ import {
   createWorkoutSessionRepository,
 } from './lib/repositories'
 
-type View = 'home' | 'exerciseTypes' | 'exerciseTypeDetail' | 'exerciseDetail' | 'routines' | 'routineDetail' | 'programs' | 'programDetail' | 'activeWorkout'
-type DrawerMode = 'exerciseType' | 'editExerciseType' | 'exercise' | 'routine' | 'editRoutine' | 'program' | 'editProgram' | null
-
 function App() {
   // Create repository instances (memoized to avoid recreating on every render)
   const exerciseTypeRepo = useMemo(() => createExerciseTypeRepository(), [])
@@ -42,16 +39,9 @@ function App() {
   const programRepo = useMemo(() => createProgramRepository(), [])
   const workoutSessionRepo = useMemo(() => createWorkoutSessionRepository(), [])
 
-  const [currentView, setCurrentView] = useState<View>('home')
-  const [drawerMode, setDrawerMode] = useState<DrawerMode>(null)
-  const [selectedExerciseType, setSelectedExerciseType] = useState<ExerciseType | null>(null)
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
-  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null)
+  const navigate = useNavigate()
+  const location = useLocation()
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null)
-
-  // Navigation context - track where we came from for proper back button behavior
-  const [navigationSource, setNavigationSource] = useState<'list' | 'routine' | 'program'>('list')
 
   // Use persisted state instead of regular useState
   const [exerciseTypes, setExerciseTypes] = usePersistedState<ExerciseType>(exerciseTypeRepo)
@@ -71,13 +61,11 @@ function App() {
 
     console.log('Creating exercise type:', newExerciseType)
     setExerciseTypes([...exerciseTypes, newExerciseType])
-    setDrawerMode(null)
+    navigate('/exercise-types')
   }
 
   const handleSelectExerciseType = (exerciseType: ExerciseType) => {
-    setSelectedExerciseType(exerciseType)
-    setNavigationSource('list')
-    setCurrentView('exerciseTypeDetail')
+    navigate(`/exercise-types/${exerciseType.id}`)
   }
 
   const handleEditExerciseType = (id: string, name: string) => {
@@ -87,8 +75,7 @@ function App() {
       updatedAt: new Date(),
     }
     setExerciseTypes(exerciseTypes.map(et => et.id === id ? updatedExerciseType : et))
-    setSelectedExerciseType(updatedExerciseType)
-    setDrawerMode(null)
+    navigate(-1)
   }
 
   // Exercise handlers
@@ -102,17 +89,15 @@ function App() {
 
     console.log('Creating exercise:', newExercise)
     setExercises([...exercises, newExercise])
-    setDrawerMode(null)
+    navigate(-1)
   }
 
-  const handleSelectExercise = (exercise: Exercise) => {
-    setSelectedExercise(exercise)
-    setCurrentView('exerciseDetail')
+  const handleSelectExercise = (exercise: Exercise, exerciseTypeId: string) => {
+    navigate(`/exercise-types/${exerciseTypeId}/exercises/${exercise.id}`)
   }
 
   const handleUpdateExercise = (updatedExercise: Exercise) => {
     setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex))
-    setSelectedExercise(updatedExercise)
   }
 
   // Routine handlers
@@ -126,12 +111,11 @@ function App() {
 
     console.log('Creating routine:', newRoutine)
     setRoutines([...routines, newRoutine])
-    setDrawerMode(null)
+    navigate('/routines')
   }
 
   const handleSelectRoutine = (routine: Routine) => {
-    setSelectedRoutine(routine)
-    setCurrentView('routineDetail')
+    navigate(`/routines/${routine.id}`)
   }
 
   const handleEditRoutine = (id: string, name: string) => {
@@ -141,34 +125,33 @@ function App() {
       updatedAt: new Date(),
     }
     setRoutines(routines.map(r => r.id === id ? updatedRoutine : r))
-    setSelectedRoutine(updatedRoutine)
-    setDrawerMode(null)
+    navigate(-1)
   }
 
-  const handleAddExerciseTypeToRoutine = (exerciseTypeId: string) => {
-    if (!selectedRoutine) return
+  const handleAddExerciseTypeToRoutine = (routineId: string, exerciseTypeId: string) => {
+    const routine = routines.find(r => r.id === routineId)
+    if (!routine) return
 
     const updatedRoutine = {
-      ...selectedRoutine,
-      exerciseTypeIds: [...selectedRoutine.exerciseTypeIds, exerciseTypeId],
+      ...routine,
+      exerciseTypeIds: [...routine.exerciseTypeIds, exerciseTypeId],
       updatedAt: new Date(),
     }
 
     setRoutines(routines.map(r => r.id === updatedRoutine.id ? updatedRoutine : r))
-    setSelectedRoutine(updatedRoutine)
   }
 
-  const handleRemoveExerciseTypeFromRoutine = (exerciseTypeId: string) => {
-    if (!selectedRoutine) return
+  const handleRemoveExerciseTypeFromRoutine = (routineId: string, exerciseTypeId: string) => {
+    const routine = routines.find(r => r.id === routineId)
+    if (!routine) return
 
     const updatedRoutine = {
-      ...selectedRoutine,
-      exerciseTypeIds: selectedRoutine.exerciseTypeIds.filter(id => id !== exerciseTypeId),
+      ...routine,
+      exerciseTypeIds: routine.exerciseTypeIds.filter(id => id !== exerciseTypeId),
       updatedAt: new Date(),
     }
 
     setRoutines(routines.map(r => r.id === updatedRoutine.id ? updatedRoutine : r))
-    setSelectedRoutine(updatedRoutine)
   }
 
   // Program handlers
@@ -182,12 +165,11 @@ function App() {
 
     console.log('Creating program:', newProgram)
     setPrograms([...programs, newProgram])
-    setDrawerMode(null)
+    navigate('/programs')
   }
 
   const handleSelectProgram = (program: Program) => {
-    setSelectedProgram(program)
-    setCurrentView('programDetail')
+    navigate(`/programs/${program.id}`)
   }
 
   const handleEditProgram = (id: string, name: string) => {
@@ -197,58 +179,53 @@ function App() {
       updatedAt: new Date(),
     }
     setPrograms(programs.map(p => p.id === id ? updatedProgram : p))
-    setSelectedProgram(updatedProgram)
-    setDrawerMode(null)
+    navigate(-1)
   }
 
-  const handleAddRoutineToProgram = (routineId: string) => {
-    if (!selectedProgram) return
+  const handleAddRoutineToProgram = (programId: string, routineId: string) => {
+    const program = programs.find(p => p.id === programId)
+    if (!program) return
 
     const updatedProgram = {
-      ...selectedProgram,
-      routineIds: [...selectedProgram.routineIds, routineId],
+      ...program,
+      routineIds: [...program.routineIds, routineId],
       updatedAt: new Date(),
     }
 
     setPrograms(programs.map(p => p.id === updatedProgram.id ? updatedProgram : p))
-    setSelectedProgram(updatedProgram)
   }
 
-  const handleRemoveRoutineFromProgram = (routineId: string) => {
-    if (!selectedProgram) return
+  const handleRemoveRoutineFromProgram = (programId: string, routineId: string) => {
+    const program = programs.find(p => p.id === programId)
+    if (!program) return
 
     const updatedProgram = {
-      ...selectedProgram,
-      routineIds: selectedProgram.routineIds.filter(id => id !== routineId),
+      ...program,
+      routineIds: program.routineIds.filter(id => id !== routineId),
       updatedAt: new Date(),
     }
 
     setPrograms(programs.map(p => p.id === updatedProgram.id ? updatedProgram : p))
-    setSelectedProgram(updatedProgram)
   }
 
   // Hierarchical navigation handlers
-  const handleSelectRoutineFromProgram = (routine: Routine) => {
-    setSelectedRoutine(routine)
-    setNavigationSource('program')
-    setCurrentView('routineDetail')
+  const handleSelectRoutineFromProgram = (programId: string, routine: Routine) => {
+    navigate(`/programs/${programId}/routines/${routine.id}`)
   }
 
-  const handleSelectExerciseTypeFromRoutine = (exerciseType: ExerciseType) => {
-    setSelectedExerciseType(exerciseType)
-    setNavigationSource('routine')
-    setCurrentView('exerciseTypeDetail')
+  const handleSelectExerciseTypeFromRoutine = (routineId: string, exerciseType: ExerciseType, programId?: string) => {
+    if (programId) {
+      navigate(`/programs/${programId}/routines/${routineId}/exercise-types/${exerciseType.id}`)
+    } else {
+      navigate(`/routines/${routineId}/exercise-types/${exerciseType.id}`)
+    }
   }
 
   // Deletion handlers
-  const handleDeleteExercise = (exerciseId: string) => {
+  const handleDeleteExercise = (exerciseId: string, exerciseTypeId: string) => {
     setExercises(exercises.filter(ex => ex.id !== exerciseId))
-
-    // If currently viewing this exercise, navigate back
-    if (selectedExercise?.id === exerciseId) {
-      setSelectedExercise(null)
-      setCurrentView('exerciseTypeDetail')
-    }
+    // Navigate back to exercise type detail
+    navigate(`/exercise-types/${exerciseTypeId}`)
   }
 
   const handleDeleteExerciseType = (exerciseTypeId: string) => {
@@ -265,11 +242,8 @@ function App() {
       updatedAt: new Date(),
     })))
 
-    // If currently viewing this exercise type, navigate back
-    if (selectedExerciseType?.id === exerciseTypeId) {
-      setSelectedExerciseType(null)
-      setCurrentView('exerciseTypes')
-    }
+    // Navigate back to exercise types list
+    navigate('/exercise-types')
   }
 
   const handleDeleteRoutine = (routineId: string) => {
@@ -282,75 +256,15 @@ function App() {
       updatedAt: new Date(),
     })))
 
-    // If currently viewing this routine, navigate back
-    if (selectedRoutine?.id === routineId) {
-      setSelectedRoutine(null)
-      setCurrentView('routines')
-    }
+    // Navigate back to routines list
+    navigate('/routines')
   }
 
   const handleDeleteProgram = (programId: string) => {
     setPrograms(programs.filter(p => p.id !== programId))
 
-    // If currently viewing this program, navigate back
-    if (selectedProgram?.id === programId) {
-      setSelectedProgram(null)
-      setCurrentView('programs')
-    }
-  }
-
-  // Navigation handlers
-  const handleNavigateToHome = () => {
-    setCurrentView('home')
-    setSelectedExerciseType(null)
-    setSelectedRoutine(null)
-    setSelectedProgram(null)
-  }
-
-  const handleNavigateToExerciseTypes = () => {
-    setCurrentView('exerciseTypes')
-  }
-
-  const handleNavigateToRoutines = () => {
-    setCurrentView('routines')
-  }
-
-  const handleNavigateToPrograms = () => {
-    setCurrentView('programs')
-  }
-
-  const handleBackFromExerciseTypeDetail = () => {
-    setSelectedExerciseType(null)
-    if (navigationSource === 'routine') {
-      // Return to routine detail if we came from there
-      setCurrentView('routineDetail')
-    } else {
-      // Otherwise return to exercise types list
-      setCurrentView('exerciseTypes')
-    }
-    setNavigationSource('list')
-  }
-
-  const handleBackFromExerciseDetail = () => {
-    setSelectedExercise(null)
-    setCurrentView('exerciseTypeDetail')
-  }
-
-  const handleBackFromRoutineDetail = () => {
-    setSelectedRoutine(null)
-    if (navigationSource === 'program') {
-      // Return to program detail if we came from there
-      setCurrentView('programDetail')
-    } else {
-      // Otherwise return to routines list
-      setCurrentView('routines')
-    }
-    setNavigationSource('list')
-  }
-
-  const handleBackFromProgramDetail = () => {
-    setSelectedProgram(null)
-    setCurrentView('programs')
+    // Navigate back to programs list
+    navigate('/programs')
   }
 
   // Workout session handlers
@@ -368,9 +282,7 @@ function App() {
     }
 
     setActiveSession(newSession)
-    setSelectedRoutine(nextWorkoutInfo.routine)
-    setSelectedProgram(nextWorkoutInfo.program || null)
-    setCurrentView('activeWorkout')
+    navigate('/workout/active')
   }
 
   const handleSkipWorkout = () => {
@@ -400,14 +312,7 @@ function App() {
   const handleFinishWorkout = (finishedSession: WorkoutSession) => {
     setWorkoutSessions([...workoutSessions, finishedSession])
     setActiveSession(null)
-    setSelectedRoutine(null)
-    setCurrentView('home')
-  }
-
-  const handleCancelWorkout = () => {
-    setActiveSession(null)
-    setSelectedRoutine(null)
-    setCurrentView('home')
+    navigate('/')
   }
 
   // Calculate next workout info (memoized to prevent re-renders)
@@ -443,262 +348,271 @@ function App() {
     return { routine: nextRoutine || programRoutines[0], program: activeProgram }
   }, [programs, routines, workoutSessions])
 
-  // Computed values
-  const filteredExercises = selectedExerciseType
-    ? exercises.filter(ex => ex.exerciseTypeId === selectedExerciseType.id)
-    : []
+  // Route wrapper components that fetch data based on URL params
+  const ExerciseTypeDetailRoute = () => {
+    const { id } = useParams<{ id: string }>()
+    const exerciseType = exerciseTypes.find(et => et.id === id)
+    if (!exerciseType) {
+      navigate('/exercise-types')
+      return null
+    }
+    const filteredExercises = exercises.filter(ex => ex.exerciseTypeId === id)
+    return (
+      <ExerciseList
+        exerciseType={exerciseType}
+        exercises={filteredExercises}
+        onAdd={() => navigate(`/exercise-types/${id}/exercises/new`)}
+        onSelect={(exercise) => handleSelectExercise(exercise, id!)}
+        onDelete={(exerciseId) => handleDeleteExercise(exerciseId, id!)}
+        onDeleteExerciseType={handleDeleteExerciseType}
+        onEdit={() => navigate(`/exercise-types/${id}/edit`)}
+        breadcrumbs={[
+          { label: 'Home', onClick: () => navigate('/') },
+          { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
+          { label: exerciseType.name, onClick: () => { } }
+        ]}
+      />
+    )
+  }
 
-  const routineExerciseTypes = selectedRoutine
-    ? exerciseTypes.filter(et => selectedRoutine.exerciseTypeIds.includes(et.id))
-    : []
+  const ExerciseDetailRoute = () => {
+    const { typeId, exerciseId } = useParams<{ typeId: string; exerciseId: string }>()
+    const exercise = exercises.find(ex => ex.id === exerciseId)
+    if (!exercise) {
+      navigate(`/exercise-types/${typeId}`)
+      return null
+    }
+    return (
+      <ExerciseDetail
+        exercise={exercise}
+        onUpdate={handleUpdateExercise}
+        onDelete={(id) => handleDeleteExercise(id, typeId!)}
+      />
+    )
+  }
 
-  const availableExerciseTypes = selectedRoutine
-    ? exerciseTypes.filter(et => !selectedRoutine.exerciseTypeIds.includes(et.id))
-    : []
+  const RoutineDetailRoute = () => {
+    const { id } = useParams<{ id: string }>()
+    const routine = routines.find(r => r.id === id)
+    if (!routine) {
+      navigate('/routines')
+      return null
+    }
+    const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
+    const availableExerciseTypes = exerciseTypes.filter(et => !routine.exerciseTypeIds.includes(et.id))
+    return (
+      <RoutineDetail
+        routine={routine}
+        exerciseTypes={routineExerciseTypes}
+        exercises={exercises}
+        availableExerciseTypes={availableExerciseTypes}
+        onAddExerciseType={(etId) => handleAddExerciseTypeToRoutine(id!, etId)}
+        onRemoveExerciseType={(etId) => handleRemoveExerciseTypeFromRoutine(id!, etId)}
+        onDelete={handleDeleteRoutine}
+        onEdit={() => navigate(`/routines/${id}/edit`)}
+        onSelectExerciseType={(et) => handleSelectExerciseTypeFromRoutine(id!, et)}
+        breadcrumbs={[
+          { label: 'Home', onClick: () => navigate('/') },
+          { label: 'Routines', onClick: () => navigate('/routines') },
+          { label: routine.name, onClick: () => { } }
+        ]}
+      />
+    )
+  }
 
-  const programRoutines = selectedProgram
-    ? routines.filter(r => selectedProgram.routineIds.includes(r.id))
-    : []
+  const ProgramDetailRoute = () => {
+    const { id } = useParams<{ id: string }>()
+    const program = programs.find(p => p.id === id)
+    if (!program) {
+      navigate('/programs')
+      return null
+    }
+    const programRoutines = routines.filter(r => program.routineIds.includes(r.id))
+    const availableRoutines = routines.filter(r => !program.routineIds.includes(r.id))
+    return (
+      <ProgramDetail
+        program={program}
+        routines={programRoutines}
+        exerciseTypes={exerciseTypes}
+        availableRoutines={availableRoutines}
+        onAddRoutine={(rId) => handleAddRoutineToProgram(id!, rId)}
+        onRemoveRoutine={(rId) => handleRemoveRoutineFromProgram(id!, rId)}
+        onDelete={handleDeleteProgram}
+        onEdit={() => navigate(`/programs/${id}/edit`)}
+        onSelectRoutine={(r) => handleSelectRoutineFromProgram(id!, r)}
+        breadcrumbs={[
+          { label: 'Home', onClick: () => navigate('/') },
+          { label: 'Programs', onClick: () => navigate('/programs') },
+          { label: program.name, onClick: () => { } }
+        ]}
+      />
+    )
+  }
 
-  const availableRoutines = selectedProgram
-    ? routines.filter(r => !selectedProgram.routineIds.includes(r.id))
-    : []
+  const ActiveWorkoutRoute = () => {
+    if (!activeSession || !nextWorkoutInfo) {
+      navigate('/')
+      return null
+    }
+    const routine = routines.find(r => r.id === activeSession.routineId)
+    if (!routine) {
+      navigate('/')
+      return null
+    }
+    const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
+    const handleCancelWorkout = () => {
+      setActiveSession(null)
+      navigate('/')
+    }
+    return (
+      <ActiveWorkout
+        session={activeSession}
+        routine={routine}
+        exerciseTypes={routineExerciseTypes}
+        exercises={exercises}
+        previousSessions={workoutSessions}
+        onUpdateSession={handleUpdateWorkoutSession}
+        onFinishWorkout={handleFinishWorkout}
+        onBack={handleCancelWorkout}
+      />
+    )
+  }
 
-  // Breadcrumb generation
-  const programDetailBreadcrumbs = selectedProgram ? [
-    { label: 'Home', onClick: () => setCurrentView('home') },
-    { label: 'Programs', onClick: () => setCurrentView('programs') },
-    { label: selectedProgram.name, onClick: () => { } }
-  ] : []
+  // Detect drawer state from URL
+  const isDrawerOpen = useMemo(() => {
+    const path = location.pathname
+    return !!(
+      path === '/exercise-types/new' ||
+      path.match(/^\/exercise-types\/[^/]+\/edit$/) ||
+      path.match(/^\/exercise-types\/[^/]+\/exercises\/new$/) ||
+      path === '/routines/new' ||
+      path.match(/^\/routines\/[^/]+\/edit$/) ||
+      path === '/programs/new' ||
+      path.match(/^\/programs\/[^/]+\/edit$/)
+    )
+  }, [location.pathname])
 
-  const routineDetailBreadcrumbs = selectedRoutine ? (
-    navigationSource === 'program' && selectedProgram ? [
-      { label: 'Home', onClick: () => setCurrentView('home') },
-      { label: 'Programs', onClick: () => setCurrentView('programs') },
-      { label: selectedProgram.name, onClick: () => setCurrentView('programDetail') },
-      { label: selectedRoutine.name, onClick: () => { } }
-    ] : [
-      { label: 'Home', onClick: () => setCurrentView('home') },
-      { label: 'Routines', onClick: () => setCurrentView('routines') },
-      { label: selectedRoutine.name, onClick: () => { } }
-    ]
-  ) : []
+  const getDrawerMode = () => {
+    const path = location.pathname
+    if (path === '/exercise-types/new') return 'exerciseType'
+    if (path.match(/^\/exercise-types\/[^/]+\/edit$/)) return 'editExerciseType'
+    if (path.match(/^\/exercise-types\/[^/]+\/exercises\/new$/)) return 'exercise'
+    if (path === '/routines/new') return 'routine'
+    if (path.match(/^\/routines\/[^/]+\/edit$/)) return 'editRoutine'
+    if (path === '/programs/new') return 'program'
+    if (path.match(/^\/programs\/[^/]+\/edit$/)) return 'editProgram'
+    return null
+  }
 
-  const exerciseTypeDetailBreadcrumbs = selectedExerciseType ? (
-    navigationSource === 'routine' && selectedRoutine ?
-      (selectedProgram ? [
-        { label: 'Home', onClick: () => setCurrentView('home') },
-        { label: 'Programs', onClick: () => setCurrentView('programs') },
-        { label: selectedProgram.name, onClick: () => setCurrentView('programDetail') },
-        { label: selectedRoutine.name, onClick: () => setCurrentView('routineDetail') },
-        { label: selectedExerciseType.name, onClick: () => { } }
-      ] : [
-        { label: 'Home', onClick: () => setCurrentView('home') },
-        { label: 'Routines', onClick: () => setCurrentView('routines') },
-        { label: selectedRoutine.name, onClick: () => setCurrentView('routineDetail') },
-        { label: selectedExerciseType.name, onClick: () => { } }
-      ])
-      : [
-        { label: 'Home', onClick: () => setCurrentView('home') },
-        { label: 'Exercise Types', onClick: () => setCurrentView('exerciseTypes') },
-        { label: selectedExerciseType.name, onClick: () => { } }
-      ]
-  ) : []
+  // Get current entity for drawer based on URL
+  const getCurrentExerciseType = () => {
+    const pathParts = location.pathname.split('/')
+    if (pathParts[1] === 'exercise-types' && pathParts[2] && pathParts[2] !== 'new') {
+      return exerciseTypes.find(et => et.id === pathParts[2])
+    }
+    return null
+  }
+
+  const getCurrentRoutine = () => {
+    const pathParts = location.pathname.split('/')
+    if (pathParts[1] === 'routines' && pathParts[2] && pathParts[2] !== 'new') {
+      return routines.find(r => r.id === pathParts[2])
+    }
+    if (pathParts[1] === 'programs' && pathParts[4] === 'routines' && pathParts[5]) {
+      return routines.find(r => r.id === pathParts[5])
+    }
+    return null
+  }
+
+  const getCurrentProgram = () => {
+    const pathParts = location.pathname.split('/')
+    if (pathParts[1] === 'programs' && pathParts[2] && pathParts[2] !== 'new') {
+      return programs.find(p => p.id === pathParts[2])
+    }
+    return null
+  }
 
   return (
     <div className="min-h-screen">
-      <AnimatePresence mode="wait">
-        {currentView === 'home' && (
-          <motion.div
-            key="home"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Home
-              onNavigateToPrograms={handleNavigateToPrograms}
-              onNavigateToRoutines={handleNavigateToRoutines}
-              onNavigateToExerciseTypes={handleNavigateToExerciseTypes}
-              onStartWorkout={handleStartWorkout}
-              onSkipWorkout={handleSkipWorkout}
-              nextRoutine={nextWorkoutInfo?.routine || null}
-              currentProgram={nextWorkoutInfo?.program || null}
-            />
-          </motion.div>
-        )}
+      <Routes>
+        <Route path="/" element={
+          <Home
+            onNavigateToPrograms={() => navigate('/programs')}
+            onNavigateToRoutines={() => navigate('/routines')}
+            onNavigateToExerciseTypes={() => navigate('/exercise-types')}
+            onStartWorkout={handleStartWorkout}
+            onSkipWorkout={handleSkipWorkout}
+            nextRoutine={nextWorkoutInfo?.routine || null}
+            currentProgram={nextWorkoutInfo?.program || null}
+          />
+        } />
+        <Route path="/exercise-types" element={
+          <ExerciseTypeList
+            exerciseTypes={exerciseTypes}
+            exercises={exercises}
+            onAdd={() => navigate('/exercise-types/new')}
+            onSelect={handleSelectExerciseType}
+          />
+        } />
+        <Route path="/exercise-types/new" element={
+          <ExerciseTypeList
+            exerciseTypes={exerciseTypes}
+            exercises={exercises}
+            onAdd={() => navigate('/exercise-types/new')}
+            onSelect={handleSelectExerciseType}
+          />
+        } />
+        <Route path="/exercise-types/:id" element={<ExerciseTypeDetailRoute />} />
+        <Route path="/exercise-types/:id/edit" element={<ExerciseTypeDetailRoute />} />
+        <Route path="/exercise-types/:id/exercises/new" element={<ExerciseTypeDetailRoute />} />
+        <Route path="/exercise-types/:typeId/exercises/:exerciseId" element={<ExerciseDetailRoute />} />
+        <Route path="/routines" element={
+          <RoutineList
+            routines={routines}
+            exerciseTypes={exerciseTypes}
+            onAdd={() => navigate('/routines/new')}
+            onSelect={handleSelectRoutine}
+          />
+        } />
+        <Route path="/routines/new" element={
+          <RoutineList
+            routines={routines}
+            exerciseTypes={exerciseTypes}
+            onAdd={() => navigate('/routines/new')}
+            onSelect={handleSelectRoutine}
+          />
+        } />
+        <Route path="/routines/:id" element={<RoutineDetailRoute />} />
+        <Route path="/routines/:id/edit" element={<RoutineDetailRoute />} />
+        <Route path="/programs" element={
+          <ProgramList
+            programs={programs}
+            routines={routines}
+            onAdd={() => navigate('/programs/new')}
+            onSelect={handleSelectProgram}
+          />
+        } />
+        <Route path="/programs/new" element={
+          <ProgramList
+            programs={programs}
+            routines={routines}
+            onAdd={() => navigate('/programs/new')}
+            onSelect={handleSelectProgram}
+          />
+        } />
+        <Route path="/programs/:id" element={<ProgramDetailRoute />} />
+        <Route path="/programs/:id/edit" element={<ProgramDetailRoute />} />
+        <Route path="/workout/active" element={<ActiveWorkoutRoute />} />
+      </Routes>
 
-        {currentView === 'exerciseTypes' && (
-          <motion.div
-            key="exerciseTypes"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ExerciseTypeList
-              exerciseTypes={exerciseTypes}
-              exercises={exercises}
-              onAdd={() => setDrawerMode('exerciseType')}
-              onSelect={handleSelectExerciseType}
-              onBack={handleNavigateToHome}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'exerciseTypeDetail' && selectedExerciseType && (
-          <motion.div
-            key="exerciseTypeDetail"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ExerciseList
-              exerciseType={selectedExerciseType}
-              exercises={filteredExercises}
-              onAdd={() => setDrawerMode('exercise')}
-              onSelect={handleSelectExercise}
-              onDelete={handleDeleteExercise}
-              onDeleteExerciseType={handleDeleteExerciseType}
-              onEdit={() => setDrawerMode('editExerciseType')}
-              onBack={handleBackFromExerciseTypeDetail}
-              breadcrumbs={exerciseTypeDetailBreadcrumbs}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'programs' && (
-          <motion.div
-            key="programs"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ProgramList
-              programs={programs}
-              routines={routines}
-              onAdd={() => setDrawerMode('program')}
-              onSelect={handleSelectProgram}
-              onBack={handleNavigateToHome}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'routines' && (
-          <motion.div
-            key="routines"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <RoutineList
-              routines={routines}
-              exerciseTypes={exerciseTypes}
-              onAdd={() => setDrawerMode('routine')}
-              onSelect={handleSelectRoutine}
-              onBack={handleNavigateToHome}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'exerciseDetail' && selectedExercise && (
-          <motion.div
-            key="exerciseDetail"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ExerciseDetail
-              exercise={selectedExercise}
-              onUpdate={handleUpdateExercise}
-              onDelete={handleDeleteExercise}
-              onBack={handleBackFromExerciseDetail}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'programDetail' && selectedProgram && (
-          <motion.div
-            key="programDetail"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ProgramDetail
-              program={selectedProgram}
-              routines={programRoutines}
-              exerciseTypes={exerciseTypes}
-              availableRoutines={availableRoutines}
-              onAddRoutine={handleAddRoutineToProgram}
-              onRemoveRoutine={handleRemoveRoutineFromProgram}
-              onDelete={handleDeleteProgram}
-              onEdit={() => setDrawerMode('editProgram')}
-              onBack={handleBackFromProgramDetail}
-              onSelectRoutine={handleSelectRoutineFromProgram}
-              breadcrumbs={programDetailBreadcrumbs}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'routineDetail' && selectedRoutine && (
-          <motion.div
-            key="routineDetail"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <RoutineDetail
-              routine={selectedRoutine}
-              exerciseTypes={routineExerciseTypes}
-              exercises={exercises}
-              availableExerciseTypes={availableExerciseTypes}
-              onAddExerciseType={handleAddExerciseTypeToRoutine}
-              onRemoveExerciseType={handleRemoveExerciseTypeFromRoutine}
-              onDelete={handleDeleteRoutine}
-              onEdit={() => setDrawerMode('editRoutine')}
-              onBack={handleBackFromRoutineDetail}
-              onSelectExerciseType={handleSelectExerciseTypeFromRoutine}
-              breadcrumbs={routineDetailBreadcrumbs}
-            />
-          </motion.div>
-        )}
-
-        {currentView === 'activeWorkout' && activeSession && selectedRoutine && (
-          <motion.div
-            key="activeWorkout"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ActiveWorkout
-              session={activeSession}
-              routine={selectedRoutine}
-              exerciseTypes={routineExerciseTypes}
-              exercises={exercises}
-              previousSessions={workoutSessions}
-              onUpdateSession={handleUpdateWorkoutSession}
-              onFinishWorkout={handleFinishWorkout}
-              onBack={handleCancelWorkout}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Drawer.Root open={drawerMode !== null} onOpenChange={(open) => !open && setDrawerMode(null)}>
+      <Drawer.Root open={isDrawerOpen} onOpenChange={(open) => !open && navigate(-1)}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40" />
           <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-[96%] mt-24 fixed bottom-0 left-0 right-0">
             <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
               <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
 
-              {drawerMode === 'exerciseType' && (
+              {getDrawerMode() === 'exerciseType' && (
                 <>
                   <Drawer.Title className="sr-only">Create Exercise Type</Drawer.Title>
                   <Drawer.Description className="sr-only">
@@ -706,40 +620,46 @@ function App() {
                   </Drawer.Description>
                   <CreateExerciseType
                     onSave={handleCreateExerciseType}
-                    onCancel={() => setDrawerMode(null)}
+                    onCancel={() => navigate(-1)}
                   />
                 </>
               )}
 
-              {drawerMode === 'exercise' && selectedExerciseType && (
-                <>
-                  <Drawer.Title className="sr-only">Create Exercise</Drawer.Title>
-                  <Drawer.Description className="sr-only">
-                    Add a new exercise to {selectedExerciseType.name}
-                  </Drawer.Description>
-                  <CreateExercise
-                    exerciseTypeId={selectedExerciseType.id}
-                    onSave={handleCreateExercise}
-                    onCancel={() => setDrawerMode(null)}
-                  />
-                </>
-              )}
+              {getDrawerMode() === 'exercise' && (() => {
+                const exerciseType = getCurrentExerciseType()
+                return exerciseType ? (
+                  <>
+                    <Drawer.Title className="sr-only">Create Exercise</Drawer.Title>
+                    <Drawer.Description className="sr-only">
+                      Add a new exercise to {exerciseType.name}
+                    </Drawer.Description>
+                    <CreateExercise
+                      exerciseTypeId={exerciseType.id}
+                      onSave={handleCreateExercise}
+                      onCancel={() => navigate(-1)}
+                    />
+                  </>
+                ) : null
+              })()}
 
-              {drawerMode === 'editExerciseType' && selectedExerciseType && (
-                <>
-                  <Drawer.Title className="sr-only">Edit Exercise Type</Drawer.Title>
-                  <Drawer.Description className="sr-only">
-                    Update exercise type details
-                  </Drawer.Description>
-                  <EditExerciseType
-                    exerciseType={selectedExerciseType}
-                    onSave={handleEditExerciseType}
-                    onCancel={() => setDrawerMode(null)}
-                  />
-                </>
-              )}
+              {getDrawerMode() === 'editExerciseType' && (() => {
+                const exerciseType = getCurrentExerciseType()
+                return exerciseType ? (
+                  <>
+                    <Drawer.Title className="sr-only">Edit Exercise Type</Drawer.Title>
+                    <Drawer.Description className="sr-only">
+                      Update exercise type details
+                    </Drawer.Description>
+                    <EditExerciseType
+                      exerciseType={exerciseType}
+                      onSave={handleEditExerciseType}
+                      onCancel={() => navigate(-1)}
+                    />
+                  </>
+                ) : null
+              })()}
 
-              {drawerMode === 'routine' && (
+              {getDrawerMode() === 'routine' && (
                 <>
                   <Drawer.Title className="sr-only">Create Routine</Drawer.Title>
                   <Drawer.Description className="sr-only">
@@ -748,26 +668,29 @@ function App() {
                   <CreateRoutine
                     exerciseTypes={exerciseTypes}
                     onSave={handleCreateRoutine}
-                    onCancel={() => setDrawerMode(null)}
+                    onCancel={() => navigate(-1)}
                   />
                 </>
               )}
 
-              {drawerMode === 'editRoutine' && selectedRoutine && (
-                <>
-                  <Drawer.Title className="sr-only">Edit Routine</Drawer.Title>
-                  <Drawer.Description className="sr-only">
-                    Update routine details
-                  </Drawer.Description>
-                  <EditRoutine
-                    routine={selectedRoutine}
-                    onSave={handleEditRoutine}
-                    onCancel={() => setDrawerMode(null)}
-                  />
-                </>
-              )}
+              {getDrawerMode() === 'editRoutine' && (() => {
+                const routine = getCurrentRoutine()
+                return routine ? (
+                  <>
+                    <Drawer.Title className="sr-only">Edit Routine</Drawer.Title>
+                    <Drawer.Description className="sr-only">
+                      Update routine details
+                    </Drawer.Description>
+                    <EditRoutine
+                      routine={routine}
+                      onSave={handleEditRoutine}
+                      onCancel={() => navigate(-1)}
+                    />
+                  </>
+                ) : null
+              })()}
 
-              {drawerMode === 'program' && (
+              {getDrawerMode() === 'program' && (
                 <>
                   <Drawer.Title className="sr-only">Create Program</Drawer.Title>
                   <Drawer.Description className="sr-only">
@@ -776,24 +699,27 @@ function App() {
                   <CreateProgram
                     routines={routines}
                     onSave={handleCreateProgram}
-                    onCancel={() => setDrawerMode(null)}
+                    onCancel={() => navigate(-1)}
                   />
                 </>
               )}
 
-              {drawerMode === 'editProgram' && selectedProgram && (
-                <>
-                  <Drawer.Title className="sr-only">Edit Program</Drawer.Title>
-                  <Drawer.Description className="sr-only">
-                    Update program details
-                  </Drawer.Description>
-                  <EditProgram
-                    program={selectedProgram}
-                    onSave={handleEditProgram}
-                    onCancel={() => setDrawerMode(null)}
-                  />
-                </>
-              )}
+              {getDrawerMode() === 'editProgram' && (() => {
+                const program = getCurrentProgram()
+                return program ? (
+                  <>
+                    <Drawer.Title className="sr-only">Edit Program</Drawer.Title>
+                    <Drawer.Description className="sr-only">
+                      Update program details
+                    </Drawer.Description>
+                    <EditProgram
+                      program={program}
+                      onSave={handleEditProgram}
+                      onCancel={() => navigate(-1)}
+                    />
+                  </>
+                ) : null
+              })()}
             </div>
           </Drawer.Content>
         </Drawer.Portal>

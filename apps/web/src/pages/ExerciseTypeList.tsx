@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ChevronRight, ChevronLeft, PersonStanding } from 'lucide-react'
+import { Plus, ChevronRight, PersonStanding } from 'lucide-react'
 import { ExerciseType } from '../types/exerciseType'
 import { Exercise } from '../types/exercise'
 import { Button } from '@/components/ui/button'
@@ -11,10 +11,9 @@ interface ExerciseTypeListProps {
   exercises: Exercise[]
   onAdd: () => void
   onSelect: (exerciseType: ExerciseType) => void
-  onBack: () => void
 }
 
-export default function ExerciseTypeList({ exerciseTypes, exercises, onAdd, onSelect, onBack }: ExerciseTypeListProps) {
+export default function ExerciseTypeList({ exerciseTypes, exercises, onAdd, onSelect }: ExerciseTypeListProps) {
   const getExerciseNames = (exerciseTypeId: string) => {
     return exercises
       .filter(ex => ex.exerciseTypeId === exerciseTypeId)
@@ -32,14 +31,6 @@ export default function ExerciseTypeList({ exerciseTypes, exercises, onAdd, onSe
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <button
-          onClick={onBack}
-          className="flex items-center text-[hsl(var(--color-muted-foreground))] hover:text-[hsl(var(--color-foreground))] transition-colors mb-4"
-        >
-          <ChevronLeft className="h-5 w-5 mr-1" />
-          Back
-        </button>
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Exercise Types</h1>

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react'
+import { Plus, ChevronRight, RefreshCw } from 'lucide-react'
 import { Program } from '../types/program'
 import { Routine } from '../types/routine'
 import { Button } from '@/components/ui/button'
@@ -11,10 +11,9 @@ interface ProgramListProps {
   routines: Routine[]
   onAdd: () => void
   onSelect: (program: Program) => void
-  onBack: () => void
 }
 
-export default function ProgramList({ programs, routines, onAdd, onSelect, onBack }: ProgramListProps) {
+export default function ProgramList({ programs, routines, onAdd, onSelect }: ProgramListProps) {
 
   const getRoutineNames = (program: Program) => {
     return program.routineIds
@@ -30,14 +29,6 @@ export default function ProgramList({ programs, routines, onAdd, onSelect, onBac
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <button
-          onClick={onBack}
-          className="flex items-center text-[hsl(var(--color-muted-foreground))] hover:text-[hsl(var(--color-foreground))] transition-colors mb-4"
-        >
-          <ChevronLeft className="h-5 w-5 mr-1" />
-          Back
-        </button>
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Programs</h1>

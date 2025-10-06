@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Exercise } from '../types/exercise'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,10 +12,10 @@ interface ExerciseDetailProps {
   exercise: Exercise
   onUpdate: (exercise: Exercise) => void
   onDelete: (exerciseId: string) => void
-  onBack: () => void
 }
 
-export default function ExerciseDetail({ exercise, onUpdate, onDelete, onBack }: ExerciseDetailProps) {
+export default function ExerciseDetail({ exercise, onUpdate, onDelete }: ExerciseDetailProps) {
+  const navigate = useNavigate()
   const [name, setName] = useState(exercise.name)
   const [machineBrand, setMachineBrand] = useState(exercise.machineBrand || '')
   const [targetRepRange, setTargetRepRange] = useState(exercise.targetRepRange)
@@ -33,7 +34,7 @@ export default function ExerciseDetail({ exercise, onUpdate, onDelete, onBack }:
         updatedAt: new Date(),
       }
       onUpdate(updatedExercise)
-      onBack()
+      navigate(-1)
     }
   }
 
@@ -48,14 +49,6 @@ export default function ExerciseDetail({ exercise, onUpdate, onDelete, onBack }:
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <button
-          onClick={onBack}
-          className="flex items-center text-[hsl(var(--color-muted-foreground))] hover:text-[hsl(var(--color-foreground))] transition-colors mb-4"
-        >
-          <ChevronLeft className="h-5 w-5 mr-1" />
-          Back
-        </button>
-
         <h1 className="text-2xl font-bold">Edit Exercise</h1>
         <p className="text-[hsl(var(--color-muted-foreground))] text-sm mt-1">
           Update exercise details
@@ -136,7 +129,7 @@ export default function ExerciseDetail({ exercise, onUpdate, onDelete, onBack }:
           <Button
             type="button"
             variant="outline"
-            onClick={onBack}
+            onClick={() => navigate(-1)}
             className="flex-1 h-12"
             size="lg"
           >

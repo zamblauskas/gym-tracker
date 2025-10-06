@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ChevronLeft, Dumbbell, Trash2, Edit, ChevronRight } from 'lucide-react'
+import { Plus, Dumbbell, Trash2, Edit, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { ExerciseType } from '../types/exerciseType'
 import { Exercise } from '../types/exercise'
@@ -17,11 +17,10 @@ interface ExerciseListProps {
   onDelete: (exerciseId: string) => void
   onDeleteExerciseType: (exerciseTypeId: string) => void
   onEdit: () => void
-  onBack: () => void
   breadcrumbs?: BreadcrumbItem[]
 }
 
-export default function ExerciseList({ exerciseType, exercises, onAdd, onSelect, onDeleteExerciseType, onEdit, onBack, breadcrumbs = [] }: ExerciseListProps) {
+export default function ExerciseList({ exerciseType, exercises, onAdd, onSelect, onDeleteExerciseType, onEdit, breadcrumbs = [] }: ExerciseListProps) {
   const [deleteTypeConfirmOpen, setDeleteTypeConfirmOpen] = useState(false)
 
   const handleConfirmDeleteType = () => {
@@ -35,17 +34,7 @@ export default function ExerciseList({ exerciseType, exercises, onAdd, onSelect,
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {breadcrumbs.length > 0 ? (
-          <Breadcrumb items={breadcrumbs} />
-        ) : (
-          <button
-            onClick={onBack}
-            className="flex items-center text-[hsl(var(--color-muted-foreground))] hover:text-[hsl(var(--color-foreground))] transition-colors mb-4"
-          >
-            <ChevronLeft className="h-5 w-5 mr-1" />
-            Back
-          </button>
-        )}
+        {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
 
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">

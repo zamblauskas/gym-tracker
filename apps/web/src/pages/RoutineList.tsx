@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ChevronRight, ChevronLeft, ScrollText } from 'lucide-react'
+import { Plus, ChevronRight, ScrollText } from 'lucide-react'
 import { Routine } from '../types/routine'
 import { ExerciseType } from '../types/exerciseType'
 import { Button } from '@/components/ui/button'
@@ -11,10 +11,9 @@ interface RoutineListProps {
   exerciseTypes: ExerciseType[]
   onAdd: () => void
   onSelect: (routine: Routine) => void
-  onBack: () => void
 }
 
-export default function RoutineList({ routines, exerciseTypes, onAdd, onSelect, onBack }: RoutineListProps) {
+export default function RoutineList({ routines, exerciseTypes, onAdd, onSelect }: RoutineListProps) {
 
   const getExerciseTypeNames = (routine: Routine) => {
     return routine.exerciseTypeIds
@@ -30,14 +29,6 @@ export default function RoutineList({ routines, exerciseTypes, onAdd, onSelect, 
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <button
-          onClick={onBack}
-          className="flex items-center text-[hsl(var(--color-muted-foreground))] hover:text-[hsl(var(--color-foreground))] transition-colors mb-4"
-        >
-          <ChevronLeft className="h-5 w-5 mr-1" />
-          Back
-        </button>
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Routines</h1>
