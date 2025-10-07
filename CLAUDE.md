@@ -14,6 +14,7 @@
 - **Workout Session**: Logged workout with exercise logs, sets, notes, metrics
   - Contains `exerciseSelections` (map of exercise type index → selected exercise ID)
   - Tracks `startTime`, `endTime`, `duration`, `totalVolume`
+  - Has `status`: `'in-progress'` | `'completed'` | `'skipped'`
 
 ## Architecture
 
@@ -49,20 +50,25 @@
 - `RouteEntityWrapper` generic component for entity-based routes
 
 ### Active Workout Flow
+- **Persistent active sessions**: In-progress workouts stored in repository, survive page refresh
+- Active session derived from `workoutSessions.find(s => s.status === 'in-progress')`
 - Exercise selection stored in `session.exerciseSelections` (single source of truth)
 - Navigate between exercise types with prev/next buttons
 - Exercise logs created on-demand when sets/notes are added
 - Notes sync via controlled state with debounced save on blur
 - Previous session history fetched via `useExerciseHistory`
-- Finish workout calculates `duration` and `totalVolume` via `finishWorkoutSession()`
+- Finish workout calculates `duration` and `totalVolume` via `finishWorkoutSession()`, sets status to `'completed'`
+- Cancel workout deletes the in-progress session from repository
+- Home page shows "Resume Workout" button when `activeSession` exists
 
 ### Key Patterns
 - Cascade deletion (exercise type → exercises → routine refs → program refs)
-- Smart routine cycling (tracks last completed workout in program cycle)
+- Smart routine cycling (tracks last completed workout in program cycle, ignores in-progress sessions)
 - Auto-save notes with 500ms debounce (`NOTES_AUTOSAVE_DEBOUNCE_MS`)
 - Exercise history lookup (searches all sessions for specific exercise)
 - Deep equality checks for state change detection (`deepEqual()`)
 - Logger utility for structured debugging (`logger.ts`)
+- Data migration on first load (`WorkoutContext`) adds `status` field to legacy sessions
 
 ## File Structure
 ```

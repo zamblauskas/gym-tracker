@@ -1,10 +1,11 @@
-import { createContext, useContext, useMemo, ReactNode } from 'react'
+import { createContext, useContext, useMemo, ReactNode, useEffect } from 'react'
 import { WorkoutSession } from '@/types/workoutSession'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import { createWorkoutSessionRepository } from '@/lib/repositories'
 import { useWorkoutLogic, NextWorkoutInfo } from '@/hooks/useWorkoutLogic'
 import { usePrograms } from './ProgramsContext'
 import { useRoutines } from './RoutinesContext'
+import { logger } from '@/lib/utils/logger'
 
 interface WorkoutContextValue {
   // Data
@@ -33,6 +34,31 @@ export function WorkoutProvider({ children }: WorkoutProviderProps) {
 
   const workoutSessionRepo = useMemo(() => createWorkoutSessionRepository(), [])
   const [workoutSessions, setWorkoutSessions, isLoading] = usePersistedState<WorkoutSession>(workoutSessionRepo)
+
+  // Data migration: Add status field to existing workout sessions
+  useEffect(() => {
+    if (isLoading || workoutSessions.length === 0) return
+
+    const needsMigration = workoutSessions.some((session: any) => !session.status)
+    if (!needsMigration) return
+
+    logger.info('Migrating workout sessions to add status field', 'WorkoutContext')
+    const migratedSessions = workoutSessions.map((session: any) => {
+      if (session.status) return session
+
+      // Determine status based on endTime presence
+      const status = session.endTime
+        ? (session.duration === 0 && session.totalVolume === 0 ? 'skipped' : 'completed')
+        : 'in-progress'
+
+      return {
+        ...session,
+        status,
+      }
+    })
+
+    setWorkoutSessions(migratedSessions)
+  }, [workoutSessions, setWorkoutSessions, isLoading])
 
   const workoutLogic = useWorkoutLogic({
     programs,

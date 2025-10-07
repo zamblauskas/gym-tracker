@@ -21,10 +21,11 @@ export interface WorkoutSession {
   routineId: string; // Reference to the Routine
   exerciseLogs: ExerciseLog[];
   exerciseSelections?: Record<number, string>; // Map of exercise type index -> selected exercise ID
+  status: 'in-progress' | 'completed' | 'skipped'; // Workout session status
   startTime: Date;
-  endTime?: Date;
-  duration?: number; // in minutes
-  totalVolume?: number; // total kg lifted (calculated)
+  endTime?: Date; // Only set when status is 'completed' or 'skipped'
+  duration?: number; // in minutes (only for completed/skipped)
+  totalVolume?: number; // total kg lifted (only for completed/skipped)
   createdAt: Date;
   updatedAt: Date;
 }

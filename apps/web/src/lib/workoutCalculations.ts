@@ -26,7 +26,7 @@ export function calculateDuration(startTime: Date, endTime: Date): number {
 /**
  * Finish a workout session with calculated metrics
  * @param session - The active workout session
- * @returns Updated session with endTime, duration, and totalVolume
+ * @returns Updated session with status 'completed', endTime, duration, and totalVolume
  */
 export function finishWorkoutSession(session: WorkoutSession): WorkoutSession {
   const endTime = new Date()
@@ -35,6 +35,7 @@ export function finishWorkoutSession(session: WorkoutSession): WorkoutSession {
 
   return {
     ...session,
+    status: 'completed',
     endTime,
     duration,
     totalVolume,

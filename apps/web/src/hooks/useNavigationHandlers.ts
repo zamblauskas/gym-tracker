@@ -24,6 +24,7 @@ export function useNavigationHandlers(handlers: {
   handleDeleteProgram: (programId: string) => void
   handleStartWorkout: () => void
   handleFinishWorkout: (session: WorkoutSession) => void
+  handleCancelWorkout: () => void
 }) {
   const navigate = useNavigate()
 
@@ -129,6 +130,11 @@ export function useNavigationHandlers(handlers: {
     navigate('/')
   }, [handlers, navigate])
 
+  const handleCancelWorkoutWithNav = useCallback(() => {
+    handlers.handleCancelWorkout()
+    navigate('/')
+  }, [handlers, navigate])
+
   return {
     // Selection handlers
     handleSelectExerciseType,
@@ -152,5 +158,6 @@ export function useNavigationHandlers(handlers: {
     handleDeleteProgramWithNav,
     handleStartWorkoutWithNav,
     handleFinishWorkoutWithNav,
+    handleCancelWorkoutWithNav,
   }
 }

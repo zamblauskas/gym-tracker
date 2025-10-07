@@ -59,6 +59,7 @@ function App() {
     handleDeleteProgram,
     handleStartWorkout,
     handleFinishWorkout,
+    handleCancelWorkout,
   })
 
   return (
@@ -91,7 +92,7 @@ function App() {
         onSkipWorkout={handleSkipWorkout}
         onUpdateWorkoutSession={handleUpdateWorkoutSession}
         onFinishWorkout={navHandlers.handleFinishWorkoutWithNav}
-        onCancelWorkout={handleCancelWorkout}
+        onCancelWorkout={navHandlers.handleCancelWorkoutWithNav}
       />
 
       <DrawerManager

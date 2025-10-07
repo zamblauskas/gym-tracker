@@ -1,13 +1,14 @@
 import { logger } from '@/lib/utils/logger'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { PersonStanding, RefreshCw, ScrollText, Play, SkipForward, LogIn, LogOut } from 'lucide-react'
+import { PersonStanding, RefreshCw, ScrollText, Play, SkipForward, LogIn, LogOut, Pause } from 'lucide-react'
 import { Drawer } from 'vaul'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { Program } from '@/types/program'
 import { Routine } from '@/types/routine'
+import { WorkoutSession } from '@/types/workoutSession'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface HomeProps {
@@ -16,6 +17,8 @@ interface HomeProps {
   onNavigateToExerciseTypes: () => void
   onStartWorkout?: () => void
   onSkipWorkout?: () => void
+  onResumeWorkout?: () => void
+  activeSession?: WorkoutSession | null
   nextRoutine?: Routine | null
   currentProgram?: Program | null
 }
@@ -26,6 +29,8 @@ export default function Home({
   onNavigateToExerciseTypes,
   onStartWorkout,
   onSkipWorkout,
+  onResumeWorkout,
+  activeSession,
   nextRoutine,
   currentProgram
 }: HomeProps) {
@@ -129,7 +134,37 @@ export default function Home({
         </div>
       </motion.div>
 
-      {nextRoutine && onStartWorkout && (
+      {activeSession && onResumeWorkout ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Card className="p-6 bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-[hsl(var(--color-muted-foreground))] mb-1">
+                  Workout in progress
+                </p>
+                <h2 className="text-2xl font-bold mb-1">Resume Workout</h2>
+                <p className="text-sm text-[hsl(var(--color-muted-foreground))]">
+                  Started {new Date(activeSession.startTime).toLocaleTimeString()}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 w-full md:w-auto">
+                <Button
+                  size="lg"
+                  onClick={onResumeWorkout}
+                  className="h-14 gap-2 bg-gradient-to-r from-orange-500 to-red-500 hover:opacity-90 animate-pulse"
+                >
+                  <Pause className="h-5 w-5" fill="currentColor" />
+                  Resume Workout
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      ) : nextRoutine && onStartWorkout && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

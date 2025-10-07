@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useMemo, useCallback } from 'react'
 import { WorkoutSession } from '@/types/workoutSession'
 import { Program } from '@/types/program'
 import { Routine } from '@/types/routine'
@@ -21,7 +21,10 @@ export function useWorkoutLogic({
   workoutSessions,
   setWorkoutSessions,
 }: UseWorkoutLogicProps) {
-  const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null)
+  // Derive active session from persisted workoutSessions array
+  const activeSession = useMemo(() => {
+    return workoutSessions.find(s => s.status === 'in-progress') || null
+  }, [workoutSessions])
 
   // Calculate next workout info (memoized to prevent re-renders)
   const nextWorkoutInfo = useMemo((): NextWorkoutInfo | null => {
@@ -38,7 +41,7 @@ export function useWorkoutLogic({
 
     // Find last completed session for this program
     const lastSession = workoutSessions
-      .filter(s => s.programId === activeProgram.id && s.endTime)
+      .filter(s => s.programId === activeProgram.id && (s.status === 'completed' || s.status === 'skipped'))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
 
     if (!lastSession) {
@@ -72,14 +75,16 @@ export function useWorkoutLogic({
       programId: nextWorkoutInfo.program?.id,
       routineId: nextWorkoutInfo.routine.id,
       exerciseLogs: [],
+      status: 'in-progress',
       startTime: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
     }
 
-    setActiveSession(newSession)
+    // Persist immediately to repository
+    setWorkoutSessions([...workoutSessions, newSession])
     return newSession
-  }, [nextWorkoutInfo])
+  }, [nextWorkoutInfo, workoutSessions, setWorkoutSessions])
 
   const handleSkipWorkout = useCallback(() => {
     if (!nextWorkoutInfo) return
@@ -90,6 +95,7 @@ export function useWorkoutLogic({
       programId: nextWorkoutInfo.program?.id,
       routineId: nextWorkoutInfo.routine.id,
       exerciseLogs: [],
+      status: 'skipped',
       startTime: now,
       endTime: now,
       duration: 0,
@@ -102,18 +108,26 @@ export function useWorkoutLogic({
   }, [nextWorkoutInfo, workoutSessions, setWorkoutSessions])
 
   const handleUpdateWorkoutSession = useCallback((session: WorkoutSession) => {
-    setActiveSession(session)
-  }, [])
+    // Update the session in the persisted array
+    setWorkoutSessions(
+      workoutSessions.map(s => s.id === session.id ? session : s)
+    )
+  }, [workoutSessions, setWorkoutSessions])
 
   const handleFinishWorkout = useCallback((finishedSession: WorkoutSession) => {
-    setWorkoutSessions([...workoutSessions, finishedSession])
-    setActiveSession(null)
+    // Update the in-progress session to completed
+    setWorkoutSessions(
+      workoutSessions.map(s => s.id === finishedSession.id ? finishedSession : s)
+    )
     return finishedSession
   }, [workoutSessions, setWorkoutSessions])
 
   const handleCancelWorkout = useCallback(() => {
-    setActiveSession(null)
-  }, [])
+    if (!activeSession) return
+
+    // Delete the in-progress session from repository
+    setWorkoutSessions(workoutSessions.filter(s => s.id !== activeSession.id))
+  }, [activeSession, workoutSessions, setWorkoutSessions])
 
   return {
     activeSession,

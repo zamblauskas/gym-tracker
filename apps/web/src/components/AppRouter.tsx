@@ -267,6 +267,8 @@ export function AppRouter({
           onNavigateToExerciseTypes={() => navigate('/exercise-types')}
           onStartWorkout={onStartWorkout}
           onSkipWorkout={onSkipWorkout}
+          onResumeWorkout={() => navigate('/workout/active')}
+          activeSession={activeSession}
           nextRoutine={nextWorkoutInfo?.routine || null}
           currentProgram={nextWorkoutInfo?.program || null}
         />
