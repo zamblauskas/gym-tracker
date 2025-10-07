@@ -10,7 +10,10 @@ export const NOTES_AUTOSAVE_DEBOUNCE_MS = 500
 export const DRAWER_HEIGHT_CLASS = 'h-[96%]'
 
 // Drawer mode constants
+// All drawers now use URL-based routing for consistency
+// Uses { replace: true } pattern on close to prevent back button from reopening drawers
 export const DRAWER_MODE = {
+  // Persistent drawers (entity CRUD operations)
   CREATE_EXERCISE_TYPE: 'createExerciseType',
   EDIT_EXERCISE_TYPE: 'editExerciseType',
   CREATE_EXERCISE: 'createExercise',
@@ -18,6 +21,10 @@ export const DRAWER_MODE = {
   EDIT_ROUTINE: 'editRoutine',
   CREATE_PROGRAM: 'createProgram',
   EDIT_PROGRAM: 'editProgram',
+
+  // Transient drawers (temporary actions within a flow)
+  SET_LOGGER: 'setLogger',
+  EXERCISE_SELECTION: 'exerciseSelection',
 } as const
 
 export type DrawerMode = typeof DRAWER_MODE[keyof typeof DRAWER_MODE]

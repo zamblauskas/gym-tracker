@@ -12,7 +12,11 @@ interface SetLoggerDrawerProps {
   onAddSet: (weight: number, reps: number, rir?: number) => void
 }
 
-export function SetLoggerDrawer({ open, onOpenChange, exercise, onAddSet }: SetLoggerDrawerProps) {
+/**
+ * Content-only component for SetLogger drawer
+ * Designed to be rendered within DrawerManager's Drawer.Root wrapper
+ */
+export function SetLoggerDrawerContent({ exercise, onAddSet, onCancel }: { exercise: Exercise; onAddSet: (weight: number, reps: number, rir?: number) => void; onCancel: () => void }) {
   const [weight, setWeight] = useState('')
   const [reps, setReps] = useState('')
   const [rir, setRir] = useState('')
@@ -32,22 +36,17 @@ export function SetLoggerDrawer({ open, onOpenChange, exercise, onAddSet }: SetL
   }
 
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange}>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-        <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-[70%] mt-24 fixed bottom-0 left-0 right-0">
-          <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
-            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
-            <Drawer.Title className="text-2xl font-bold mb-2">
-              Add Set
-            </Drawer.Title>
-            <Drawer.Description className="text-[hsl(var(--color-muted-foreground))] mb-6">
-              {exercise.name}
-              {exercise.targetRepRange && ` • Target: ${exercise.targetRepRange} reps`}
-              {exercise.targetRepsInReserve !== undefined && ` @ ${exercise.targetRepsInReserve} RIR`}
-            </Drawer.Description>
+    <>
+      <Drawer.Title className="text-2xl font-bold mb-2">
+        Add Set
+      </Drawer.Title>
+      <Drawer.Description className="text-[hsl(var(--color-muted-foreground))] mb-6">
+        {exercise.name}
+        {exercise.targetRepRange && ` • Target: ${exercise.targetRepRange} reps`}
+        {exercise.targetRepsInReserve !== undefined && ` @ ${exercise.targetRepsInReserve} RIR`}
+      </Drawer.Description>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="weight">Weight (kg)</Label>
                 <Input
@@ -94,21 +93,43 @@ export function SetLoggerDrawer({ open, onOpenChange, exercise, onAddSet }: SetL
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" className="flex-1 h-12" size="lg">
-                  Save Set
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  className="flex-1 h-12"
-                  size="lg"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
+        <div className="flex gap-3 pt-4">
+          <Button type="submit" className="flex-1 h-12" size="lg">
+            Save Set
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="flex-1 h-12"
+            size="lg"
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </>
+  )
+}
+
+/**
+ * Standalone SetLogger drawer with its own Drawer.Root wrapper
+ * @deprecated Use SetLoggerDrawerContent with DrawerManager instead
+ * Kept for backward compatibility only
+ */
+export function SetLoggerDrawer({ open, onOpenChange, exercise, onAddSet }: SetLoggerDrawerProps) {
+  return (
+    <Drawer.Root open={open} onOpenChange={onOpenChange}>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-[70%] mt-24 fixed bottom-0 left-0 right-0">
+          <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
+            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
+            <SetLoggerDrawerContent
+              exercise={exercise}
+              onAddSet={onAddSet}
+              onCancel={() => onOpenChange(false)}
+            />
           </div>
         </Drawer.Content>
       </Drawer.Portal>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useDrawer } from '@/hooks/useDrawer'
+import { useWorkoutDrawer } from '@/contexts/WorkoutDrawerContext'
 import { WorkoutSession, ExerciseLog, SetLog } from '@/types/workoutSession'
 import { Routine } from '@/types/routine'
 import { ExerciseType } from '@/types/exerciseType'
@@ -10,6 +12,7 @@ import { WorkoutActions } from '@/components/workout/WorkoutActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useExerciseHistory } from '@/hooks/useExerciseHistory'
 import { finishWorkoutSession } from '@/lib/workoutCalculations'
+import { DRAWER_MODE } from '@/lib/constants'
 
 interface ActiveWorkoutProps {
   session: WorkoutSession
@@ -35,8 +38,8 @@ export default function ActiveWorkout({
   currentExerciseIndex
 }: ActiveWorkoutProps) {
   const navigate = useNavigate()
-  const [exerciseSelectionOpen, setExerciseSelectionOpen] = useState(false)
-  const [setLoggerOpen, setSetLoggerOpen] = useState(false)
+  const { openDrawer, closeDrawer } = useDrawer()
+  const { setWorkoutDrawerHandlers } = useWorkoutDrawer()
   const [currentNotes, setCurrentNotes] = useState('')
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
@@ -45,10 +48,6 @@ export default function ActiveWorkout({
   const exerciseSelections = session.exerciseSelections || {}
 
   const currentExerciseType = exerciseTypes[currentExerciseIndex]
-
-  const availableExercises = exercises.filter(
-    ex => ex.exerciseTypeId === currentExerciseType?.id
-  )
 
   const selectedExerciseId = exerciseSelections[currentExerciseIndex]
   const selectedExercise = selectedExerciseId
@@ -74,6 +73,17 @@ export default function ActiveWorkout({
     }
   }, [currentExerciseIndex, selectedExercise?.id, currentExerciseLog?.notes])
 
+  // Register workout drawer handlers with context on mount, cleanup on unmount
+  useEffect(() => {
+    setWorkoutDrawerHandlers({
+      onAddSet: handleAddSet,
+      onSelectExercise: handleSelectExercise,
+    })
+    return () => {
+      setWorkoutDrawerHandlers(null)
+    }
+  }, [session, selectedExercise, currentExerciseLog])
+
   function handleSelectExercise(exercise: Exercise) {
     // Update session with new exercise selection
     const updatedSession: WorkoutSession = {
@@ -89,19 +99,30 @@ export default function ActiveWorkout({
     // Load notes for the selected exercise
     const exerciseLog = session.exerciseLogs.find(log => log.exerciseId === exercise.id)
     setCurrentNotes(exerciseLog?.notes || '')
-    setExerciseSelectionOpen(false)
+    closeDrawer()
   }
 
   function handleChooseExercise() {
-    setExerciseSelectionOpen(true)
+    openExerciseSelectionDrawer()
   }
 
   function handleChangeExercise() {
-    setExerciseSelectionOpen(true)
+    openExerciseSelectionDrawer()
   }
 
   function handleOpenSetLogger() {
-    setSetLoggerOpen(true)
+    openSetLoggerDrawer()
+  }
+
+  // Drawer navigation helpers
+  function openExerciseSelectionDrawer() {
+    if (!currentExerciseType) return
+    openDrawer(DRAWER_MODE.EXERCISE_SELECTION, { exerciseTypeId: currentExerciseType.id })
+  }
+
+  function openSetLoggerDrawer() {
+    if (!selectedExercise) return
+    openDrawer(DRAWER_MODE.SET_LOGGER, { exerciseId: selectedExercise.id })
   }
 
   function handleNotesChange(notes: string) {
@@ -155,7 +176,7 @@ export default function ActiveWorkout({
 
     // Update session and close drawer
     onUpdateSession(updatedSession)
-    setSetLoggerOpen(false)
+    closeDrawer()
   }
 
   function handleRemoveSet(setId: string) {
@@ -247,20 +268,13 @@ export default function ActiveWorkout({
 
       <WorkoutExerciseManager
         exerciseType={currentExerciseType}
-        availableExercises={availableExercises}
         selectedExercise={selectedExercise || null}
         exerciseLog={currentExerciseLog}
         previousExerciseData={previousExerciseData}
         currentNotes={currentNotes}
-        exerciseSelectionOpen={exerciseSelectionOpen}
-        setLoggerOpen={setLoggerOpen}
         onChooseExercise={handleChooseExercise}
         onChangeExercise={handleChangeExercise}
-        onSelectExercise={handleSelectExercise}
-        onCloseExerciseSelection={() => setExerciseSelectionOpen(false)}
         onOpenSetLogger={handleOpenSetLogger}
-        onCloseSetLogger={() => setSetLoggerOpen(false)}
-        onAddSet={handleAddSet}
         onRemoveSet={handleRemoveSet}
         onNotesChange={handleNotesChange}
         onNotesBlur={handleNotesBlur}

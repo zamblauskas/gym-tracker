@@ -32,15 +32,24 @@
 - Supabase: RLS-enforced, automatic user_id injection
 - Batch operations supported for multi-entity updates
 
-### Routing (React Router v6)
-- URL-based navigation (`navigate()`, `useParams()`)
-- Drawers controlled by URL query params (e.g., `?drawer=createExerciseType&id=123`)
-- Browser back button closes drawers automatically
-- `DrawerManager` component handles all drawer routing logic
-- `AppRouter` component defines all route configurations
-- Route wrapper pattern: `RouteEntityWrapper` eliminates repetitive route setup
-- `useNavigationHandlers` hook encapsulates navigation + entity operation combos
-- `useRouteEntity` hook handles entity lookup and 404 redirects
+### Routing & Drawer Management (React Router v6)
+- **URL-based navigation**: All navigation uses `navigate()`, `useParams()`, `useSearchParams()`
+- **Unified drawer system**: ALL drawers use URL query params for consistency
+  - Entity CRUD drawers: `?drawer=createExerciseType&id=123` (handled by DrawerManager)
+  - Transient drawers: `?drawer=setLogger&exerciseId=456` (rendered in-page, state from URL)
+- **Smart back button UX**: Closing drawers uses `navigate(path, { replace: true })`
+  - This replaces the drawer URL in history, preventing back button from reopening
+  - Example flow: Home → Exercise Types → Add (opens) → Save (closes with replace) → Back → Home ✅
+  - Without replace: Home → Exercise Types → Add → Save → Back → Add (reopens) ❌
+- **DrawerManager**: Handles persistent entity CRUD drawers (create/edit ExerciseTypes, Routines, Programs)
+- **In-page drawers**: Transient workflow drawers (SetLogger, ExerciseSelection) rendered within page component tree
+  - State still comes from URL params, but drawer shell is local to component
+  - Allows access to page-specific state and handlers
+- **useDrawer hook**: Unified API for opening/closing any drawer with smart history management
+- **AppRouter**: Defines all route configurations
+- **Route wrapper pattern**: `RouteEntityWrapper` eliminates repetitive route setup
+- **useNavigationHandlers** hook: Encapsulates navigation + entity operation combos
+- **useRouteEntity** hook: Entity lookup + 404 redirects
 
 ### Component Architecture
 - Pages are route components (Home, ActiveWorkout, *List, *Detail)
@@ -52,6 +61,10 @@
 ### Active Workout Flow
 - **Persistent active sessions**: In-progress workouts stored in repository, survive page refresh
 - Active session derived from `workoutSessions.find(s => s.status === 'in-progress')`
+- **Drawer state from URL**: SetLogger and ExerciseSelection drawers use URL params (`?drawer=setLogger`)
+  - Drawer open/close modifies URL with `{ replace: true }` for good back button UX
+  - URL is single source of truth for drawer visibility
+  - Drawer components rendered locally in ActiveWorkout, state passed from URL
 - Exercise selection stored in `session.exerciseSelections` (single source of truth)
 - Navigate between exercise types with prev/next buttons
 - Exercise logs created on-demand when sets/notes are added
@@ -91,6 +104,7 @@ apps/web/src/
 │   └── AuthContext.tsx        # Supabase auth
 ├── hooks/                     # Custom React hooks
 │   ├── usePersistedState.ts   # Repository persistence with delta tracking
+│   ├── useDrawer.ts           # Unified drawer management with smart history
 │   ├── useNavigationHandlers.ts # Navigation + entity operations
 │   ├── useRouteEntity.ts      # Entity lookup + 404 redirect
 │   ├── useWorkoutLogic.ts     # Next workout calculation

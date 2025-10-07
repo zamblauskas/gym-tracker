@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import CreateExerciseType from '@/pages/CreateExerciseType'
 import EditExerciseType from '@/pages/EditExerciseType'
@@ -7,8 +7,11 @@ import CreateRoutine from '@/pages/CreateRoutine'
 import EditRoutine from '@/pages/EditRoutine'
 import CreateProgram from '@/pages/CreateProgram'
 import EditProgram from '@/pages/EditProgram'
+import { SetLoggerDrawerContent } from '@/components/workout/SetLoggerDrawer'
+import { ExerciseSelectionDrawerContent } from '@/components/workout/ExerciseSelectionDrawer'
+import { useWorkoutDrawer } from '@/contexts/WorkoutDrawerContext'
 import { ExerciseType } from '@/types/exerciseType'
-import { CreateExerciseInput } from '@/types/exercise'
+import { CreateExerciseInput, Exercise } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
 import { Program, CreateProgramInput } from '@/types/program'
 import { DRAWER_HEIGHT_CLASS, DRAWER_MODE } from '@/lib/constants'
@@ -17,6 +20,7 @@ export interface DrawerManagerProps {
   exerciseTypes: ExerciseType[]
   routines: Routine[]
   programs: Program[]
+  exercises: Exercise[]
   onCreateExerciseType: (name: string) => void
   onEditExerciseType: (id: string, name: string) => void
   onCreateExercise: (input: CreateExerciseInput) => void
@@ -30,6 +34,7 @@ export function DrawerManager({
   exerciseTypes,
   routines,
   programs,
+  exercises,
   onCreateExerciseType,
   onEditExerciseType,
   onCreateExercise,
@@ -39,17 +44,25 @@ export function DrawerManager({
   onEditProgram,
 }: DrawerManagerProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
+  const { onAddSet, onSelectExercise } = useWorkoutDrawer()
 
   // Detect drawer state from query params
   const drawerMode = searchParams.get('drawer')
   const entityId = searchParams.get('id')
   const exerciseTypeId = searchParams.get('exerciseTypeId')
+  const exerciseId = searchParams.get('exerciseId')
 
+  // All drawers are now handled by DrawerManager
   const isDrawerOpen = !!drawerMode
 
+  /**
+   * Close drawer using replace: true to prevent back button from reopening
+   * This ensures good back button UX
+   */
   const closeDrawer = () => {
-    navigate(-1)
+    navigate(location.pathname, { replace: true })
   }
 
   // Get current entity for drawer based on query params
@@ -177,6 +190,41 @@ export function DrawerManager({
                     program={program}
                     onSave={onEditProgram}
                     onCancel={closeDrawer}
+                  />
+                </>
+              ) : null
+            })()}
+
+            {drawerMode === DRAWER_MODE.SET_LOGGER && exerciseId && onAddSet && (() => {
+              const exercise = exercises.find(ex => ex.id === exerciseId)
+              return exercise ? (
+                <>
+                  <Drawer.Title className="sr-only">Add Set</Drawer.Title>
+                  <Drawer.Description className="sr-only">
+                    Log a new set for {exercise.name}
+                  </Drawer.Description>
+                  <SetLoggerDrawerContent
+                    exercise={exercise}
+                    onAddSet={onAddSet}
+                    onCancel={closeDrawer}
+                  />
+                </>
+              ) : null
+            })()}
+
+            {drawerMode === DRAWER_MODE.EXERCISE_SELECTION && exerciseTypeId && onSelectExercise && (() => {
+              const exerciseType = exerciseTypes.find(et => et.id === exerciseTypeId)
+              const availableExercises = exercises.filter(ex => ex.exerciseTypeId === exerciseTypeId)
+              return exerciseType ? (
+                <>
+                  <Drawer.Title className="sr-only">Select Exercise</Drawer.Title>
+                  <Drawer.Description className="sr-only">
+                    Choose an exercise for {exerciseType.name}
+                  </Drawer.Description>
+                  <ExerciseSelectionDrawerContent
+                    exerciseType={exerciseType}
+                    availableExercises={availableExercises}
+                    onSelectExercise={onSelectExercise}
                   />
                 </>
               ) : null
