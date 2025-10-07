@@ -122,7 +122,7 @@ export function useNavigationHandlers(handlers: {
 
   const handleStartWorkoutWithNav = useCallback(() => {
     handlers.handleStartWorkout()
-    navigate('/workout/active')
+    navigate('/workout/active/0')
   }, [handlers, navigate])
 
   const handleFinishWorkoutWithNav = useCallback((session: WorkoutSession) => {

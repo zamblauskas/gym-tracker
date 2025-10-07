@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { WorkoutSession, ExerciseLog, SetLog } from '@/types/workoutSession'
 import { Routine } from '@/types/routine'
 import { ExerciseType } from '@/types/exerciseType'
@@ -19,6 +20,7 @@ interface ActiveWorkoutProps {
   onUpdateSession: (session: WorkoutSession) => void
   onFinishWorkout: (finishedSession: WorkoutSession) => void
   onBack: () => void
+  currentExerciseIndex: number
 }
 
 export default function ActiveWorkout({
@@ -29,9 +31,10 @@ export default function ActiveWorkout({
   previousSessions,
   onUpdateSession,
   onFinishWorkout,
-  onBack
+  onBack,
+  currentExerciseIndex
 }: ActiveWorkoutProps) {
-  const [currentExerciseTypeIndex, setCurrentExerciseTypeIndex] = useState(0)
+  const navigate = useNavigate()
   const [exerciseSelectionOpen, setExerciseSelectionOpen] = useState(false)
   const [setLoggerOpen, setSetLoggerOpen] = useState(false)
   const [currentNotes, setCurrentNotes] = useState('')
@@ -41,13 +44,13 @@ export default function ActiveWorkout({
   // Get exercise selections from session (single source of truth)
   const exerciseSelections = session.exerciseSelections || {}
 
-  const currentExerciseType = exerciseTypes[currentExerciseTypeIndex]
+  const currentExerciseType = exerciseTypes[currentExerciseIndex]
 
   const availableExercises = exercises.filter(
     ex => ex.exerciseTypeId === currentExerciseType?.id
   )
 
-  const selectedExerciseId = exerciseSelections[currentExerciseTypeIndex]
+  const selectedExerciseId = exerciseSelections[currentExerciseIndex]
   const selectedExercise = selectedExerciseId
     ? exercises.find(ex => ex.id === selectedExerciseId)
     : undefined
@@ -69,7 +72,7 @@ export default function ActiveWorkout({
     } else {
       setCurrentNotes('')
     }
-  }, [currentExerciseTypeIndex, selectedExercise?.id, currentExerciseLog?.notes])
+  }, [currentExerciseIndex, selectedExercise?.id, currentExerciseLog?.notes])
 
   function handleSelectExercise(exercise: Exercise) {
     // Update session with new exercise selection
@@ -77,7 +80,7 @@ export default function ActiveWorkout({
       ...session,
       exerciseSelections: {
         ...exerciseSelections,
-        [currentExerciseTypeIndex]: exercise.id
+        [currentExerciseIndex]: exercise.id
       },
       updatedAt: new Date()
     }
@@ -208,14 +211,14 @@ export default function ActiveWorkout({
   }
 
   function handlePreviousExerciseType() {
-    if (currentExerciseTypeIndex > 0) {
-      setCurrentExerciseTypeIndex(currentExerciseTypeIndex - 1)
+    if (currentExerciseIndex > 0) {
+      navigate(`/workout/active/${currentExerciseIndex - 1}`)
     }
   }
 
   function handleNextExerciseType() {
-    if (currentExerciseTypeIndex < exerciseTypes.length - 1) {
-      setCurrentExerciseTypeIndex(currentExerciseTypeIndex + 1)
+    if (currentExerciseIndex < exerciseTypes.length - 1) {
+      navigate(`/workout/active/${currentExerciseIndex + 1}`)
     }
   }
 
@@ -236,7 +239,7 @@ export default function ActiveWorkout({
     <div className="max-w-2xl mx-auto p-4 pb-8">
       <ActiveWorkoutHeader
         routine={routine}
-        currentIndex={currentExerciseTypeIndex}
+        currentIndex={currentExerciseIndex}
         totalExercises={exerciseTypes.length}
         onPrevious={handlePreviousExerciseType}
         onNext={handleNextExerciseType}
@@ -264,7 +267,7 @@ export default function ActiveWorkout({
       />
 
       <WorkoutActions
-        isLastExercise={currentExerciseTypeIndex === exerciseTypes.length - 1}
+        isLastExercise={currentExerciseIndex === exerciseTypes.length - 1}
         onCancelClick={() => setCancelConfirmOpen(true)}
         onFinishClick={() => setFinishConfirmOpen(true)}
       />

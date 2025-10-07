@@ -234,6 +234,7 @@ export function AppRouter({
   }
 
   const ActiveWorkoutRoute = () => {
+    const { exerciseIndex } = useParams<{ exerciseIndex: string }>()
     const routine = useRouteEntity(
       activeSession ? routines.find(r => r.id === activeSession.routineId) : undefined,
       '/'
@@ -244,6 +245,16 @@ export function AppRouter({
     }
 
     const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
+
+    // Parse exercise index from URL, default to 0
+    const currentIndex = exerciseIndex ? parseInt(exerciseIndex, 10) : 0
+
+    // Redirect to first exercise if no index or invalid index
+    if (exerciseIndex === undefined || isNaN(currentIndex) || currentIndex < 0 || currentIndex >= routineExerciseTypes.length) {
+      navigate('/workout/active/0', { replace: true })
+      return null
+    }
+
     return (
       <ActiveWorkout
         session={activeSession}
@@ -254,6 +265,7 @@ export function AppRouter({
         onUpdateSession={onUpdateWorkoutSession}
         onFinishWorkout={onFinishWorkout}
         onBack={onCancelWorkout}
+        currentExerciseIndex={currentIndex}
       />
     )
   }
@@ -267,7 +279,7 @@ export function AppRouter({
           onNavigateToExerciseTypes={() => navigate('/exercise-types')}
           onStartWorkout={onStartWorkout}
           onSkipWorkout={onSkipWorkout}
-          onResumeWorkout={() => navigate('/workout/active')}
+          onResumeWorkout={() => navigate('/workout/active/0')}
           activeSession={activeSession}
           nextRoutine={nextWorkoutInfo?.routine || null}
           currentProgram={nextWorkoutInfo?.program || null}
@@ -302,7 +314,7 @@ export function AppRouter({
       } />
       <Route path="/programs/:id" element={<ProgramDetailRoute />} />
       <Route path="/programs/:programId/routines/:routineId" element={<ProgramRoutineDetailRoute />} />
-      <Route path="/workout/active" element={<ActiveWorkoutRoute />} />
+      <Route path="/workout/active/:exerciseIndex" element={<ActiveWorkoutRoute />} />
     </Routes>
   )
 }
