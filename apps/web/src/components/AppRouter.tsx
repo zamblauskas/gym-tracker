@@ -39,7 +39,6 @@ export interface AppRouterProps {
   onDeleteRoutine: (routineId: string) => void
   onDeleteProgram: (programId: string) => void
   onUpdateExercise: (exercise: Exercise) => void
-  onAddExerciseTypeToRoutine: (routineId: string, exerciseTypeId: string) => void
   onRemoveExerciseTypeFromRoutine: (routineId: string, exerciseTypeId: string) => void
   onAddRoutineToProgram: (programId: string, routineId: string) => void
   onRemoveRoutineFromProgram: (programId: string, routineId: string) => void
@@ -70,7 +69,6 @@ export function AppRouter({
   onDeleteRoutine,
   onDeleteProgram,
   onUpdateExercise,
-  onAddExerciseTypeToRoutine,
   onRemoveExerciseTypeFromRoutine,
   onAddRoutineToProgram,
   onRemoveRoutineFromProgram,
@@ -143,21 +141,18 @@ export function AppRouter({
       render={(routine, params) => {
         const id = params.id!
         const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
-        const availableExerciseTypes = exerciseTypes.filter(et => !routine.exerciseTypeIds.includes(et.id))
         return (
           <RoutineDetail
             routine={routine}
             exerciseTypes={routineExerciseTypes}
             exercises={exercises}
-            availableExerciseTypes={availableExerciseTypes}
-            onAddExerciseType={(etId) => onAddExerciseTypeToRoutine(id, etId)}
             onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(id, etId)}
             onDelete={onDeleteRoutine}
             onEdit={() => navigate(`?drawer=${DRAWER_MODE.EDIT_ROUTINE}&id=${id}`)}
             onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(id, et)}
             breadcrumbs={[
               { label: 'Home', onClick: () => navigate('/') },
-              { label: 'Routines', onClick: () => navigate('/routines') },
+              { label: 'Routines', onClick: () => navigate('/') },
               { label: routine.name, onClick: () => { } }
             ]}
           />
@@ -211,14 +206,11 @@ export function AppRouter({
     if (!program || !routine) return null
 
     const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
-    const availableExerciseTypes = exerciseTypes.filter(et => !routine.exerciseTypeIds.includes(et.id))
     return (
       <RoutineDetail
         routine={routine}
         exerciseTypes={routineExerciseTypes}
         exercises={exercises}
-        availableExerciseTypes={availableExerciseTypes}
-        onAddExerciseType={(etId) => onAddExerciseTypeToRoutine(routineId!, etId)}
         onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(routineId!, etId)}
         onDelete={onDeleteRoutine}
         onEdit={() => navigate(`?drawer=${DRAWER_MODE.EDIT_ROUTINE}&id=${routineId}`)}

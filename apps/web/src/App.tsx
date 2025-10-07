@@ -84,7 +84,6 @@ function App() {
         onDeleteRoutine={navHandlers.handleDeleteRoutineWithNav}
         onDeleteProgram={navHandlers.handleDeleteProgramWithNav}
         onUpdateExercise={handleUpdateExercise}
-        onAddExerciseTypeToRoutine={handleAddExerciseTypeToRoutine}
         onRemoveExerciseTypeFromRoutine={handleRemoveExerciseTypeFromRoutine}
         onAddRoutineToProgram={handleAddRoutineToProgram}
         onRemoveRoutineFromProgram={handleRemoveRoutineFromProgram}
@@ -99,7 +98,6 @@ function App() {
         exerciseTypes={exerciseTypes}
         routines={routines}
         programs={programs}
-        exercises={exercises}
         onCreateExerciseType={navHandlers.handleCreateExerciseTypeWithNav}
         onEditExerciseType={navHandlers.handleEditExerciseTypeWithNav}
         onCreateExercise={navHandlers.handleCreateExerciseWithNav}
@@ -107,6 +105,7 @@ function App() {
         onEditRoutine={navHandlers.handleEditRoutineWithNav}
         onCreateProgram={navHandlers.handleCreateProgramWithNav}
         onEditProgram={navHandlers.handleEditProgramWithNav}
+        onAddExerciseTypeToRoutine={handleAddExerciseTypeToRoutine}
       />
 
       <Toast />

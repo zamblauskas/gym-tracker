@@ -22,6 +22,9 @@ export const DRAWER_MODE = {
   CREATE_PROGRAM: 'createProgram',
   EDIT_PROGRAM: 'editProgram',
 
+  // Selector drawers (adding items to collections)
+  ADD_EXERCISE_TYPE_TO_ROUTINE: 'addExerciseTypeToRoutine',
+
   // Transient drawers (temporary actions within a flow)
   SET_LOGGER: 'setLogger',
   EXERCISE_SELECTION: 'exerciseSelection',

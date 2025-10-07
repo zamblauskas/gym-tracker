@@ -14,7 +14,6 @@ import { useWorkout } from './WorkoutContext'
  * App State Context - Coordinator for domain-specific contexts
  * Delegates to ExercisesContext, RoutinesContext, ProgramsContext, and WorkoutContext
  */
-
 interface AppStateContextValue {
   // Entity data
   exerciseTypes: ExerciseType[]

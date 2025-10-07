@@ -7,11 +7,8 @@ import CreateRoutine from '@/pages/CreateRoutine'
 import EditRoutine from '@/pages/EditRoutine'
 import CreateProgram from '@/pages/CreateProgram'
 import EditProgram from '@/pages/EditProgram'
-import { SetLoggerDrawerContent } from '@/components/workout/SetLoggerDrawer'
-import { ExerciseSelectionDrawerContent } from '@/components/workout/ExerciseSelectionDrawer'
-import { useWorkoutDrawer } from '@/contexts/WorkoutDrawerContext'
 import { ExerciseType } from '@/types/exerciseType'
-import { CreateExerciseInput, Exercise } from '@/types/exercise'
+import { CreateExerciseInput } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
 import { Program, CreateProgramInput } from '@/types/program'
 import { DRAWER_HEIGHT_CLASS, DRAWER_MODE } from '@/lib/constants'
@@ -20,7 +17,6 @@ export interface DrawerManagerProps {
   exerciseTypes: ExerciseType[]
   routines: Routine[]
   programs: Program[]
-  exercises: Exercise[]
   onCreateExerciseType: (name: string) => void
   onEditExerciseType: (id: string, name: string) => void
   onCreateExercise: (input: CreateExerciseInput) => void
@@ -28,13 +24,13 @@ export interface DrawerManagerProps {
   onEditRoutine: (id: string, name: string) => void
   onCreateProgram: (input: CreateProgramInput) => void
   onEditProgram: (id: string, name: string) => void
+  onAddExerciseTypeToRoutine: (routineId: string, exerciseTypeId: string) => void
 }
 
 export function DrawerManager({
   exerciseTypes,
   routines,
   programs,
-  exercises,
   onCreateExerciseType,
   onEditExerciseType,
   onCreateExercise,
@@ -42,17 +38,17 @@ export function DrawerManager({
   onEditRoutine,
   onCreateProgram,
   onEditProgram,
+  onAddExerciseTypeToRoutine,
 }: DrawerManagerProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const { onAddSet, onSelectExercise } = useWorkoutDrawer()
 
   // Detect drawer state from query params
   const drawerMode = searchParams.get('drawer')
   const entityId = searchParams.get('id')
   const exerciseTypeId = searchParams.get('exerciseTypeId')
-  const exerciseId = searchParams.get('exerciseId')
+  const routineId = searchParams.get('routineId')
 
   // All drawers are now handled by DrawerManager
   const isDrawerOpen = !!drawerMode
@@ -195,40 +191,51 @@ export function DrawerManager({
               ) : null
             })()}
 
-            {drawerMode === DRAWER_MODE.SET_LOGGER && exerciseId && onAddSet && (() => {
-              const exercise = exercises.find(ex => ex.id === exerciseId)
-              return exercise ? (
+            {drawerMode === DRAWER_MODE.ADD_EXERCISE_TYPE_TO_ROUTINE && routineId && (() => {
+              const routine = routines.find(r => r.id === routineId)
+              if (!routine) return null
+              const availableExerciseTypes = exerciseTypes.filter(et => !routine.exerciseTypeIds.includes(et.id))
+
+              const handleAdd = (exerciseTypeId: string) => {
+                onAddExerciseTypeToRoutine(routineId, exerciseTypeId)
+                closeDrawer()
+              }
+
+              return (
                 <>
-                  <Drawer.Title className="sr-only">Add Set</Drawer.Title>
+                  <Drawer.Title className="text-2xl font-bold mb-6">
+                    Add Exercise Type
+                  </Drawer.Title>
                   <Drawer.Description className="sr-only">
-                    Log a new set for {exercise.name}
+                    Select an exercise type to add to this routine
                   </Drawer.Description>
-                  <SetLoggerDrawerContent
-                    exercise={exercise}
-                    onAddSet={onAddSet}
-                    onCancel={closeDrawer}
-                  />
+
+                  {availableExerciseTypes.length === 0 ? (
+                    <p className="text-[hsl(var(--color-muted-foreground))] text-center py-8">
+                      All exercise types have been added to this routine.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {availableExerciseTypes.map((exerciseType) => (
+                        <button
+                          key={exerciseType.id}
+                          onClick={() => handleAdd(exerciseType.id)}
+                          className="w-full text-left"
+                        >
+                          <div className="p-4 rounded-lg border border-[hsl(var(--color-border))] hover:shadow-md transition-shadow cursor-pointer hover:bg-[hsl(var(--color-accent))]">
+                            <h3 className="text-lg font-medium">
+                              {exerciseType.name}
+                            </h3>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
-              ) : null
+              )
             })()}
 
-            {drawerMode === DRAWER_MODE.EXERCISE_SELECTION && exerciseTypeId && onSelectExercise && (() => {
-              const exerciseType = exerciseTypes.find(et => et.id === exerciseTypeId)
-              const availableExercises = exercises.filter(ex => ex.exerciseTypeId === exerciseTypeId)
-              return exerciseType ? (
-                <>
-                  <Drawer.Title className="sr-only">Select Exercise</Drawer.Title>
-                  <Drawer.Description className="sr-only">
-                    Choose an exercise for {exerciseType.name}
-                  </Drawer.Description>
-                  <ExerciseSelectionDrawerContent
-                    exerciseType={exerciseType}
-                    availableExercises={availableExercises}
-                    onSelectExercise={onSelectExercise}
-                  />
-                </>
-              ) : null
-            })()}
+            {/* Workout drawers (SET_LOGGER, EXERCISE_SELECTION) are handled in ActiveWorkout component */}
           </div>
         </Drawer.Content>
       </Drawer.Portal>

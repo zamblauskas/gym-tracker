@@ -9,7 +9,6 @@ import { ExercisesProvider } from './contexts/ExercisesContext'
 import { RoutinesProvider } from './contexts/RoutinesContext'
 import { ProgramsProvider } from './contexts/ProgramsContext'
 import { WorkoutProvider } from './contexts/WorkoutContext'
-import { WorkoutDrawerProvider } from './contexts/WorkoutDrawerContext'
 import { AppStateProvider } from './contexts/AppStateContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/globals.css'
@@ -37,11 +36,9 @@ createRoot(document.getElementById('root')!).render(
                 <RoutinesProvider>
                   <ProgramsProvider>
                     <WorkoutProvider>
-                      <WorkoutDrawerProvider>
-                        <AppStateProvider>
-                          <App />
-                        </AppStateProvider>
-                      </WorkoutDrawerProvider>
+                      <AppStateProvider>
+                        <App />
+                      </AppStateProvider>
                     </WorkoutProvider>
                   </ProgramsProvider>
                 </RoutinesProvider>

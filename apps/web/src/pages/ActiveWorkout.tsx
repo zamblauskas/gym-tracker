@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDrawer } from '@/hooks/useDrawer'
-import { useWorkoutDrawer } from '@/contexts/WorkoutDrawerContext'
+import { Drawer } from 'vaul'
 import { WorkoutSession, ExerciseLog, SetLog } from '@/types/workoutSession'
 import { Routine } from '@/types/routine'
 import { ExerciseType } from '@/types/exerciseType'
@@ -9,10 +9,12 @@ import { Exercise } from '@/types/exercise'
 import { ActiveWorkoutHeader } from '@/components/workout/ActiveWorkoutHeader'
 import { WorkoutExerciseManager } from '@/components/workout/WorkoutExerciseManager'
 import { WorkoutActions } from '@/components/workout/WorkoutActions'
+import { SetLoggerDrawerContent } from '@/components/workout/SetLoggerDrawer'
+import { ExerciseSelectionDrawerContent } from '@/components/workout/ExerciseSelectionDrawer'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useExerciseHistory } from '@/hooks/useExerciseHistory'
 import { finishWorkoutSession } from '@/lib/workoutCalculations'
-import { DRAWER_MODE } from '@/lib/constants'
+import { DRAWER_MODE, DRAWER_HEIGHT_CLASS } from '@/lib/constants'
 
 interface ActiveWorkoutProps {
   session: WorkoutSession
@@ -38,11 +40,17 @@ export default function ActiveWorkout({
   currentExerciseIndex
 }: ActiveWorkoutProps) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { openDrawer, closeDrawer } = useDrawer()
-  const { setWorkoutDrawerHandlers } = useWorkoutDrawer()
   const [currentNotes, setCurrentNotes] = useState('')
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
+
+  // Detect drawer state from query params
+  const drawerMode = searchParams.get('drawer')
+  const exerciseId = searchParams.get('exerciseId')
+  const exerciseTypeId = searchParams.get('exerciseTypeId')
+  const isDrawerOpen = !!(drawerMode && (drawerMode === DRAWER_MODE.SET_LOGGER || drawerMode === DRAWER_MODE.EXERCISE_SELECTION))
 
   // Get exercise selections from session (single source of truth)
   const exerciseSelections = session.exerciseSelections || {}
@@ -72,17 +80,6 @@ export default function ActiveWorkout({
       setCurrentNotes('')
     }
   }, [currentExerciseIndex, selectedExercise?.id, currentExerciseLog?.notes])
-
-  // Register workout drawer handlers with context on mount, cleanup on unmount
-  useEffect(() => {
-    setWorkoutDrawerHandlers({
-      onAddSet: handleAddSet,
-      onSelectExercise: handleSelectExercise,
-    })
-    return () => {
-      setWorkoutDrawerHandlers(null)
-    }
-  }, [session, selectedExercise, currentExerciseLog])
 
   function handleSelectExercise(exercise: Exercise) {
     // Update session with new exercise selection
@@ -311,6 +308,53 @@ export default function ActiveWorkout({
         variant="default"
         showWarningIcon={false}
       />
+
+      {/* Workout-specific drawers */}
+      <Drawer.Root open={isDrawerOpen} onOpenChange={(open) => !open && closeDrawer()}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+          <Drawer.Content className={`bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] ${DRAWER_HEIGHT_CLASS} mt-24 fixed bottom-0 left-0 right-0`}>
+            <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
+              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
+
+              {drawerMode === DRAWER_MODE.SET_LOGGER && exerciseId && (() => {
+                const exercise = exercises.find(ex => ex.id === exerciseId)
+                return exercise ? (
+                  <>
+                    <Drawer.Title className="sr-only">Add Set</Drawer.Title>
+                    <Drawer.Description className="sr-only">
+                      Log a new set for {exercise.name}
+                    </Drawer.Description>
+                    <SetLoggerDrawerContent
+                      exercise={exercise}
+                      onAddSet={handleAddSet}
+                      onCancel={closeDrawer}
+                    />
+                  </>
+                ) : null
+              })()}
+
+              {drawerMode === DRAWER_MODE.EXERCISE_SELECTION && exerciseTypeId && (() => {
+                const exerciseType = exerciseTypes.find(et => et.id === exerciseTypeId)
+                const availableExercises = exercises.filter(ex => ex.exerciseTypeId === exerciseTypeId)
+                return exerciseType ? (
+                  <>
+                    <Drawer.Title className="sr-only">Select Exercise</Drawer.Title>
+                    <Drawer.Description className="sr-only">
+                      Choose an exercise for {exerciseType.name}
+                    </Drawer.Description>
+                    <ExerciseSelectionDrawerContent
+                      exerciseType={exerciseType}
+                      availableExercises={availableExercises}
+                      onSelectExercise={handleSelectExercise}
+                    />
+                  </>
+                ) : null
+              })()}
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </div>
   )
 }

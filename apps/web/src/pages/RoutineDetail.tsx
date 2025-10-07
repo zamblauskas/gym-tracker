@@ -5,19 +5,18 @@ import { ExerciseType } from '@/types/exerciseType'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Drawer } from 'vaul'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import Breadcrumb, { BreadcrumbItem } from '@/components/Breadcrumb'
 import { useState } from 'react'
 import { Exercise } from '@/types/exercise'
 import { useExercisesByType } from '@/hooks/useExercisesByType'
+import { useDrawer } from '@/hooks/useDrawer'
+import { DRAWER_MODE } from '@/lib/constants'
 
 interface RoutineDetailProps {
   routine: Routine
   exerciseTypes: ExerciseType[]
   exercises: Exercise[]
-  availableExerciseTypes: ExerciseType[]
-  onAddExerciseType: (exerciseTypeId: string) => void
   onRemoveExerciseType: (exerciseTypeId: string) => void
   onDelete: (routineId: string) => void
   onEdit: () => void
@@ -29,20 +28,17 @@ export default function RoutineDetail({
   routine,
   exerciseTypes,
   exercises,
-  availableExerciseTypes,
-  onAddExerciseType,
   onRemoveExerciseType,
   onDelete,
   onEdit,
   onSelectExerciseType,
   breadcrumbs = []
 }: RoutineDetailProps) {
-  const [selectorOpen, setSelectorOpen] = useState(false)
+  const { openDrawer } = useDrawer()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
-  const handleAdd = (exerciseTypeId: string) => {
-    onAddExerciseType(exerciseTypeId)
-    setSelectorOpen(false)
+  const handleOpenAddDrawer = () => {
+    openDrawer(DRAWER_MODE.ADD_EXERCISE_TYPE_TO_ROUTINE, { routineId: routine.id })
   }
 
   const handleConfirmDelete = () => {
@@ -76,7 +72,7 @@ export default function RoutineDetail({
           </Button>
         </div>
 
-        <Button onClick={() => setSelectorOpen(true)} size="lg" className="w-full h-12 gap-2">
+        <Button onClick={handleOpenAddDrawer} size="lg" className="w-full h-12 gap-2">
           <Plus className="h-5 w-5" />
           Add Exercise Type
         </Button>
@@ -185,45 +181,7 @@ export default function RoutineDetail({
         </Button>
       </motion.div>
 
-      {/* Exercise Type Selector Drawer */}
-      <Drawer.Root open={selectorOpen} onOpenChange={setSelectorOpen}>
-        <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-          <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-[70%] mt-24 fixed bottom-0 left-0 right-0">
-            <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
-              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
-              <Drawer.Title className="text-2xl font-bold mb-6">
-                Add Exercise Type
-              </Drawer.Title>
-              <Drawer.Description className="sr-only">
-                Select an exercise type to add to this routine
-              </Drawer.Description>
-
-              {availableExerciseTypes.length === 0 ? (
-                <p className="text-[hsl(var(--color-muted-foreground))] text-center py-8">
-                  All exercise types have been added to this routine.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {availableExerciseTypes.map((exerciseType) => (
-                    <button
-                      key={exerciseType.id}
-                      onClick={() => handleAdd(exerciseType.id)}
-                      className="w-full text-left"
-                    >
-                      <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer hover:bg-[hsl(var(--color-accent))]">
-                        <h3 className="text-lg font-medium">
-                          {exerciseType.name}
-                        </h3>
-                      </Card>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      {/* Exercise Type Selector Drawer is now handled by DrawerManager */}
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
