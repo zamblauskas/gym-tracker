@@ -20,6 +20,7 @@ export interface WorkoutSession {
   programId?: string; // Reference to the Program (optional)
   routineId: string; // Reference to the Routine
   exerciseLogs: ExerciseLog[];
+  exerciseSelections?: Record<number, string>; // Map of exercise type index -> selected exercise ID
   startTime: Date;
   endTime?: Date;
   duration?: number; // in minutes

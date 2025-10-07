@@ -28,7 +28,6 @@ export function SetLoggerDrawer({ open, onOpenChange, exercise, onAddSet }: SetL
       setWeight('')
       setReps('')
       setRir('')
-      onOpenChange(false)
     }
   }
 

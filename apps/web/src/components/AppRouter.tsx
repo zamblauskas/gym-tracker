@@ -240,7 +240,6 @@ export function AppRouter({
     )
 
     if (!activeSession || !nextWorkoutInfo || !routine) {
-      navigate('/')
       return null
     }
 

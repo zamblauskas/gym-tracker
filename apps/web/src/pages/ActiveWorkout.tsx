@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { WorkoutSession, ExerciseLog, SetLog } from '@/types/workoutSession'
 import { Routine } from '@/types/routine'
 import { ExerciseType } from '@/types/exerciseType'
@@ -32,9 +32,14 @@ export default function ActiveWorkout({
   onBack
 }: ActiveWorkoutProps) {
   const [currentExerciseTypeIndex, setCurrentExerciseTypeIndex] = useState(0)
-  const [exerciseSelections, setExerciseSelections] = useState<Record<number, string>>({})
+  const [exerciseSelectionOpen, setExerciseSelectionOpen] = useState(false)
+  const [setLoggerOpen, setSetLoggerOpen] = useState(false)
+  const [currentNotes, setCurrentNotes] = useState('')
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
+
+  // Get exercise selections from session (single source of truth)
+  const exerciseSelections = session.exerciseSelections || {}
 
   const currentExerciseType = exerciseTypes[currentExerciseTypeIndex]
 
@@ -57,15 +62,58 @@ export default function ActiveWorkout({
     currentSessionId: session.id
   })
 
+  // Sync notes when navigating between exercise types
+  useEffect(() => {
+    if (selectedExercise && currentExerciseLog) {
+      setCurrentNotes(currentExerciseLog.notes || '')
+    } else {
+      setCurrentNotes('')
+    }
+  }, [currentExerciseTypeIndex, selectedExercise?.id, currentExerciseLog?.notes])
+
   function handleSelectExercise(exercise: Exercise) {
-    setExerciseSelections({
-      ...exerciseSelections,
-      [currentExerciseTypeIndex]: exercise.id
-    })
+    // Update session with new exercise selection
+    const updatedSession: WorkoutSession = {
+      ...session,
+      exerciseSelections: {
+        ...exerciseSelections,
+        [currentExerciseTypeIndex]: exercise.id
+      },
+      updatedAt: new Date()
+    }
+    onUpdateSession(updatedSession)
+
+    // Load notes for the selected exercise
+    const exerciseLog = session.exerciseLogs.find(log => log.exerciseId === exercise.id)
+    setCurrentNotes(exerciseLog?.notes || '')
+    setExerciseSelectionOpen(false)
+  }
+
+  function handleChooseExercise() {
+    setExerciseSelectionOpen(true)
+  }
+
+  function handleChangeExercise() {
+    setExerciseSelectionOpen(true)
+  }
+
+  function handleOpenSetLogger() {
+    setSetLoggerOpen(true)
+  }
+
+  function handleNotesChange(notes: string) {
+    setCurrentNotes(notes)
+  }
+
+  function handleNotesBlur() {
+    handleUpdateNotes(currentNotes)
   }
 
   function handleAddSet(weight: number, reps: number, rir?: number) {
-    if (!selectedExercise) return
+    if (!selectedExercise) {
+      console.error('handleAddSet called but no selectedExercise')
+      return
+    }
 
     const newSet: SetLog = {
       id: crypto.randomUUID(),
@@ -102,7 +150,9 @@ export default function ActiveWorkout({
       }
     }
 
+    // Update session and close drawer
     onUpdateSession(updatedSession)
+    setSetLoggerOpen(false)
   }
 
   function handleRemoveSet(setId: string) {
@@ -195,14 +245,22 @@ export default function ActiveWorkout({
       <WorkoutExerciseManager
         exerciseType={currentExerciseType}
         availableExercises={availableExercises}
+        selectedExercise={selectedExercise || null}
         exerciseLog={currentExerciseLog}
         previousExerciseData={previousExerciseData}
-        exerciseSelections={exerciseSelections}
-        currentExerciseTypeIndex={currentExerciseTypeIndex}
+        currentNotes={currentNotes}
+        exerciseSelectionOpen={exerciseSelectionOpen}
+        setLoggerOpen={setLoggerOpen}
+        onChooseExercise={handleChooseExercise}
+        onChangeExercise={handleChangeExercise}
         onSelectExercise={handleSelectExercise}
+        onCloseExerciseSelection={() => setExerciseSelectionOpen(false)}
+        onOpenSetLogger={handleOpenSetLogger}
+        onCloseSetLogger={() => setSetLoggerOpen(false)}
         onAddSet={handleAddSet}
         onRemoveSet={handleRemoveSet}
-        onUpdateNotes={handleUpdateNotes}
+        onNotesChange={handleNotesChange}
+        onNotesBlur={handleNotesBlur}
       />
 
       <WorkoutActions
