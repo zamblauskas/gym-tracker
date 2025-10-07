@@ -1,23 +1,18 @@
-import { createContext, useContext, useMemo, ReactNode } from 'react'
+import { createContext, useContext, useMemo, ReactNode, useCallback } from 'react'
 import { ExerciseType } from '@/types/exerciseType'
 import { Exercise, CreateExerciseInput } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
 import { Program, CreateProgramInput } from '@/types/program'
 import { WorkoutSession } from '@/types/workoutSession'
-import { usePersistedState } from '@/hooks/usePersistedState'
-import { useEntityHandlers } from '@/hooks/useEntityHandlers'
-import { useWorkoutLogic, NextWorkoutInfo } from '@/hooks/useWorkoutLogic'
-import {
-  createExerciseTypeRepository,
-  createExerciseRepository,
-  createRoutineRepository,
-  createProgramRepository,
-  createWorkoutSessionRepository,
-} from '@/lib/repositories'
+import { NextWorkoutInfo } from '@/hooks/useWorkoutLogic'
+import { useExercises } from './ExercisesContext'
+import { useRoutines } from './RoutinesContext'
+import { usePrograms } from './ProgramsContext'
+import { useWorkout } from './WorkoutContext'
 
 /**
- * App State Context - Central state management for the entire application
- * Provides all entity data, handlers, and loading states
+ * App State Context - Coordinator for domain-specific contexts
+ * Delegates to ExercisesContext, RoutinesContext, ProgramsContext, and WorkoutContext
  */
 
 interface AppStateContextValue {
@@ -71,96 +66,78 @@ interface AppStateProviderProps {
 }
 
 export function AppStateProvider({ children }: AppStateProviderProps) {
-  // Create repository instances (memoized to avoid recreating on every render)
-  const exerciseTypeRepo = useMemo(() => createExerciseTypeRepository(), [])
-  const exerciseRepo = useMemo(() => createExerciseRepository(), [])
-  const routineRepo = useMemo(() => createRoutineRepository(), [])
-  const programRepo = useMemo(() => createProgramRepository(), [])
-  const workoutSessionRepo = useMemo(() => createWorkoutSessionRepository(), [])
+  // Get state and handlers from domain contexts
+  const exercises = useExercises()
+  const routines = useRoutines()
+  const programs = usePrograms()
+  const workout = useWorkout()
 
-  // Use persisted state for all entities
-  const [exerciseTypes, setExerciseTypes, isLoadingExerciseTypes] = usePersistedState<ExerciseType>(exerciseTypeRepo)
-  const [exercises, setExercises, isLoadingExercises] = usePersistedState<Exercise>(exerciseRepo)
-  const [routines, setRoutines, isLoadingRoutines] = usePersistedState<Routine>(routineRepo)
-  const [programs, setPrograms, isLoadingPrograms] = usePersistedState<Program>(programRepo)
-  const [workoutSessions, setWorkoutSessions, isLoadingWorkoutSessions] = usePersistedState<WorkoutSession>(workoutSessionRepo)
+  const isLoading = exercises.isLoading || routines.isLoading || programs.isLoading || workout.isLoading
 
-  const isLoading = isLoadingExerciseTypes || isLoadingExercises || isLoadingRoutines || isLoadingPrograms || isLoadingWorkoutSessions
+  // Wire up cross-domain dependencies
+  const handleDeleteExerciseType = useCallback((exerciseTypeId: string) => {
+    exercises.handleDeleteExerciseType(exerciseTypeId, routines.handleUpdateRoutineExerciseTypes)
+  }, [exercises, routines])
 
-  // Entity handlers
-  const entityHandlers = useEntityHandlers({
-    exerciseTypes,
-    exercises,
-    routines,
-    programs,
-    setExerciseTypes,
-    setExercises,
-    setRoutines,
-    setPrograms,
-  })
-
-  // Workout logic
-  const workoutLogic = useWorkoutLogic({
-    programs,
-    routines,
-    workoutSessions,
-    setWorkoutSessions,
-  })
+  const handleDeleteRoutine = useCallback((routineId: string) => {
+    routines.handleDeleteRoutine(routineId, programs.handleUpdateProgramRoutines)
+  }, [routines, programs])
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<AppStateContextValue>(
     () => ({
       // Entity data
-      exerciseTypes,
-      exercises,
-      routines,
-      programs,
-      workoutSessions,
+      exerciseTypes: exercises.exerciseTypes,
+      exercises: exercises.exercises,
+      routines: routines.routines,
+      programs: programs.programs,
+      workoutSessions: workout.workoutSessions,
 
       // Loading states
       isLoading,
 
       // Workout state
-      activeSession: workoutLogic.activeSession,
-      nextWorkoutInfo: workoutLogic.nextWorkoutInfo,
+      activeSession: workout.activeSession,
+      nextWorkoutInfo: workout.nextWorkoutInfo,
 
-      // Entity handlers
-      handleCreateExerciseType: entityHandlers.handleCreateExerciseType,
-      handleEditExerciseType: entityHandlers.handleEditExerciseType,
-      handleDeleteExerciseType: entityHandlers.handleDeleteExerciseType,
+      // Exercise handlers
+      handleCreateExerciseType: exercises.handleCreateExerciseType,
+      handleEditExerciseType: exercises.handleEditExerciseType,
+      handleDeleteExerciseType,
 
-      handleCreateExercise: entityHandlers.handleCreateExercise,
-      handleUpdateExercise: entityHandlers.handleUpdateExercise,
-      handleDeleteExercise: entityHandlers.handleDeleteExercise,
+      handleCreateExercise: exercises.handleCreateExercise,
+      handleUpdateExercise: exercises.handleUpdateExercise,
+      handleDeleteExercise: exercises.handleDeleteExercise,
 
-      handleCreateRoutine: entityHandlers.handleCreateRoutine,
-      handleEditRoutine: entityHandlers.handleEditRoutine,
-      handleAddExerciseTypeToRoutine: entityHandlers.handleAddExerciseTypeToRoutine,
-      handleRemoveExerciseTypeFromRoutine: entityHandlers.handleRemoveExerciseTypeFromRoutine,
-      handleDeleteRoutine: entityHandlers.handleDeleteRoutine,
+      // Routine handlers
+      handleCreateRoutine: routines.handleCreateRoutine,
+      handleEditRoutine: routines.handleEditRoutine,
+      handleAddExerciseTypeToRoutine: routines.handleAddExerciseTypeToRoutine,
+      handleRemoveExerciseTypeFromRoutine: routines.handleRemoveExerciseTypeFromRoutine,
+      handleDeleteRoutine,
 
-      handleCreateProgram: entityHandlers.handleCreateProgram,
-      handleEditProgram: entityHandlers.handleEditProgram,
-      handleAddRoutineToProgram: entityHandlers.handleAddRoutineToProgram,
-      handleRemoveRoutineFromProgram: entityHandlers.handleRemoveRoutineFromProgram,
-      handleDeleteProgram: entityHandlers.handleDeleteProgram,
+      // Program handlers
+      handleCreateProgram: programs.handleCreateProgram,
+      handleEditProgram: programs.handleEditProgram,
+      handleAddRoutineToProgram: programs.handleAddRoutineToProgram,
+      handleRemoveRoutineFromProgram: programs.handleRemoveRoutineFromProgram,
+      handleDeleteProgram: programs.handleDeleteProgram,
 
       // Workout handlers
-      handleStartWorkout: workoutLogic.handleStartWorkout,
-      handleSkipWorkout: workoutLogic.handleSkipWorkout,
-      handleUpdateWorkoutSession: workoutLogic.handleUpdateWorkoutSession,
-      handleFinishWorkout: workoutLogic.handleFinishWorkout,
-      handleCancelWorkout: workoutLogic.handleCancelWorkout,
+      handleStartWorkout: workout.handleStartWorkout,
+      handleSkipWorkout: workout.handleSkipWorkout,
+      handleUpdateWorkoutSession: workout.handleUpdateWorkoutSession,
+      handleFinishWorkout: workout.handleFinishWorkout,
+      handleCancelWorkout: workout.handleCancelWorkout,
     }),
     [
-      exerciseTypes,
       exercises,
       routines,
       programs,
-      workoutSessions,
+      workout,
       isLoading,
-      workoutLogic,
-      entityHandlers,
+      handleDeleteExerciseType,
+      handleDeleteRoutine,
     ]
   )
 

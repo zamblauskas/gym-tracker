@@ -1,20 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { WorkoutSession, ExerciseLog, SetLog } from '@/types/workoutSession'
 import { Routine } from '@/types/routine'
 import { ExerciseType } from '@/types/exerciseType'
 import { Exercise } from '@/types/exercise'
 import { ActiveWorkoutHeader } from '@/components/workout/ActiveWorkoutHeader'
-import { ExerciseCard } from '@/components/workout/ExerciseCard'
-import { ExerciseSelectionDrawer } from '@/components/workout/ExerciseSelectionDrawer'
-import { SetLoggerDrawer } from '@/components/workout/SetLoggerDrawer'
-import { ExerciseNotes } from '@/components/workout/ExerciseNotes'
-import { PreviousSessionHistory } from '@/components/workout/PreviousSessionHistory'
+import { WorkoutExerciseManager } from '@/components/workout/WorkoutExerciseManager'
 import { WorkoutActions } from '@/components/workout/WorkoutActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useExerciseHistory } from '@/hooks/useExerciseHistory'
-import { useAutoSaveNotes } from '@/hooks/useAutoSaveNotes'
 import { finishWorkoutSession } from '@/lib/workoutCalculations'
-import { NOTES_AUTOSAVE_DEBOUNCE_MS } from '@/lib/constants'
 
 interface ActiveWorkoutProps {
   session: WorkoutSession
@@ -38,10 +32,6 @@ export default function ActiveWorkout({
   onBack
 }: ActiveWorkoutProps) {
   const [currentExerciseTypeIndex, setCurrentExerciseTypeIndex] = useState(0)
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-  const [exerciseSelectionOpen, setExerciseSelectionOpen] = useState(false)
-  const [setLoggerOpen, setSetLoggerOpen] = useState(false)
-  const [currentNotes, setCurrentNotes] = useState('')
   const [exerciseSelections, setExerciseSelections] = useState<Record<number, string>>({})
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
@@ -52,48 +42,26 @@ export default function ActiveWorkout({
     ex => ex.exerciseTypeId === currentExerciseType?.id
   )
 
-  const currentExerciseLog = session.exerciseLogs.find(
-    log => log.exerciseId === selectedExercise?.id
-  )
+  const selectedExerciseId = exerciseSelections[currentExerciseTypeIndex]
+  const selectedExercise = selectedExerciseId
+    ? exercises.find(ex => ex.id === selectedExerciseId)
+    : undefined
+
+  const currentExerciseLog = selectedExercise
+    ? session.exerciseLogs.find(log => log.exerciseId === selectedExercise.id)
+    : undefined
 
   const previousExerciseData = useExerciseHistory({
-    selectedExercise,
+    selectedExercise: selectedExercise || null,
     previousSessions,
     currentSessionId: session.id
   })
 
-  // Auto-save notes with debouncing
-  useAutoSaveNotes({
-    notes: currentNotes,
-    onSave: handleUpdateNotes,
-    enabled: !!selectedExercise,
-    debounceMs: NOTES_AUTOSAVE_DEBOUNCE_MS
-  })
-
-  // Restore exercise selection when navigating
-  useEffect(() => {
-    const savedExerciseId = exerciseSelections[currentExerciseTypeIndex]
-    if (savedExerciseId) {
-      const exercise = exercises.find(ex => ex.id === savedExerciseId)
-      if (exercise) {
-        setSelectedExercise(exercise)
-        const existingLog = session.exerciseLogs.find(log => log.exerciseId === exercise.id)
-        setCurrentNotes(existingLog?.notes || '')
-      }
-    } else {
-      setSelectedExercise(null)
-      setCurrentNotes('')
-    }
-  }, [currentExerciseTypeIndex, exercises, exerciseSelections, session.exerciseLogs])
-
   function handleSelectExercise(exercise: Exercise) {
-    setSelectedExercise(exercise)
     setExerciseSelections({
       ...exerciseSelections,
       [currentExerciseTypeIndex]: exercise.id
     })
-    const existingLog = session.exerciseLogs.find(log => log.exerciseId === exercise.id)
-    setCurrentNotes(existingLog?.notes || '')
   }
 
   function handleAddSet(weight: number, reps: number, rir?: number) {
@@ -153,7 +121,7 @@ export default function ActiveWorkout({
     onUpdateSession(updatedSession)
   }
 
-  function handleUpdateNotes() {
+  function handleUpdateNotes(notes: string) {
     if (!selectedExercise) return
 
     let updatedSession: WorkoutSession
@@ -163,18 +131,18 @@ export default function ActiveWorkout({
         ...session,
         exerciseLogs: session.exerciseLogs.map(log =>
           log.exerciseId === selectedExercise.id
-            ? { ...log, notes: currentNotes || undefined }
+            ? { ...log, notes: notes || undefined }
             : log
         ),
         updatedAt: new Date()
       }
-    } else if (currentNotes.trim()) {
+    } else if (notes.trim()) {
       const newExerciseLog: ExerciseLog = {
         id: crypto.randomUUID(),
         exerciseId: selectedExercise.id,
         exerciseTypeId: selectedExercise.exerciseTypeId,
         sets: [],
-        notes: currentNotes,
+        notes: notes,
         createdAt: new Date()
       }
       updatedSession = {
@@ -192,14 +160,12 @@ export default function ActiveWorkout({
   function handlePreviousExerciseType() {
     if (currentExerciseTypeIndex > 0) {
       setCurrentExerciseTypeIndex(currentExerciseTypeIndex - 1)
-      setSetLoggerOpen(false)
     }
   }
 
   function handleNextExerciseType() {
     if (currentExerciseTypeIndex < exerciseTypes.length - 1) {
       setCurrentExerciseTypeIndex(currentExerciseTypeIndex + 1)
-      setSetLoggerOpen(false)
     }
   }
 
@@ -226,49 +192,18 @@ export default function ActiveWorkout({
         onNext={handleNextExerciseType}
       />
 
-      <ExerciseCard
-        exerciseType={currentExerciseType}
-        selectedExercise={selectedExercise}
-        currentExerciseLog={currentExerciseLog}
-        onChooseExercise={() => setExerciseSelectionOpen(true)}
-        onChangeExercise={() => {
-          setSelectedExercise(null)
-          setExerciseSelectionOpen(true)
-        }}
-        onAddSet={() => setSetLoggerOpen(true)}
-        onRemoveSet={handleRemoveSet}
-      />
-
-      {selectedExercise && (
-        <>
-          <ExerciseNotes
-            notes={currentNotes}
-            onNotesChange={setCurrentNotes}
-            onBlur={handleUpdateNotes}
-          />
-
-          {previousExerciseData && (
-            <PreviousSessionHistory previousExerciseData={previousExerciseData} />
-          )}
-        </>
-      )}
-
-      <ExerciseSelectionDrawer
-        open={exerciseSelectionOpen}
-        onOpenChange={setExerciseSelectionOpen}
+      <WorkoutExerciseManager
         exerciseType={currentExerciseType}
         availableExercises={availableExercises}
+        exerciseLog={currentExerciseLog}
+        previousExerciseData={previousExerciseData}
+        exerciseSelections={exerciseSelections}
+        currentExerciseTypeIndex={currentExerciseTypeIndex}
         onSelectExercise={handleSelectExercise}
+        onAddSet={handleAddSet}
+        onRemoveSet={handleRemoveSet}
+        onUpdateNotes={handleUpdateNotes}
       />
-
-      {selectedExercise && (
-        <SetLoggerDrawer
-          open={setLoggerOpen}
-          onOpenChange={setSetLoggerOpen}
-          exercise={selectedExercise}
-          onAddSet={handleAddSet}
-        />
-      )}
 
       <WorkoutActions
         isLastExercise={currentExerciseTypeIndex === exerciseTypes.length - 1}

@@ -10,8 +10,3 @@ export interface CreateRoutineInput {
   name: string;
   exerciseTypeIds: string[];
 }
-
-export interface UpdateRoutineInput {
-  name?: string;
-  exerciseTypeIds?: string[];
-}

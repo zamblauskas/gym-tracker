@@ -1,3 +1,4 @@
+import { logger } from '@/lib/utils/logger'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { PersonStanding, RefreshCw, ScrollText, Play, SkipForward, LogIn, LogOut } from 'lucide-react'
@@ -50,7 +51,7 @@ export default function Home({
     try {
       await signInWithGoogle()
     } catch (error) {
-      console.error('Failed to sign in:', error)
+      logger.error('Failed to sign in', error, 'Home')
     }
   }
 
@@ -59,7 +60,7 @@ export default function Home({
       await signOut()
       setShowProfileMenu(false)
     } catch (error) {
-      console.error('Failed to sign out:', error)
+      logger.error('Failed to sign out', error, 'Home')
     }
   }
 

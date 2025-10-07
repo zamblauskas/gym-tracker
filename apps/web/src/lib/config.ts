@@ -3,6 +3,8 @@
  * Centralizes environment variable access and app settings
  */
 
+import { logger } from '@/lib/utils/logger'
+
 export type StorageBackend = 'localStorage' | 'supabase'
 
 /**
@@ -38,9 +40,10 @@ export function getActiveStorageBackend(): StorageBackend {
   const backend = getStorageBackend()
 
   if (backend === 'supabase' && !isSupabaseConfigured()) {
-    console.warn(
+    logger.warn(
       'Supabase storage backend selected but credentials not configured. ' +
-      'Falling back to localStorage. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local'
+      'Falling back to localStorage. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local',
+      'Config'
     )
     return 'localStorage'
   }

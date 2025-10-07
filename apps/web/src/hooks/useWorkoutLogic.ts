@@ -43,7 +43,9 @@ export function useWorkoutLogic({
 
     if (!lastSession) {
       // No sessions yet, return first routine
-      return { routine: programRoutines[0], program: activeProgram }
+      const firstRoutine = programRoutines[0]
+      if (!firstRoutine) return null
+      return { routine: firstRoutine, program: activeProgram }
     }
 
     // Find index of last routine in the cycle
@@ -53,7 +55,13 @@ export function useWorkoutLogic({
     const nextRoutineId = activeProgram.routineIds[(lastRoutineIndex + 1) % activeProgram.routineIds.length]
     const nextRoutine = programRoutines.find(r => r.id === nextRoutineId)
 
-    return { routine: nextRoutine || programRoutines[0], program: activeProgram }
+    if (!nextRoutine) {
+      const firstRoutine = programRoutines[0]
+      if (!firstRoutine) return null
+      return { routine: firstRoutine, program: activeProgram }
+    }
+
+    return { routine: nextRoutine, program: activeProgram }
   }, [programs, routines, workoutSessions])
 
   const handleStartWorkout = useCallback(() => {

@@ -1,5 +1,6 @@
 import { IDataRepository } from './types'
 import { supabase } from '../supabase'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Type mapping for entity types to Supabase table names
@@ -42,13 +43,13 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error(`Error fetching from ${this.tableName}:`, error)
+        logger.error(`Error fetching from ${this.tableName}:`, error)
         throw error
       }
 
       return (data || []).map(item => this.deserializeDates(item))
     } catch (error) {
-      console.error(`Error reading from Supabase (${this.tableName}):`, error)
+      logger.error(`Error reading from Supabase (${this.tableName}):`, error)
       // Return empty array for unauthenticated users
       return []
     }
@@ -68,13 +69,13 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
           // Not found or not authorized
           return null
         }
-        console.error(`Error fetching from ${this.tableName}:`, error)
+        logger.error(`Error fetching from ${this.tableName}:`, error)
         throw error
       }
 
       return data ? this.deserializeDates(data) : null
     } catch (error) {
-      console.error(`Error reading from Supabase (${this.tableName}):`, error)
+      logger.error(`Error reading from Supabase (${this.tableName}):`, error)
       return null
     }
   }
@@ -99,13 +100,13 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .single()
 
       if (error) {
-        console.error(`Error creating in ${this.tableName}:`, error)
+        logger.error(`Error creating in ${this.tableName}:`, error)
         throw error
       }
 
       return this.deserializeDates(data)
     } catch (error) {
-      console.error(`Error writing to Supabase (${this.tableName}):`, error)
+      logger.error(`Error writing to Supabase (${this.tableName}):`, error)
       throw error
     }
   }
@@ -126,13 +127,13 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .single()
 
       if (error) {
-        console.error(`Error updating in ${this.tableName}:`, error)
+        logger.error(`Error updating in ${this.tableName}:`, error)
         throw error
       }
 
       return this.deserializeDates(data)
     } catch (error) {
-      console.error(`Error updating in Supabase (${this.tableName}):`, error)
+      logger.error(`Error updating in Supabase (${this.tableName}):`, error)
       throw error
     }
   }
@@ -149,11 +150,11 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .eq('id', id)
 
       if (error) {
-        console.error(`Error deleting from ${this.tableName}:`, error)
+        logger.error(`Error deleting from ${this.tableName}:`, error)
         throw error
       }
     } catch (error) {
-      console.error(`Error deleting from Supabase (${this.tableName}):`, error)
+      logger.error(`Error deleting from Supabase (${this.tableName}):`, error)
       throw error
     }
   }
@@ -171,11 +172,11 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .eq('user_id', userId)
 
       if (error) {
-        console.error(`Error clearing ${this.tableName}:`, error)
+        logger.error(`Error clearing ${this.tableName}:`, error)
         throw error
       }
     } catch (error) {
-      console.error(`Error clearing Supabase table (${this.tableName}):`, error)
+      logger.error(`Error clearing Supabase table (${this.tableName}):`, error)
       throw error
     }
   }
@@ -195,13 +196,13 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .select()
 
       if (error) {
-        console.error(`Error batch creating in ${this.tableName}:`, error)
+        logger.error(`Error batch creating in ${this.tableName}:`, error)
         throw error
       }
 
       return (data || []).map(item => this.deserializeDates(item))
     } catch (error) {
-      console.error(`Error batch writing to Supabase (${this.tableName}):`, error)
+      logger.error(`Error batch writing to Supabase (${this.tableName}):`, error)
       throw error
     }
   }
@@ -219,13 +220,13 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
         .select()
 
       if (error) {
-        console.error(`Error batch updating in ${this.tableName}:`, error)
+        logger.error(`Error batch updating in ${this.tableName}:`, error)
         throw error
       }
 
       return (data || []).map(item => this.deserializeDates(item))
     } catch (error) {
-      console.error(`Error batch updating in Supabase (${this.tableName}):`, error)
+      logger.error(`Error batch updating in Supabase (${this.tableName}):`, error)
       throw error
     }
   }
@@ -243,11 +244,11 @@ export class SupabaseRepository<T extends { id: string }> implements IDataReposi
 
       const errors = results.filter(r => r.error).map(r => r.error)
       if (errors.length > 0) {
-        console.error(`Error batch deleting from ${this.tableName}:`, errors)
+        logger.error(`Error batch deleting from ${this.tableName}:`, errors)
         throw new Error(`Failed to delete ${errors.length} items`)
       }
     } catch (error) {
-      console.error(`Error batch deleting from Supabase (${this.tableName}):`, error)
+      logger.error(`Error batch deleting from Supabase (${this.tableName}):`, error)
       throw error
     }
   }

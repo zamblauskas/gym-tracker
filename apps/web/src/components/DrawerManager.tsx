@@ -11,7 +11,7 @@ import { ExerciseType } from '@/types/exerciseType'
 import { CreateExerciseInput } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
 import { Program, CreateProgramInput } from '@/types/program'
-import { DRAWER_HEIGHT_CLASS } from '@/lib/constants'
+import { DRAWER_HEIGHT_CLASS, DRAWER_MODE } from '@/lib/constants'
 
 export interface DrawerManagerProps {
   exerciseTypes: ExerciseType[]
@@ -76,7 +76,7 @@ export function DrawerManager({
           <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
 
-            {drawerMode === 'createExerciseType' && (
+            {drawerMode === DRAWER_MODE.CREATE_EXERCISE_TYPE && (
               <>
                 <Drawer.Title className="sr-only">Create Exercise Type</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -89,7 +89,7 @@ export function DrawerManager({
               </>
             )}
 
-            {drawerMode === 'createExercise' && exerciseTypeId && (
+            {drawerMode === DRAWER_MODE.CREATE_EXERCISE && exerciseTypeId && (
               <>
                 <Drawer.Title className="sr-only">Create Exercise</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -103,7 +103,7 @@ export function DrawerManager({
               </>
             )}
 
-            {drawerMode === 'editExerciseType' && (() => {
+            {drawerMode === DRAWER_MODE.EDIT_EXERCISE_TYPE && (() => {
               const exerciseType = getCurrentExerciseType()
               return exerciseType ? (
                 <>
@@ -120,7 +120,7 @@ export function DrawerManager({
               ) : null
             })()}
 
-            {drawerMode === 'createRoutine' && (
+            {drawerMode === DRAWER_MODE.CREATE_ROUTINE && (
               <>
                 <Drawer.Title className="sr-only">Create Routine</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -134,7 +134,7 @@ export function DrawerManager({
               </>
             )}
 
-            {drawerMode === 'editRoutine' && (() => {
+            {drawerMode === DRAWER_MODE.EDIT_ROUTINE && (() => {
               const routine = getCurrentRoutine()
               return routine ? (
                 <>
@@ -151,7 +151,7 @@ export function DrawerManager({
               ) : null
             })()}
 
-            {drawerMode === 'createProgram' && (
+            {drawerMode === DRAWER_MODE.CREATE_PROGRAM && (
               <>
                 <Drawer.Title className="sr-only">Create Program</Drawer.Title>
                 <Drawer.Description className="sr-only">
@@ -165,7 +165,7 @@ export function DrawerManager({
               </>
             )}
 
-            {drawerMode === 'editProgram' && (() => {
+            {drawerMode === DRAWER_MODE.EDIT_PROGRAM && (() => {
               const program = getCurrentProgram()
               return program ? (
                 <>

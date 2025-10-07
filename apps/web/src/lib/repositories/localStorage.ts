@@ -1,4 +1,5 @@
 import { IDataRepository } from './types'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * LocalStorage implementation of the data repository
@@ -19,8 +20,8 @@ export class LocalStorageRepository<T extends { id: string }> implements IDataRe
       const items = JSON.parse(data)
       return Promise.resolve(items.map((item: any) => this.deserializeDates(item)))
     } catch (error) {
-      console.error(`Error reading from localStorage (${this.storageKey}):`, error)
-      return Promise.resolve([])
+      logger.error(`Error reading from localStorage (${this.storageKey})`, error, 'LocalStorageRepository')
+      return Promise.reject(new Error(`Failed to load data from localStorage: ${error instanceof Error ? error.message : 'Unknown error'}`))
     }
   }
 
@@ -97,8 +98,8 @@ export class LocalStorageRepository<T extends { id: string }> implements IDataRe
       const items = JSON.parse(data)
       return items.map((item: any) => this.deserializeDates(item))
     } catch (error) {
-      console.error(`Error reading from localStorage (${this.storageKey}):`, error)
-      return []
+      logger.error(`Error reading from localStorage (${this.storageKey})`, error, 'LocalStorageRepository')
+      throw new Error(`Failed to read from localStorage: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -106,7 +107,7 @@ export class LocalStorageRepository<T extends { id: string }> implements IDataRe
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(items))
     } catch (error) {
-      console.error(`Error writing to localStorage (${this.storageKey}):`, error)
+      logger.error(`Error writing to localStorage (${this.storageKey})`, error, 'LocalStorageRepository')
       throw error
     }
   }

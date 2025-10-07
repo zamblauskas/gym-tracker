@@ -16,11 +16,3 @@ export interface CreateExerciseInput {
   targetRepsInReserve?: number;
   exerciseTypeId: string;
 }
-
-export interface UpdateExerciseInput {
-  name?: string;
-  machineBrand?: string;
-  targetRepRange?: string;
-  targetRepsInReserve?: number;
-  exerciseTypeId?: string;
-}
