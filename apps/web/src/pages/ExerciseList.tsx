@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import Breadcrumb, { BreadcrumbItem } from '@/components/Breadcrumb'
 
 interface ExerciseListProps {
   exerciseType: ExerciseType
@@ -17,10 +16,16 @@ interface ExerciseListProps {
   onDelete: (exerciseId: string) => void
   onDeleteExerciseType: (exerciseTypeId: string) => void
   onEdit: () => void
-  breadcrumbs?: BreadcrumbItem[]
 }
 
-export default function ExerciseList({ exerciseType, exercises, onAdd, onSelect, onDeleteExerciseType, onEdit, breadcrumbs = [] }: ExerciseListProps) {
+export default function ExerciseList({
+  exerciseType,
+  exercises,
+  onAdd,
+  onSelect,
+  onDeleteExerciseType,
+  onEdit
+}: ExerciseListProps) {
   const [deleteTypeConfirmOpen, setDeleteTypeConfirmOpen] = useState(false)
 
   const handleConfirmDeleteType = () => {
@@ -34,8 +39,6 @@ export default function ExerciseList({ exerciseType, exercises, onAdd, onSelect,
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
-
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{exerciseType.name}</h1>

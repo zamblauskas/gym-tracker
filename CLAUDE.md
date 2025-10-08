@@ -57,15 +57,10 @@
   - Returns: `{ isOpen, drawerMode, drawerParams, openDrawer, closeDrawer }`
 - **AppRouter**: Defines all route configurations and route wrapper components
   - Route wrappers (e.g., `ExerciseTypeDetailRoute`) use `RouteEntityWrapper` for entity lookup
-  - Handles breadcrumb context passing via `location.state`
 - **useNavigationHandlers** hook: Encapsulates navigation + entity operation combos
   - Wraps entity operations (create/edit/delete) with appropriate navigation
   - Navigation happens after successful entity operation or on cancel
 - **useRouteEntity** hook: Entity lookup + 404 redirects
-- **Breadcrumb navigation**: Uses `location.state` to pass breadcrumb context between pages
-  - Preserves navigation history when drilling down (Program → Routine → Exercise Type → Exercise)
-  - Breadcrumbs stored as `{ label: string; path: string }[]` in location state
-  - Falls back to default breadcrumbs if state is not available
 
 ### Component Architecture
 - Pages are route components (Home, ActiveWorkout, *List, *Detail)
@@ -123,7 +118,6 @@ apps/web/src/
 │   ├── AppRouter.tsx                # Route definitions + route wrappers
 │   ├── DrawerManager.tsx            # Drawer routing logic (entity CRUD)
 │   ├── RouteEntityWrapper.tsx       # Generic route wrapper component
-│   ├── Breadcrumb.tsx               # Breadcrumb navigation
 │   ├── ErrorBoundary.tsx            # Error boundary wrapper
 │   ├── LoadingSkeletons.tsx         # Skeleton loading states
 │   ├── ExerciseForm.tsx             # Reusable exercise form
@@ -204,7 +198,7 @@ apps/web/src/
 
 ### UI/UX
 - **Mobile-first**: Vaul drawers, responsive Tailwind layouts
-- **No back buttons**: Browser back + breadcrumbs only (no explicit back buttons in UI)
+- **No back buttons**: Browser back button only (no explicit back buttons in UI)
 - **Drawer height**: 96% of viewport (`DRAWER_HEIGHT_CLASS` constant)
 - **CSS variables**: Defined in `globals.css` using HSL format (`hsl(var(--color-*))`)
 - **Animations**: Framer Motion for page transitions and component animations
@@ -213,7 +207,6 @@ apps/web/src/
 ### Navigation
 - **URL as state**: Drawer state, exercise index, all in URL (no React state for navigation)
 - **History management**: Always use `replace: true` for drawers to prevent history pollution
-- **Breadcrumbs**: Pass via `location.state` for context-aware navigation
 
 ### Data Management
 - **Repository pattern**: All data access through `IDataRepository<T>` interface
@@ -234,13 +227,6 @@ apps/web/src/
   - ADD_EXERCISE_TYPE_TO_ROUTINE
   - SET_LOGGER, EXERCISE_SELECTION (in-page only)
 - **Always use `{ replace: true }` when opening/closing drawers** to prevent back button issues
-
-### Exercise Detail Page Navigation
-- **Canonical paths**: Always navigate to `/exercises/:id` regardless of entry point
-- **Breadcrumbs via state**: Pass `location.state.breadcrumbs` to preserve context
-- **Example flow**:
-  - Program Detail → Routine Detail → Exercise Type (passed in state) → Exercise (preserves full path)
-  - Direct Exercise Type → Exercise (default breadcrumbs)
 
 ### Active Workout Session Management
 - **Single active session**: Only one workout can have `status: 'in-progress'` at a time

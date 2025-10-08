@@ -30,7 +30,7 @@ export interface AppRouterProps {
   nextWorkoutInfo: NextWorkoutInfo | null
   workoutSessions: WorkoutSession[]
   onSelectExerciseType: (exerciseType: ExerciseType) => void
-  onSelectExercise: (exercise: Exercise, exerciseTypeId: string) => void
+  onSelectExercise: (exercise: Exercise, exerciseTypeId: string, fromContext?: { programId?: string; routineId?: string }) => void
   onSelectRoutine: (routine: Routine) => void
   onSelectProgram: (program: Program) => void
   onSelectRoutineFromProgram: (programId: string, routine: Routine) => void
@@ -90,7 +90,9 @@ export function AppRouter({
   // Route wrapper components that fetch data based on URL params
   const ExerciseTypeDetailRoute = () => {
     const location = useLocation()
-    const locationState = location.state as { breadcrumbs?: Array<{ label: string; path: string }> } | null
+    const searchParams = new URLSearchParams(location.search)
+    const programIdFromQuery = searchParams.get('from')?.match(/program:([^,]+)/)?.[1]
+    const routineIdFromQuery = searchParams.get('from')?.match(/routine:([^,]+)/)?.[1]
 
     return (
       <RouteEntityWrapper
@@ -101,37 +103,18 @@ export function AppRouter({
           const id = params.id!
           const filteredExercises = exercises.filter(ex => ex.exerciseTypeId === id)
 
-          // Use breadcrumbs from location state if available, otherwise use default
-          const breadcrumbs = locationState?.breadcrumbs
-            ? locationState.breadcrumbs.map(bc => ({
-                label: bc.label,
-                onClick: () => navigate(bc.path)
-              })).concat([{ label: exerciseType.name, onClick: () => {} }])
-            : [
-                { label: 'Home', onClick: () => navigate('/') },
-                { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
-                { label: exerciseType.name, onClick: () => {} }
-              ]
-
-          // Prepare breadcrumbs to pass via location state when navigating to exercise
-          const breadcrumbsForExercise = locationState?.breadcrumbs
-            ? [...locationState.breadcrumbs, { label: exerciseType.name, path: `/exercise-types/${id}` }]
-            : [
-                { label: 'Home', path: '/' },
-                { label: 'Exercise Types', path: '/exercise-types' },
-                { label: exerciseType.name, path: `/exercise-types/${id}` }
-              ]
-
           return (
             <ExerciseList
               exerciseType={exerciseType}
               exercises={filteredExercises}
               onAdd={() => openDrawer(DRAWER_MODE.CREATE_EXERCISE, { exerciseTypeId: id })}
-              onSelect={(exercise) => onSelectExercise(exercise, id, breadcrumbsForExercise)}
+              onSelect={(exercise) => onSelectExercise(exercise, id, {
+                programId: programIdFromQuery,
+                routineId: routineIdFromQuery
+              })}
               onDelete={(exerciseId) => onDeleteExercise(exerciseId, id)}
               onDeleteExerciseType={onDeleteExerciseType}
               onEdit={() => openDrawer(DRAWER_MODE.EDIT_EXERCISE_TYPE, { id })}
-              breadcrumbs={breadcrumbs}
             />
           )
         }}
@@ -140,33 +123,17 @@ export function AppRouter({
   }
 
   const ExerciseDetailRoute = () => {
-    const location = useLocation()
-    const locationState = location.state as { breadcrumbs?: Array<{ label: string; path: string }> } | null
-
     return (
       <RouteEntityWrapper
         entities={exercises}
         getIdFromParams={(params) => params.id}
         fallbackPath="/exercise-types"
-        render={(exercise, params) => {
-          // Use breadcrumbs from location state if available, otherwise use default
-          const breadcrumbs = locationState?.breadcrumbs
-            ? locationState.breadcrumbs.map(bc => ({
-                label: bc.label,
-                onClick: () => navigate(bc.path)
-              })).concat([{ label: exercise.name, onClick: () => {} }])
-            : [
-                { label: 'Home', onClick: () => navigate('/') },
-                { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
-                { label: exercise.name, onClick: () => {} }
-              ]
-
+        render={(exercise) => {
           return (
             <ExerciseDetail
               exercise={exercise}
               onUpdate={onUpdateExercise}
               onDelete={(id) => onDeleteExercise(id, exercise.exerciseTypeId)}
-              breadcrumbs={breadcrumbs}
             />
           )
         }}
@@ -176,7 +143,8 @@ export function AppRouter({
 
   const RoutineDetailRoute = () => {
     const location = useLocation()
-    const locationState = location.state as { breadcrumbs?: Array<{ label: string; path: string }> } | null
+    const searchParams = new URLSearchParams(location.search)
+    const programIdFromQuery = searchParams.get('from')?.match(/program:([^,]+)/)?.[1]
 
     return (
       <RouteEntityWrapper
@@ -187,27 +155,6 @@ export function AppRouter({
           const id = params.id!
           const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
 
-          // Use breadcrumbs from location state if available, otherwise use default
-          const breadcrumbs = locationState?.breadcrumbs
-            ? locationState.breadcrumbs.map(bc => ({
-                label: bc.label,
-                onClick: () => navigate(bc.path)
-              })).concat([{ label: routine.name, onClick: () => {} }])
-            : [
-                { label: 'Home', onClick: () => navigate('/') },
-                { label: 'Routines', onClick: () => navigate('/routines') },
-                { label: routine.name, onClick: () => {} }
-              ]
-
-          // Prepare breadcrumbs to pass via location state when navigating to exercise type
-          const breadcrumbsForExerciseType = locationState?.breadcrumbs
-            ? [...locationState.breadcrumbs, { label: routine.name, path: `/routines/${id}` }]
-            : [
-                { label: 'Home', path: '/' },
-                { label: 'Routines', path: '/routines' },
-                { label: routine.name, path: `/routines/${id}` }
-              ]
-
           return (
             <RoutineDetail
               routine={routine}
@@ -216,8 +163,7 @@ export function AppRouter({
               onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(id, etId)}
               onDelete={onDeleteRoutine}
               onEdit={() => openDrawer(DRAWER_MODE.EDIT_ROUTINE, { id })}
-              onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(id, et, undefined, breadcrumbsForExerciseType)}
-              breadcrumbs={breadcrumbs}
+              onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(id, et, programIdFromQuery)}
             />
           )
         }}
@@ -235,13 +181,6 @@ export function AppRouter({
         const programRoutines = routines.filter(r => program.routineIds.includes(r.id))
         const availableRoutines = routines.filter(r => !program.routineIds.includes(r.id))
 
-        // Prepare breadcrumbs to pass via location state when navigating to routine
-        const breadcrumbsForRoutine = [
-          { label: 'Home', path: '/' },
-          { label: 'Programs', path: '/programs' },
-          { label: program.name, path: `/programs/${id}` }
-        ]
-
         return (
           <ProgramDetail
             program={program}
@@ -252,12 +191,7 @@ export function AppRouter({
             onRemoveRoutine={(rId) => onRemoveRoutineFromProgram(id, rId)}
             onDelete={onDeleteProgram}
             onEdit={() => openDrawer(DRAWER_MODE.EDIT_PROGRAM, { id })}
-            onSelectRoutine={(r) => onSelectRoutineFromProgram(id, r, breadcrumbsForRoutine)}
-            breadcrumbs={[
-              { label: 'Home', onClick: () => navigate('/') },
-              { label: 'Programs', onClick: () => navigate('/programs') },
-              { label: program.name, onClick: () => { } }
-            ]}
+            onSelectRoutine={(r) => onSelectRoutineFromProgram(id, r)}
           />
         )
       }}

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import Breadcrumb, { BreadcrumbItem } from '@/components/Breadcrumb'
 import { useState } from 'react'
 import { Exercise } from '@/types/exercise'
 import { useExercisesByType } from '@/hooks/useExercisesByType'
@@ -21,7 +20,6 @@ interface RoutineDetailProps {
   onDelete: (routineId: string) => void
   onEdit: () => void
   onSelectExerciseType?: (exerciseType: ExerciseType) => void
-  breadcrumbs?: BreadcrumbItem[]
 }
 
 export default function RoutineDetail({
@@ -31,8 +29,7 @@ export default function RoutineDetail({
   onRemoveExerciseType,
   onDelete,
   onEdit,
-  onSelectExerciseType,
-  breadcrumbs = []
+  onSelectExerciseType
 }: RoutineDetailProps) {
   const { openDrawer } = useDrawer()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -52,8 +49,6 @@ export default function RoutineDetail({
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
-
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{routine.name}</h1>

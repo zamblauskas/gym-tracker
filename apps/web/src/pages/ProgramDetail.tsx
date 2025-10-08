@@ -8,7 +8,6 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Drawer } from 'vaul'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import Breadcrumb, { BreadcrumbItem } from '@/components/Breadcrumb'
 import { useState } from 'react'
 
 interface ProgramDetailProps {
@@ -21,7 +20,6 @@ interface ProgramDetailProps {
   onDelete: (programId: string) => void
   onEdit: () => void
   onSelectRoutine?: (routine: Routine) => void
-  breadcrumbs?: BreadcrumbItem[]
 }
 
 export default function ProgramDetail({
@@ -33,8 +31,7 @@ export default function ProgramDetail({
   onRemoveRoutine,
   onDelete,
   onEdit,
-  onSelectRoutine,
-  breadcrumbs = []
+  onSelectRoutine
 }: ProgramDetailProps) {
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -62,8 +59,6 @@ export default function ProgramDetail({
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
-
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{program.name}</h1>

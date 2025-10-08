@@ -36,13 +36,16 @@ export function useNavigationHandlers(handlers: {
   const handleSelectExercise = useCallback((
     exercise: Exercise,
     exerciseTypeId: string,
-    breadcrumbs?: Array<{ label: string; path: string }>
+    fromContext?: { programId?: string; routineId?: string }
   ) => {
-    // Always navigate to the canonical exercise path
-    // Pass breadcrumbs via location state to preserve navigation context
-    navigate(`/exercises/${exercise.id}`, {
-      state: { breadcrumbs }
-    })
+    // Build 'from' query param to preserve navigation context
+    const queryParts: string[] = []
+    if (fromContext?.programId) queryParts.push(`program:${fromContext.programId}`)
+    if (fromContext?.routineId) queryParts.push(`routine:${fromContext.routineId}`)
+    queryParts.push(`exerciseType:${exerciseTypeId}`)
+
+    const query = queryParts.length > 0 ? `?from=${queryParts.join(',')}` : ''
+    navigate(`/exercises/${exercise.id}${query}`)
   }, [navigate])
 
   const handleSelectRoutine = useCallback((routine: Routine) => {
@@ -55,27 +58,24 @@ export function useNavigationHandlers(handlers: {
 
   const handleSelectRoutineFromProgram = useCallback((
     programId: string,
-    routine: Routine,
-    breadcrumbs?: Array<{ label: string; path: string }>
+    routine: Routine
   ) => {
-    // Always navigate to the canonical routine path
-    // Pass breadcrumbs via location state to preserve navigation context
-    navigate(`/routines/${routine.id}`, {
-      state: { breadcrumbs }
-    })
+    // Add 'from' query param to preserve navigation context
+    navigate(`/routines/${routine.id}?from=program:${programId}`)
   }, [navigate])
 
   const handleSelectExerciseTypeFromRoutine = useCallback((
     routineId: string,
     exerciseType: ExerciseType,
-    programId?: string,
-    breadcrumbs?: Array<{ label: string; path: string }>
+    programId?: string
   ) => {
-    // Always navigate to the canonical exercise type path
-    // Pass breadcrumbs via location state to preserve navigation context
-    navigate(`/exercise-types/${exerciseType.id}`, {
-      state: { breadcrumbs }
-    })
+    // Build 'from' query param to preserve navigation context
+    const queryParts: string[] = []
+    if (programId) queryParts.push(`program:${programId}`)
+    queryParts.push(`routine:${routineId}`)
+
+    const query = queryParts.length > 0 ? `?from=${queryParts.join(',')}` : ''
+    navigate(`/exercise-types/${exerciseType.id}${query}`)
   }, [navigate])
 
   // Wrapped handlers that navigate after entity operations
