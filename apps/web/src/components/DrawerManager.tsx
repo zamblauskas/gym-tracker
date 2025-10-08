@@ -7,6 +7,7 @@ import CreateRoutine from '@/pages/CreateRoutine'
 import EditRoutine from '@/pages/EditRoutine'
 import CreateProgram from '@/pages/CreateProgram'
 import EditProgram from '@/pages/EditProgram'
+import { DrawerErrorState } from '@/components/ui/DrawerErrorState'
 import { ExerciseType } from '@/types/exerciseType'
 import { CreateExerciseInput } from '@/types/exercise'
 import { Routine, CreateRoutineInput } from '@/types/routine'
@@ -50,8 +51,20 @@ export function DrawerManager({
   const exerciseTypeId = searchParams.get('exerciseTypeId')
   const routineId = searchParams.get('routineId')
 
-  // All drawers are now handled by DrawerManager
-  const isDrawerOpen = !!drawerMode
+  // Only handle drawers that DrawerManager is responsible for
+  // This prevents DrawerManager from opening when ActiveWorkout's in-page drawers are triggered
+  // (SET_LOGGER and EXERCISE_SELECTION are handled by ActiveWorkout's local Drawer.Root)
+  const managedDrawerModes = [
+    DRAWER_MODE.CREATE_EXERCISE_TYPE,
+    DRAWER_MODE.EDIT_EXERCISE_TYPE,
+    DRAWER_MODE.CREATE_EXERCISE,
+    DRAWER_MODE.CREATE_ROUTINE,
+    DRAWER_MODE.EDIT_ROUTINE,
+    DRAWER_MODE.CREATE_PROGRAM,
+    DRAWER_MODE.EDIT_PROGRAM,
+    DRAWER_MODE.ADD_EXERCISE_TYPE_TO_ROUTINE,
+  ]
+  const isDrawerOpen = !!drawerMode && managedDrawerModes.includes(drawerMode as any)
 
   /**
    * Close drawer using replace: true to prevent back button from reopening
@@ -114,19 +127,28 @@ export function DrawerManager({
 
             {drawerMode === DRAWER_MODE.EDIT_EXERCISE_TYPE && (() => {
               const exerciseType = getCurrentExerciseType()
-              return exerciseType ? (
+
+              return (
                 <>
                   <Drawer.Title className="sr-only">Edit Exercise Type</Drawer.Title>
                   <Drawer.Description className="sr-only">
                     Update exercise type details
                   </Drawer.Description>
-                  <EditExerciseType
-                    exerciseType={exerciseType}
-                    onSave={onEditExerciseType}
-                    onCancel={closeDrawer}
-                  />
+
+                  {exerciseType ? (
+                    <EditExerciseType
+                      exerciseType={exerciseType}
+                      onSave={onEditExerciseType}
+                      onCancel={closeDrawer}
+                    />
+                  ) : (
+                    <DrawerErrorState
+                      message="The exercise type could not be found. It may have been deleted."
+                      onClose={closeDrawer}
+                    />
+                  )}
                 </>
-              ) : null
+              )
             })()}
 
             {drawerMode === DRAWER_MODE.CREATE_ROUTINE && (
@@ -145,19 +167,28 @@ export function DrawerManager({
 
             {drawerMode === DRAWER_MODE.EDIT_ROUTINE && (() => {
               const routine = getCurrentRoutine()
-              return routine ? (
+
+              return (
                 <>
                   <Drawer.Title className="sr-only">Edit Routine</Drawer.Title>
                   <Drawer.Description className="sr-only">
                     Update routine details
                   </Drawer.Description>
-                  <EditRoutine
-                    routine={routine}
-                    onSave={onEditRoutine}
-                    onCancel={closeDrawer}
-                  />
+
+                  {routine ? (
+                    <EditRoutine
+                      routine={routine}
+                      onSave={onEditRoutine}
+                      onCancel={closeDrawer}
+                    />
+                  ) : (
+                    <DrawerErrorState
+                      message="The routine could not be found. It may have been deleted."
+                      onClose={closeDrawer}
+                    />
+                  )}
                 </>
-              ) : null
+              )
             })()}
 
             {drawerMode === DRAWER_MODE.CREATE_PROGRAM && (
@@ -176,19 +207,28 @@ export function DrawerManager({
 
             {drawerMode === DRAWER_MODE.EDIT_PROGRAM && (() => {
               const program = getCurrentProgram()
-              return program ? (
+
+              return (
                 <>
                   <Drawer.Title className="sr-only">Edit Program</Drawer.Title>
                   <Drawer.Description className="sr-only">
                     Update program details
                   </Drawer.Description>
-                  <EditProgram
-                    program={program}
-                    onSave={onEditProgram}
-                    onCancel={closeDrawer}
-                  />
+
+                  {program ? (
+                    <EditProgram
+                      program={program}
+                      onSave={onEditProgram}
+                      onCancel={closeDrawer}
+                    />
+                  ) : (
+                    <DrawerErrorState
+                      message="The program could not be found. It may have been deleted."
+                      onClose={closeDrawer}
+                    />
+                  )}
                 </>
-              ) : null
+              )
             })()}
 
             {drawerMode === DRAWER_MODE.ADD_EXERCISE_TYPE_TO_ROUTINE && routineId && (() => {

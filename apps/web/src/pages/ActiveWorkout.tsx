@@ -12,6 +12,7 @@ import { WorkoutActions } from '@/components/workout/WorkoutActions'
 import { SetLoggerDrawerContent } from '@/components/workout/SetLoggerDrawer'
 import { ExerciseSelectionDrawerContent } from '@/components/workout/ExerciseSelectionDrawer'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { DrawerErrorState } from '@/components/ui/DrawerErrorState'
 import { useExerciseHistory } from '@/hooks/useExerciseHistory'
 import { finishWorkoutSession } from '@/lib/workoutCalculations'
 import { DRAWER_MODE, DRAWER_HEIGHT_CLASS, Z_INDEX } from '@/lib/constants'
@@ -319,37 +320,55 @@ export default function ActiveWorkout({
 
               {drawerMode === DRAWER_MODE.SET_LOGGER && exerciseId && (() => {
                 const exercise = exercises.find(ex => ex.id === exerciseId)
-                return exercise ? (
+
+                return (
                   <>
                     <Drawer.Title className="sr-only">Add Set</Drawer.Title>
                     <Drawer.Description className="sr-only">
-                      Log a new set for {exercise.name}
+                      Log a new set for this exercise
                     </Drawer.Description>
-                    <SetLoggerDrawerContent
-                      exercise={exercise}
-                      onAddSet={handleAddSet}
-                      onCancel={closeDrawer}
-                    />
+
+                    {exercise ? (
+                      <SetLoggerDrawerContent
+                        exercise={exercise}
+                        onAddSet={handleAddSet}
+                        onCancel={closeDrawer}
+                      />
+                    ) : (
+                      <DrawerErrorState
+                        message="The exercise could not be found. Please close this drawer and try again."
+                        onClose={closeDrawer}
+                      />
+                    )}
                   </>
-                ) : null
+                )
               })()}
 
               {drawerMode === DRAWER_MODE.EXERCISE_SELECTION && exerciseTypeId && (() => {
                 const exerciseType = exerciseTypes.find(et => et.id === exerciseTypeId)
                 const availableExercises = exercises.filter(ex => ex.exerciseTypeId === exerciseTypeId)
-                return exerciseType ? (
+
+                return (
                   <>
                     <Drawer.Title className="sr-only">Select Exercise</Drawer.Title>
                     <Drawer.Description className="sr-only">
-                      Choose an exercise for {exerciseType.name}
+                      Choose an exercise for this exercise type
                     </Drawer.Description>
-                    <ExerciseSelectionDrawerContent
-                      exerciseType={exerciseType}
-                      availableExercises={availableExercises}
-                      onSelectExercise={handleSelectExercise}
-                    />
+
+                    {exerciseType ? (
+                      <ExerciseSelectionDrawerContent
+                        exerciseType={exerciseType}
+                        availableExercises={availableExercises}
+                        onSelectExercise={handleSelectExercise}
+                      />
+                    ) : (
+                      <DrawerErrorState
+                        message="The exercise type could not be found. Please close this drawer and try again."
+                        onClose={closeDrawer}
+                      />
+                    )}
                   </>
-                ) : null
+                )
               })()}
             </div>
           </Drawer.Content>
