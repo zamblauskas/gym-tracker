@@ -10,6 +10,7 @@ import { Program } from '@/types/program'
 import { Routine } from '@/types/routine'
 import { WorkoutSession } from '@/types/workoutSession'
 import { useAuth } from '@/contexts/AuthContext'
+import { Z_INDEX } from '@/lib/constants'
 
 interface HomeProps {
   onNavigateToPrograms: () => void
@@ -256,8 +257,8 @@ export default function Home({
 
       <Drawer.Root open={showProfileMenu} onOpenChange={setShowProfileMenu}>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50" />
-          <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-auto mt-24 fixed bottom-0 left-0 right-0 z-50">
+          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[var(--z-drawer-overlay)]" style={{ '--z-drawer-overlay': Z_INDEX.DRAWER_OVERLAY } as React.CSSProperties} />
+          <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-auto mt-24 fixed bottom-0 left-0 right-0 z-[var(--z-drawer-content)]" style={{ '--z-drawer-content': Z_INDEX.DRAWER_CONTENT } as React.CSSProperties}>
             <div className="p-6 bg-[hsl(var(--color-background))] rounded-t-[10px]">
               <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-6" />
 

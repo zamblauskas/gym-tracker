@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Drawer } from 'vaul'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useState } from 'react'
+import { Z_INDEX } from '@/lib/constants'
 
 interface ProgramDetailProps {
   program: Program
@@ -145,7 +146,7 @@ export default function ProgramDetail({
                             e.stopPropagation()
                             onRemoveRoutine(routine.id)
                           }}
-                          className="p-2 hover:bg-[hsl(var(--color-destructive))] hover:bg-opacity-10 rounded-lg transition-colors group/remove z-10"
+                          className="p-2 hover:bg-[hsl(var(--color-destructive))] hover:bg-opacity-10 rounded-lg transition-colors group/remove"
                           aria-label="Remove routine"
                         >
                           <X className="h-5 w-5 text-[hsl(var(--color-muted-foreground))] group-hover/remove:text-[hsl(var(--color-destructive))]" />
@@ -197,8 +198,8 @@ export default function ProgramDetail({
       {/* Routine Selector Drawer */}
       <Drawer.Root open={selectorOpen} onOpenChange={setSelectorOpen}>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-          <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-[70%] mt-24 fixed bottom-0 left-0 right-0">
+          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[var(--z-drawer-overlay)]" style={{ '--z-drawer-overlay': Z_INDEX.DRAWER_OVERLAY } as React.CSSProperties} />
+          <Drawer.Content className="bg-[hsl(var(--color-background))] flex flex-col rounded-t-[10px] h-[70%] mt-24 fixed bottom-0 left-0 right-0 z-[var(--z-drawer-content)]" style={{ '--z-drawer-content': Z_INDEX.DRAWER_CONTENT } as React.CSSProperties}>
             <div className="p-4 bg-[hsl(var(--color-background))] rounded-t-[10px] flex-1 overflow-y-auto">
               <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--color-muted))] mb-8" />
               <Drawer.Title className="text-2xl font-bold mb-6">

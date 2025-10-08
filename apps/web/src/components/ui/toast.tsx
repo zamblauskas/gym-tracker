@@ -1,5 +1,6 @@
 import { useErrors } from '@/contexts/ErrorContext'
 import { Button } from './button'
+import { Z_INDEX } from '@/lib/constants'
 
 export function Toast() {
   const { errors, clearError } = useErrors()
@@ -7,7 +8,7 @@ export function Toast() {
   if (errors.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-md">
+    <div className="fixed bottom-4 right-4 z-[var(--z-toast)] flex flex-col gap-2 max-w-md" style={{ '--z-toast': Z_INDEX.TOAST } as React.CSSProperties}>
       {errors.map((error) => (
         <div
           key={error.id}

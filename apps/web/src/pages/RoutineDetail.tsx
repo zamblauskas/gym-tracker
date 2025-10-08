@@ -133,7 +133,7 @@ export default function RoutineDetail({
                           e.stopPropagation()
                           onRemoveExerciseType(exerciseType.id)
                         }}
-                        className="p-2 hover:bg-[hsl(var(--color-destructive))] hover:bg-opacity-10 rounded-lg transition-colors group/remove z-10"
+                        className="p-2 hover:bg-[hsl(var(--color-destructive))] hover:bg-opacity-10 rounded-lg transition-colors group/remove"
                         aria-label="Remove exercise type"
                       >
                         <X className="h-5 w-5 text-[hsl(var(--color-muted-foreground))] group-hover/remove:text-[hsl(var(--color-destructive))]" />

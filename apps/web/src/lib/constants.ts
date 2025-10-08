@@ -9,6 +9,18 @@ export const NOTES_AUTOSAVE_DEBOUNCE_MS = 500
 // Drawer UI constants
 export const DRAWER_HEIGHT_CLASS = 'h-[96%]'
 
+// Z-index hierarchy
+// Ensures consistent layering across the application
+export const Z_INDEX = {
+  BASE: 0,                    // Base content
+  DROPDOWN: 10,               // Dropdowns, popovers
+  DRAWER_OVERLAY: 50,         // Drawer overlays
+  DRAWER_CONTENT: 50,         // Drawer content
+  MODAL_OVERLAY: 60,          // Modal overlays (future use)
+  MODAL_CONTENT: 60,          // Modal content (future use)
+  TOAST: 100,                 // Toast notifications
+} as const
+
 // Drawer mode constants
 // All drawers now use URL-based routing for consistency
 // Uses { replace: true } pattern on close to prevent back button from reopening drawers
