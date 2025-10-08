@@ -1,10 +1,13 @@
 # CLAUDE.md
 
 ## Tech Stack
-- React + Vite + TypeScript + Tailwind v4
-- shadcn/ui + Framer Motion + Vaul (drawers)
-- Supabase (auth + storage) or LocalStorage backend
-- React Router v6 (URL-based navigation)
+- **Frontend**: React 19.2 + TypeScript 5.9 + Vite 7.1
+- **Styling**: Tailwind CSS v4 + Framer Motion 12.23 + shadcn/ui components
+- **UI Components**: Vaul (drawers), Radix UI (primitives), Lucide React (icons)
+- **Routing**: React Router v7 (URL-based navigation)
+- **Data Layer**: Supabase (auth + storage) or LocalStorage backend
+- **Validation**: Zod 4.1
+- **State**: React Context API (no external state management library)
 
 ## Domain Model (Hierarchical)
 - **Exercise Type**: Category grouping exercises (e.g., "Incline Chest Press")
@@ -37,19 +40,32 @@
 - **Unified drawer system**: ALL drawers use URL query params for consistency
   - Entity CRUD drawers: `?drawer=createExerciseType&id=123` (handled by DrawerManager)
   - Transient drawers: `?drawer=setLogger&exerciseId=456` (rendered in-page, state from URL)
-- **Smart back button UX**: Closing drawers uses `navigate(path, { replace: true })`
-  - This replaces the drawer URL in history, preventing back button from reopening
-  - Example flow: Home → Exercise Types → Add (opens) → Save (closes with replace) → Back → Home ✅
-  - Without replace: Home → Exercise Types → Add → Save → Back → Add (reopens) ❌
-- **DrawerManager**: Handles persistent entity CRUD drawers (create/edit ExerciseTypes, Routines, Programs)
-- **In-page drawers**: Transient workflow drawers (SetLogger, ExerciseSelection) rendered within page component tree
+- **Smart back button UX**: Opening drawers uses `navigate(url, { replace: true })`
+  - This replaces the current history entry, preventing history pollution
+  - Closing drawers also uses `navigate(path, { replace: true })`
+  - Result: Drawers never create new history entries, back button navigates to previous page
+  - Example: Page A → Open Drawer (replace) → Close (replace) → Back → Previous Page ✅
+- **DrawerManager**: Handles persistent entity CRUD drawers (create/edit ExerciseTypes, Routines, Programs, AddExerciseTypeToRoutine)
+  - Renders drawer shell based on `?drawer=` query param
+  - Provides `closeDrawer()` to child components for navigation
+- **In-page drawers**: Transient workflow drawers (SetLogger, ExerciseSelection) rendered within ActiveWorkout page
   - State still comes from URL params, but drawer shell is local to component
   - Allows access to page-specific state and handlers
 - **useDrawer hook**: Unified API for opening/closing any drawer with smart history management
-- **AppRouter**: Defines all route configurations
-- **Route wrapper pattern**: `RouteEntityWrapper` eliminates repetitive route setup
+  - `openDrawer(mode, params)`: Opens drawer with replace: true
+  - `closeDrawer()`: Closes drawer with replace: true
+  - Returns: `{ isOpen, drawerMode, drawerParams, openDrawer, closeDrawer }`
+- **AppRouter**: Defines all route configurations and route wrapper components
+  - Route wrappers (e.g., `ExerciseTypeDetailRoute`) use `RouteEntityWrapper` for entity lookup
+  - Handles breadcrumb context passing via `location.state`
 - **useNavigationHandlers** hook: Encapsulates navigation + entity operation combos
+  - Wraps entity operations (create/edit/delete) with appropriate navigation
+  - Navigation happens after successful entity operation or on cancel
 - **useRouteEntity** hook: Entity lookup + 404 redirects
+- **Breadcrumb navigation**: Uses `location.state` to pass breadcrumb context between pages
+  - Preserves navigation history when drilling down (Program → Routine → Exercise Type → Exercise)
+  - Breadcrumbs stored as `{ label: string; path: string }[]` in location state
+  - Falls back to default breadcrumbs if state is not available
 
 ### Component Architecture
 - Pages are route components (Home, ActiveWorkout, *List, *Detail)
@@ -61,74 +77,180 @@
 ### Active Workout Flow
 - **Persistent active sessions**: In-progress workouts stored in repository, survive page refresh
 - Active session derived from `workoutSessions.find(s => s.status === 'in-progress')`
-- **Drawer state from URL**: SetLogger and ExerciseSelection drawers use URL params (`?drawer=setLogger`)
+- **URL-based exercise navigation**: Current exercise index stored in URL path (`/workout/active/:exerciseIndex`)
+  - Navigate between exercises using prev/next buttons
+  - Invalid index redirects to `/workout/active/0` with replace: true
+- **Drawer state from URL**: SetLogger and ExerciseSelection drawers use URL params (`?drawer=setLogger&exerciseId=123`)
   - Drawer open/close modifies URL with `{ replace: true }` for good back button UX
   - URL is single source of truth for drawer visibility
   - Drawer components rendered locally in ActiveWorkout, state passed from URL
 - Exercise selection stored in `session.exerciseSelections` (single source of truth)
-- Navigate between exercise types with prev/next buttons
 - Exercise logs created on-demand when sets/notes are added
-- Notes sync via controlled state with debounced save on blur
+- Notes sync via controlled state with immediate save on blur (no debounce in current implementation)
 - Previous session history fetched via `useExerciseHistory`
 - Finish workout calculates `duration` and `totalVolume` via `finishWorkoutSession()`, sets status to `'completed'`
 - Cancel workout deletes the in-progress session from repository
 - Home page shows "Resume Workout" button when `activeSession` exists
+- Confirmation dialogs for cancel/finish actions (ConfirmDialog component)
 
 ### Key Patterns
-- Cascade deletion (exercise type → exercises → routine refs → program refs)
-- Smart routine cycling (tracks last completed workout in program cycle, ignores in-progress sessions)
-- Auto-save notes with 500ms debounce (`NOTES_AUTOSAVE_DEBOUNCE_MS`)
-- Exercise history lookup (searches all sessions for specific exercise)
-- Deep equality checks for state change detection (`deepEqual()`)
-- Logger utility for structured debugging (`logger.ts`)
-- Data migration on first load (`WorkoutContext`) adds `status` field to legacy sessions
+- **Cascade deletion**: exercise type → exercises → routine refs → program refs
+- **Smart routine cycling**: tracks last completed workout in program cycle, ignores in-progress sessions
+- **Exercise history lookup**: searches all sessions for specific exercise (`useExerciseHistory`)
+- **Deep equality checks**: state change detection using `deepEqual()` in `usePersistedState`
+- **Delta tracking**: optimizes repository saves by detecting adds, updates, deletes
+- **Optimistic UI**: state updates immediately, rollback on repository errors
+- **Queued saves**: if save in progress, queue next save to prevent race conditions
+- **Logger utility**: structured debugging via `logger.ts`
+- **Data migration**: `WorkoutContext` adds `status` field to legacy sessions on first load
+- **Controlled components**: all form inputs fully controlled with React state
+- **Error boundaries**: `ErrorBoundary` wraps app, `ErrorContext` for global error handling
 
 ## File Structure
 ```
 apps/web/src/
 ├── components/
-│   ├── ui/                    # shadcn/ui components (Button, Card, Drawer, etc.)
-│   ├── workout/               # Workout-specific components
-│   ├── AppRouter.tsx          # Route definitions + route wrappers
-│   ├── DrawerManager.tsx      # Drawer routing logic
-│   ├── RouteEntityWrapper.tsx # Generic route wrapper component
-│   ├── Breadcrumb.tsx         # Breadcrumb navigation
-│   └── ErrorBoundary.tsx      # Error boundary wrapper
-├── contexts/                  # React contexts for state management
-│   ├── AppStateContext.tsx    # Coordinator context
-│   ├── ExercisesContext.tsx   # Exercise + ExerciseType state
-│   ├── RoutinesContext.tsx    # Routine state
-│   ├── ProgramsContext.tsx    # Program state
-│   ├── WorkoutContext.tsx     # Active workout session state
-│   ├── ErrorContext.tsx       # Global error handling
-│   └── AuthContext.tsx        # Supabase auth
-├── hooks/                     # Custom React hooks
-│   ├── usePersistedState.ts   # Repository persistence with delta tracking
-│   ├── useDrawer.ts           # Unified drawer management with smart history
-│   ├── useNavigationHandlers.ts # Navigation + entity operations
-│   ├── useRouteEntity.ts      # Entity lookup + 404 redirect
-│   ├── useWorkoutLogic.ts     # Next workout calculation
-│   ├── useExerciseHistory.ts  # Previous session lookup
-│   └── useEntityHandlers.ts   # Entity CRUD operations
+│   ├── ui/                          # shadcn/ui components (Button, Card, ConfirmDialog, Toast, etc.)
+│   ├── workout/                     # Workout-specific components
+│   │   ├── ActiveWorkoutHeader.tsx  # Header with navigation
+│   │   ├── WorkoutExerciseManager.tsx # Main workout UI (controlled)
+│   │   ├── ExerciseCard.tsx         # Exercise display
+│   │   ├── SetLoggerDrawer.tsx      # Set logging drawer content
+│   │   ├── ExerciseSelectionDrawer.tsx # Exercise selection drawer content
+│   │   ├── ExerciseNotes.tsx        # Notes textarea
+│   │   ├── PreviousSessionHistory.tsx # History display
+│   │   └── WorkoutActions.tsx       # Cancel/Finish buttons
+│   ├── AppRouter.tsx                # Route definitions + route wrappers
+│   ├── DrawerManager.tsx            # Drawer routing logic (entity CRUD)
+│   ├── RouteEntityWrapper.tsx       # Generic route wrapper component
+│   ├── Breadcrumb.tsx               # Breadcrumb navigation
+│   ├── ErrorBoundary.tsx            # Error boundary wrapper
+│   ├── LoadingSkeletons.tsx         # Skeleton loading states
+│   ├── ExerciseForm.tsx             # Reusable exercise form
+│   ├── ExerciseTypeSelector.tsx     # Exercise type picker
+│   └── RoutineSelector.tsx          # Routine picker
+├── contexts/                        # React contexts for state management
+│   ├── AppStateContext.tsx          # Coordinator context (combines all contexts)
+│   ├── ExercisesContext.tsx         # Exercise + ExerciseType state
+│   ├── RoutinesContext.tsx          # Routine state
+│   ├── ProgramsContext.tsx          # Program state
+│   ├── WorkoutContext.tsx           # Workout session state + activeSession logic
+│   ├── ErrorContext.tsx             # Global error handling + toast
+│   └── AuthContext.tsx              # Supabase auth
+├── hooks/                           # Custom React hooks
+│   ├── usePersistedState.ts         # Repository persistence with delta tracking
+│   ├── useDrawer.ts                 # Unified drawer management with smart history
+│   ├── useNavigationHandlers.ts     # Navigation + entity operations
+│   ├── useRouteEntity.ts            # Entity lookup + 404 redirect
+│   ├── useWorkoutLogic.ts           # Next workout calculation
+│   ├── useExerciseHistory.ts        # Previous session lookup
+│   ├── useEntityHandlers.ts         # Entity CRUD operations
+│   ├── useAutoSaveNotes.ts          # Notes auto-save logic
+│   └── useExercisesByType.ts        # Filter exercises by type
 ├── lib/
-│   ├── repositories/          # IDataRepository, LocalStorage, Supabase
-│   ├── utils/                 # deepEqual, logger
-│   ├── workoutCalculations.ts # Volume, duration calculations
-│   ├── exerciseHistory.ts     # Exercise history queries
-│   ├── entityFactory.ts       # Entity creation helpers
-│   ├── constants.ts           # App constants (DRAWER_MODE, etc.)
-│   └── config.ts              # Environment config
-├── pages/                     # Route components (*List, *Detail, Active)
-├── types/                     # TypeScript domain types
-└── main.tsx                   # App entry point with context providers
+│   ├── repositories/                # Data layer
+│   │   ├── types.ts                 # IDataRepository interface
+│   │   ├── localStorage.ts          # LocalStorage implementation
+│   │   ├── supabase.ts              # Supabase implementation
+│   │   └── index.ts                 # Repository factory
+│   ├── utils/                       # Utilities
+│   │   ├── deepEqual.ts             # Deep equality check
+│   │   └── logger.ts                # Structured logging
+│   ├── validation/                  # Zod schemas
+│   │   └── schemas.ts               # Validation schemas
+│   ├── workoutCalculations.ts       # Volume, duration calculations
+│   ├── exerciseHistory.ts           # Exercise history queries
+│   ├── entityFactory.ts             # Entity creation helpers
+│   ├── constants.ts                 # App constants (DRAWER_MODE, DRAWER_HEIGHT_CLASS, etc.)
+│   ├── config.ts                    # Environment config
+│   └── supabase.ts                  # Supabase client setup
+├── pages/                           # Route components
+│   ├── Home.tsx                     # Home page with start/resume workout
+│   ├── ActiveWorkout.tsx            # Active workout page
+│   ├── ExerciseTypeList.tsx         # Exercise types list
+│   ├── ExerciseList.tsx             # Exercises for a type
+│   ├── ExerciseDetail.tsx           # Exercise edit/delete page
+│   ├── RoutineList.tsx              # Routines list
+│   ├── RoutineDetail.tsx            # Routine detail
+│   ├── ProgramList.tsx              # Programs list
+│   ├── ProgramDetail.tsx            # Program detail
+│   ├── CreateExerciseType.tsx       # Create exercise type form
+│   ├── EditExerciseType.tsx         # Edit exercise type form
+│   ├── CreateExercise.tsx           # Create exercise form
+│   ├── CreateRoutine.tsx            # Create routine form
+│   ├── EditRoutine.tsx              # Edit routine form
+│   ├── CreateProgram.tsx            # Create program form
+│   └── EditProgram.tsx              # Edit program form
+├── styles/
+│   └── globals.css                  # Tailwind + CSS variables
+├── types/                           # TypeScript domain types
+│   ├── exerciseType.ts              # ExerciseType
+│   ├── exercise.ts                  # Exercise, CreateExerciseInput
+│   ├── routine.ts                   # Routine, CreateRoutineInput
+│   ├── program.ts                   # Program, CreateProgramInput
+│   └── workoutSession.ts            # WorkoutSession, ExerciseLog, SetLog
+├── App.tsx                          # Main app component
+└── main.tsx                         # Entry point with context providers
 ```
 
 ## Conventions
-- Path aliases: `@/` maps to `src/`
-- CSS variables defined in globals.css
-- Mobile-first design (Vaul drawers, responsive layouts)
-- No explicit back buttons (browser back + breadcrumbs only)
-- TypeScript strict mode enabled with `noUncheckedIndexedAccess`
-- Drawer height: 96% of viewport (`DRAWER_HEIGHT_CLASS`)
-- All entity types extend `{ id: string }`
-- Date fields use native `Date` objects (serialized by repositories)
+
+### Code Style
+- **Path aliases**: `@/` maps to `src/`
+- **TypeScript**: Strict mode enabled with `noUncheckedIndexedAccess`
+- **Entity types**: All extend `{ id: string }` base interface
+- **Date handling**: Native `Date` objects (serialized by repositories)
+- **ID generation**: `crypto.randomUUID()` for all entity IDs
+
+### UI/UX
+- **Mobile-first**: Vaul drawers, responsive Tailwind layouts
+- **No back buttons**: Browser back + breadcrumbs only (no explicit back buttons in UI)
+- **Drawer height**: 96% of viewport (`DRAWER_HEIGHT_CLASS` constant)
+- **CSS variables**: Defined in `globals.css` using HSL format (`hsl(var(--color-*))`)
+- **Animations**: Framer Motion for page transitions and component animations
+- **Loading states**: Skeleton components for initial data loading
+
+### Navigation
+- **URL as state**: Drawer state, exercise index, all in URL (no React state for navigation)
+- **History management**: Always use `replace: true` for drawers to prevent history pollution
+- **Breadcrumbs**: Pass via `location.state` for context-aware navigation
+
+### Data Management
+- **Repository pattern**: All data access through `IDataRepository<T>` interface
+- **Optimistic updates**: UI updates immediately, rollback on error
+- **Delta tracking**: Only save changed entities (add/update/delete detection)
+- **Deep equality**: Use `deepEqual()` to detect actual changes before saves
+
+## Important Implementation Details
+
+### Drawer System
+- **Two types of drawers**:
+  1. **Persistent drawers** (DrawerManager): Entity CRUD operations that need to persist across navigations
+  2. **In-page drawers** (ActiveWorkout): Transient actions tied to specific page state
+- **Drawer modes** defined in `DRAWER_MODE` constant (constants.ts):
+  - CREATE_EXERCISE_TYPE, EDIT_EXERCISE_TYPE
+  - CREATE_EXERCISE, CREATE_ROUTINE, EDIT_ROUTINE
+  - CREATE_PROGRAM, EDIT_PROGRAM
+  - ADD_EXERCISE_TYPE_TO_ROUTINE
+  - SET_LOGGER, EXERCISE_SELECTION (in-page only)
+- **Always use `{ replace: true }` when opening/closing drawers** to prevent back button issues
+
+### Exercise Detail Page Navigation
+- **Canonical paths**: Always navigate to `/exercises/:id` regardless of entry point
+- **Breadcrumbs via state**: Pass `location.state.breadcrumbs` to preserve context
+- **Example flow**:
+  - Program Detail → Routine Detail → Exercise Type (passed in state) → Exercise (preserves full path)
+  - Direct Exercise Type → Exercise (default breadcrumbs)
+
+### Active Workout Session Management
+- **Single active session**: Only one workout can have `status: 'in-progress'` at a time
+- **Exercise index in URL**: `/workout/active/:exerciseIndex` (0-based)
+- **Exercise selection persistence**: Stored in `session.exerciseSelections` (Record<number, string>)
+- **Lazy exercise log creation**: ExerciseLog only created when first set added or notes entered
+- **Finish workflow**: Calculates `duration` (minutes) and `totalVolume` (kg) before marking completed
+
+### Context Architecture
+- **AppStateContext**: Combines all domain contexts, provides unified API to components
+- **Individual contexts**: Each manages its own domain (Exercises, Routines, Programs, Workouts)
+- **usePersistedState**: All contexts use this hook for repository sync
+- **Error handling**: ErrorContext wraps all operations, shows toast on errors

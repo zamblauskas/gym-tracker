@@ -33,8 +33,16 @@ export function useNavigationHandlers(handlers: {
     navigate(`/exercise-types/${exerciseType.id}`)
   }, [navigate])
 
-  const handleSelectExercise = useCallback((exercise: Exercise, exerciseTypeId: string) => {
-    navigate(`/exercise-types/${exerciseTypeId}/exercises/${exercise.id}`)
+  const handleSelectExercise = useCallback((
+    exercise: Exercise,
+    exerciseTypeId: string,
+    breadcrumbs?: Array<{ label: string; path: string }>
+  ) => {
+    // Always navigate to the canonical exercise path
+    // Pass breadcrumbs via location state to preserve navigation context
+    navigate(`/exercises/${exercise.id}`, {
+      state: { breadcrumbs }
+    })
   }, [navigate])
 
   const handleSelectRoutine = useCallback((routine: Routine) => {
@@ -45,20 +53,29 @@ export function useNavigationHandlers(handlers: {
     navigate(`/programs/${program.id}`)
   }, [navigate])
 
-  const handleSelectRoutineFromProgram = useCallback((programId: string, routine: Routine) => {
-    navigate(`/programs/${programId}/routines/${routine.id}`)
+  const handleSelectRoutineFromProgram = useCallback((
+    programId: string,
+    routine: Routine,
+    breadcrumbs?: Array<{ label: string; path: string }>
+  ) => {
+    // Always navigate to the canonical routine path
+    // Pass breadcrumbs via location state to preserve navigation context
+    navigate(`/routines/${routine.id}`, {
+      state: { breadcrumbs }
+    })
   }, [navigate])
 
   const handleSelectExerciseTypeFromRoutine = useCallback((
     routineId: string,
     exerciseType: ExerciseType,
-    programId?: string
+    programId?: string,
+    breadcrumbs?: Array<{ label: string; path: string }>
   ) => {
-    if (programId) {
-      navigate(`/programs/${programId}/routines/${routineId}/exercise-types/${exerciseType.id}`)
-    } else {
-      navigate(`/routines/${routineId}/exercise-types/${exerciseType.id}`)
-    }
+    // Always navigate to the canonical exercise type path
+    // Pass breadcrumbs via location state to preserve navigation context
+    navigate(`/exercise-types/${exerciseType.id}`, {
+      state: { breadcrumbs }
+    })
   }, [navigate])
 
   // Wrapped handlers that navigate after entity operations
@@ -68,15 +85,14 @@ export function useNavigationHandlers(handlers: {
   }, [handlers, navigate])
 
   const handleEditExerciseTypeWithNav = useCallback((id: string, name: string) => {
-    if (handlers.handleEditExerciseType(id, name)) {
-      navigate(-1)
-    }
-  }, [handlers, navigate])
+    // Just update the entity - drawer close will handle navigation via closeDrawer()
+    handlers.handleEditExerciseType(id, name)
+  }, [handlers])
 
   const handleCreateExerciseWithNav = useCallback((input: CreateExerciseInput) => {
+    // Just create the entity - drawer close will handle navigation via closeDrawer()
     handlers.handleCreateExercise(input)
-    navigate(-1)
-  }, [handlers, navigate])
+  }, [handlers])
 
   const handleCreateRoutineWithNav = useCallback((input: CreateRoutineInput) => {
     handlers.handleCreateRoutine(input)
@@ -84,10 +100,9 @@ export function useNavigationHandlers(handlers: {
   }, [handlers, navigate])
 
   const handleEditRoutineWithNav = useCallback((id: string, name: string) => {
-    if (handlers.handleEditRoutine(id, name)) {
-      navigate(-1)
-    }
-  }, [handlers, navigate])
+    // Just update the entity - drawer close will handle navigation via closeDrawer()
+    handlers.handleEditRoutine(id, name)
+  }, [handlers])
 
   const handleCreateProgramWithNav = useCallback((input: CreateProgramInput) => {
     handlers.handleCreateProgram(input)
@@ -95,10 +110,9 @@ export function useNavigationHandlers(handlers: {
   }, [handlers, navigate])
 
   const handleEditProgramWithNav = useCallback((id: string, name: string) => {
-    if (handlers.handleEditProgram(id, name)) {
-      navigate(-1)
-    }
-  }, [handlers, navigate])
+    // Just update the entity - drawer close will handle navigation via closeDrawer()
+    handlers.handleEditProgram(id, name)
+  }, [handlers])
 
   const handleDeleteExerciseWithNav = useCallback((exerciseId: string, exerciseTypeId: string) => {
     handlers.handleDeleteExercise(exerciseId)

@@ -8,24 +8,24 @@ export interface DrawerParams {
 }
 
 /**
- * Unified hook for managing URL-based drawer state with smart back button UX
+ * Unified hook for managing URL-based drawer state with proper history handling
  *
  * Usage:
  * ```tsx
  * const { isOpen, drawerMode, openDrawer, closeDrawer } = useDrawer()
  *
- * // Open drawer (pushes to history)
+ * // Open drawer (replaces current history entry)
  * openDrawer('createExerciseType')
  * openDrawer('editExerciseType', { id: '123' })
  *
- * // Close drawer (replaces history to prevent back button reopening)
+ * // Close drawer (replaces current history entry)
  * closeDrawer()
  * ```
  *
  * History behavior:
- * - Opening drawer: navigate(url) → pushes to history
+ * - Opening drawer: navigate(url, { replace: true }) → replaces current entry
  * - Closing drawer: navigate(baseUrl, { replace: true }) → replaces current entry
- * - Result: Back button skips closed drawer and goes to previous page
+ * - Result: Drawers never create history entries, back button navigates to previous page
  */
 export function useDrawer() {
   const navigate = useNavigate()
@@ -49,7 +49,8 @@ export function useDrawer() {
 
   /**
    * Opens a drawer by adding query params to current URL
-   * Pushes new entry to browser history
+   * Uses replace: true to avoid creating new history entries
+   * This ensures drawers don't pollute browser history
    */
   const openDrawer = (mode: DrawerMode, params?: DrawerParams) => {
     const searchParamsObj = new URLSearchParams()
@@ -63,7 +64,7 @@ export function useDrawer() {
       })
     }
 
-    navigate(`${location.pathname}?${searchParamsObj.toString()}`)
+    navigate(`${location.pathname}?${searchParamsObj.toString()}`, { replace: true })
   }
 
   /**

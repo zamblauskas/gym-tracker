@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, useParams } from 'react-router-dom'
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom'
 import Home from '@/pages/Home'
 import ExerciseTypeList from '@/pages/ExerciseTypeList'
 import ExerciseList from '@/pages/ExerciseList'
@@ -17,6 +17,7 @@ import { NextWorkoutInfo } from '@/hooks/useWorkoutLogic'
 import { HomeSkeleton } from '@/components/LoadingSkeletons'
 import { useRouteEntity } from '@/hooks/useRouteEntity'
 import { RouteEntityWrapper } from '@/components/RouteEntityWrapper'
+import { useDrawer } from '@/hooks/useDrawer'
 import { DRAWER_MODE } from '@/lib/constants'
 
 export interface AppRouterProps {
@@ -79,6 +80,7 @@ export function AppRouter({
   onCancelWorkout,
 }: AppRouterProps) {
   const navigate = useNavigate()
+  const { openDrawer } = useDrawer()
 
   // Show loading skeleton while data is loading
   if (isLoading) {
@@ -86,80 +88,142 @@ export function AppRouter({
   }
 
   // Route wrapper components that fetch data based on URL params
-  const ExerciseTypeDetailRoute = () => (
-    <RouteEntityWrapper
-      entities={exerciseTypes}
-      getIdFromParams={(params) => params.id}
-      fallbackPath="/exercise-types"
-      render={(exerciseType, params) => {
-        const id = params.id!
-        const filteredExercises = exercises.filter(ex => ex.exerciseTypeId === id)
-        return (
-          <ExerciseList
-            exerciseType={exerciseType}
-            exercises={filteredExercises}
-            onAdd={() => navigate(`?drawer=${DRAWER_MODE.CREATE_EXERCISE}&exerciseTypeId=${id}`)}
-            onSelect={(exercise) => onSelectExercise(exercise, id)}
-            onDelete={(exerciseId) => onDeleteExercise(exerciseId, id)}
-            onDeleteExerciseType={onDeleteExerciseType}
-            onEdit={() => navigate(`?drawer=${DRAWER_MODE.EDIT_EXERCISE_TYPE}&id=${id}`)}
-            breadcrumbs={[
-              { label: 'Home', onClick: () => navigate('/') },
-              { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
-              { label: exerciseType.name, onClick: () => { } }
-            ]}
-          />
-        )
-      }}
-    />
-  )
+  const ExerciseTypeDetailRoute = () => {
+    const location = useLocation()
+    const locationState = location.state as { breadcrumbs?: Array<{ label: string; path: string }> } | null
 
-  const ExerciseDetailRoute = () => (
-    <RouteEntityWrapper
-      entities={exercises}
-      getIdFromParams={(params) => params.exerciseId}
-      fallbackPath=""
-      render={(exercise, params) => (
-        <ExerciseDetail
-          exercise={exercise}
-          onUpdate={onUpdateExercise}
-          onDelete={(id) => onDeleteExercise(id, params.typeId!)}
-        />
-      )}
-      findEntity={(exercises, id) => {
-        const exercise = exercises.find(ex => ex.id === id)
-        return exercise
-      }}
-    />
-  )
+    return (
+      <RouteEntityWrapper
+        entities={exerciseTypes}
+        getIdFromParams={(params) => params.id}
+        fallbackPath="/exercise-types"
+        render={(exerciseType, params) => {
+          const id = params.id!
+          const filteredExercises = exercises.filter(ex => ex.exerciseTypeId === id)
 
-  const RoutineDetailRoute = () => (
-    <RouteEntityWrapper
-      entities={routines}
-      getIdFromParams={(params) => params.id}
-      fallbackPath="/routines"
-      render={(routine, params) => {
-        const id = params.id!
-        const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
-        return (
-          <RoutineDetail
-            routine={routine}
-            exerciseTypes={routineExerciseTypes}
-            exercises={exercises}
-            onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(id, etId)}
-            onDelete={onDeleteRoutine}
-            onEdit={() => navigate(`?drawer=${DRAWER_MODE.EDIT_ROUTINE}&id=${id}`)}
-            onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(id, et)}
-            breadcrumbs={[
-              { label: 'Home', onClick: () => navigate('/') },
-              { label: 'Routines', onClick: () => navigate('/') },
-              { label: routine.name, onClick: () => { } }
-            ]}
-          />
-        )
-      }}
-    />
-  )
+          // Use breadcrumbs from location state if available, otherwise use default
+          const breadcrumbs = locationState?.breadcrumbs
+            ? locationState.breadcrumbs.map(bc => ({
+                label: bc.label,
+                onClick: () => navigate(bc.path)
+              })).concat([{ label: exerciseType.name, onClick: () => {} }])
+            : [
+                { label: 'Home', onClick: () => navigate('/') },
+                { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
+                { label: exerciseType.name, onClick: () => {} }
+              ]
+
+          // Prepare breadcrumbs to pass via location state when navigating to exercise
+          const breadcrumbsForExercise = locationState?.breadcrumbs
+            ? [...locationState.breadcrumbs, { label: exerciseType.name, path: `/exercise-types/${id}` }]
+            : [
+                { label: 'Home', path: '/' },
+                { label: 'Exercise Types', path: '/exercise-types' },
+                { label: exerciseType.name, path: `/exercise-types/${id}` }
+              ]
+
+          return (
+            <ExerciseList
+              exerciseType={exerciseType}
+              exercises={filteredExercises}
+              onAdd={() => openDrawer(DRAWER_MODE.CREATE_EXERCISE, { exerciseTypeId: id })}
+              onSelect={(exercise) => onSelectExercise(exercise, id, breadcrumbsForExercise)}
+              onDelete={(exerciseId) => onDeleteExercise(exerciseId, id)}
+              onDeleteExerciseType={onDeleteExerciseType}
+              onEdit={() => openDrawer(DRAWER_MODE.EDIT_EXERCISE_TYPE, { id })}
+              breadcrumbs={breadcrumbs}
+            />
+          )
+        }}
+      />
+    )
+  }
+
+  const ExerciseDetailRoute = () => {
+    const location = useLocation()
+    const locationState = location.state as { breadcrumbs?: Array<{ label: string; path: string }> } | null
+
+    return (
+      <RouteEntityWrapper
+        entities={exercises}
+        getIdFromParams={(params) => params.id}
+        fallbackPath="/exercise-types"
+        render={(exercise, params) => {
+          // Use breadcrumbs from location state if available, otherwise use default
+          const breadcrumbs = locationState?.breadcrumbs
+            ? locationState.breadcrumbs.map(bc => ({
+                label: bc.label,
+                onClick: () => navigate(bc.path)
+              })).concat([{ label: exercise.name, onClick: () => {} }])
+            : [
+                { label: 'Home', onClick: () => navigate('/') },
+                { label: 'Exercise Types', onClick: () => navigate('/exercise-types') },
+                { label: exercise.name, onClick: () => {} }
+              ]
+
+          return (
+            <ExerciseDetail
+              exercise={exercise}
+              onUpdate={onUpdateExercise}
+              onDelete={(id) => onDeleteExercise(id, exercise.exerciseTypeId)}
+              breadcrumbs={breadcrumbs}
+            />
+          )
+        }}
+      />
+    )
+  }
+
+  const RoutineDetailRoute = () => {
+    const location = useLocation()
+    const locationState = location.state as { breadcrumbs?: Array<{ label: string; path: string }> } | null
+
+    return (
+      <RouteEntityWrapper
+        entities={routines}
+        getIdFromParams={(params) => params.id}
+        fallbackPath="/routines"
+        render={(routine, params) => {
+          const id = params.id!
+          const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
+
+          // Use breadcrumbs from location state if available, otherwise use default
+          const breadcrumbs = locationState?.breadcrumbs
+            ? locationState.breadcrumbs.map(bc => ({
+                label: bc.label,
+                onClick: () => navigate(bc.path)
+              })).concat([{ label: routine.name, onClick: () => {} }])
+            : [
+                { label: 'Home', onClick: () => navigate('/') },
+                { label: 'Routines', onClick: () => navigate('/routines') },
+                { label: routine.name, onClick: () => {} }
+              ]
+
+          // Prepare breadcrumbs to pass via location state when navigating to exercise type
+          const breadcrumbsForExerciseType = locationState?.breadcrumbs
+            ? [...locationState.breadcrumbs, { label: routine.name, path: `/routines/${id}` }]
+            : [
+                { label: 'Home', path: '/' },
+                { label: 'Routines', path: '/routines' },
+                { label: routine.name, path: `/routines/${id}` }
+              ]
+
+          return (
+            <RoutineDetail
+              routine={routine}
+              exerciseTypes={routineExerciseTypes}
+              exercises={exercises}
+              onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(id, etId)}
+              onDelete={onDeleteRoutine}
+              onEdit={() => openDrawer(DRAWER_MODE.EDIT_ROUTINE, { id })}
+              onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(id, et, undefined, breadcrumbsForExerciseType)}
+              breadcrumbs={breadcrumbs}
+            />
+          )
+        }}
+      />
+    )
+  }
 
   const ProgramDetailRoute = () => (
     <RouteEntityWrapper
@@ -170,6 +234,14 @@ export function AppRouter({
         const id = params.id!
         const programRoutines = routines.filter(r => program.routineIds.includes(r.id))
         const availableRoutines = routines.filter(r => !program.routineIds.includes(r.id))
+
+        // Prepare breadcrumbs to pass via location state when navigating to routine
+        const breadcrumbsForRoutine = [
+          { label: 'Home', path: '/' },
+          { label: 'Programs', path: '/programs' },
+          { label: program.name, path: `/programs/${id}` }
+        ]
+
         return (
           <ProgramDetail
             program={program}
@@ -179,8 +251,8 @@ export function AppRouter({
             onAddRoutine={(rId) => onAddRoutineToProgram(id, rId)}
             onRemoveRoutine={(rId) => onRemoveRoutineFromProgram(id, rId)}
             onDelete={onDeleteProgram}
-            onEdit={() => navigate(`?drawer=${DRAWER_MODE.EDIT_PROGRAM}&id=${id}`)}
-            onSelectRoutine={(r) => onSelectRoutineFromProgram(id, r)}
+            onEdit={() => openDrawer(DRAWER_MODE.EDIT_PROGRAM, { id })}
+            onSelectRoutine={(r) => onSelectRoutineFromProgram(id, r, breadcrumbsForRoutine)}
             breadcrumbs={[
               { label: 'Home', onClick: () => navigate('/') },
               { label: 'Programs', onClick: () => navigate('/programs') },
@@ -191,39 +263,6 @@ export function AppRouter({
       }}
     />
   )
-
-  const ProgramRoutineDetailRoute = () => {
-    const { programId, routineId } = useParams<{ programId: string; routineId: string }>()
-    const program = useRouteEntity(
-      programs.find(p => p.id === programId),
-      '/programs'
-    )
-    const routine = useRouteEntity(
-      routines.find(r => r.id === routineId),
-      '/programs'
-    )
-
-    if (!program || !routine) return null
-
-    const routineExerciseTypes = exerciseTypes.filter(et => routine.exerciseTypeIds.includes(et.id))
-    return (
-      <RoutineDetail
-        routine={routine}
-        exerciseTypes={routineExerciseTypes}
-        exercises={exercises}
-        onRemoveExerciseType={(etId) => onRemoveExerciseTypeFromRoutine(routineId!, etId)}
-        onDelete={onDeleteRoutine}
-        onEdit={() => navigate(`?drawer=${DRAWER_MODE.EDIT_ROUTINE}&id=${routineId}`)}
-        onSelectExerciseType={(et) => onSelectExerciseTypeFromRoutine(routineId!, et, programId)}
-        breadcrumbs={[
-          { label: 'Home', onClick: () => navigate('/') },
-          { label: 'Programs', onClick: () => navigate('/programs') },
-          { label: program.name, onClick: () => navigate(`/programs/${programId}`) },
-          { label: routine.name, onClick: () => { } }
-        ]}
-      />
-    )
-  }
 
   const ActiveWorkoutRoute = () => {
     const { exerciseIndex } = useParams<{ exerciseIndex: string }>()
@@ -281,17 +320,17 @@ export function AppRouter({
         <ExerciseTypeList
           exerciseTypes={exerciseTypes}
           exercises={exercises}
-          onAdd={() => navigate(`?drawer=${DRAWER_MODE.CREATE_EXERCISE_TYPE}`)}
+          onAdd={() => openDrawer(DRAWER_MODE.CREATE_EXERCISE_TYPE)}
           onSelect={onSelectExerciseType}
         />
       } />
       <Route path="/exercise-types/:id" element={<ExerciseTypeDetailRoute />} />
-      <Route path="/exercise-types/:typeId/exercises/:exerciseId" element={<ExerciseDetailRoute />} />
+      <Route path="/exercises/:id" element={<ExerciseDetailRoute />} />
       <Route path="/routines" element={
         <RoutineList
           routines={routines}
           exerciseTypes={exerciseTypes}
-          onAdd={() => navigate(`?drawer=${DRAWER_MODE.CREATE_ROUTINE}`)}
+          onAdd={() => openDrawer(DRAWER_MODE.CREATE_ROUTINE)}
           onSelect={onSelectRoutine}
         />
       } />
@@ -300,12 +339,11 @@ export function AppRouter({
         <ProgramList
           programs={programs}
           routines={routines}
-          onAdd={() => navigate(`?drawer=${DRAWER_MODE.CREATE_PROGRAM}`)}
+          onAdd={() => openDrawer(DRAWER_MODE.CREATE_PROGRAM)}
           onSelect={onSelectProgram}
         />
       } />
       <Route path="/programs/:id" element={<ProgramDetailRoute />} />
-      <Route path="/programs/:programId/routines/:routineId" element={<ProgramRoutineDetailRoute />} />
       <Route path="/workout/active/:exerciseIndex" element={<ActiveWorkoutRoute />} />
     </Routes>
   )

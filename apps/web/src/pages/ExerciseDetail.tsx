@@ -6,14 +6,16 @@ import { Exercise, CreateExerciseInput } from '@/types/exercise'
 import { Button } from '@/components/ui/button'
 import { ExerciseForm } from '@/components/ExerciseForm'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import Breadcrumb, { BreadcrumbItem } from '@/components/Breadcrumb'
 
 interface ExerciseDetailProps {
   exercise: Exercise
   onUpdate: (exercise: Exercise) => void
   onDelete: (exerciseId: string) => void
+  breadcrumbs?: BreadcrumbItem[]
 }
 
-export default function ExerciseDetail({ exercise, onUpdate, onDelete }: ExerciseDetailProps) {
+export default function ExerciseDetail({ exercise, onUpdate, onDelete, breadcrumbs = [] }: ExerciseDetailProps) {
   const navigate = useNavigate()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
@@ -27,7 +29,8 @@ export default function ExerciseDetail({ exercise, onUpdate, onDelete }: Exercis
       updatedAt: new Date(),
     }
     onUpdate(updatedExercise)
-    navigate(-1)
+    // Navigate back to exercise type detail page
+    navigate(`/exercise-types/${exercise.exerciseTypeId}`)
   }
 
   const handleConfirmDelete = () => {
@@ -36,6 +39,8 @@ export default function ExerciseDetail({ exercise, onUpdate, onDelete }: Exercis
 
   return (
     <div className="max-w-2xl mx-auto p-4 pb-8">
+      {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -46,7 +51,7 @@ export default function ExerciseDetail({ exercise, onUpdate, onDelete }: Exercis
           exerciseTypeId={exercise.exerciseTypeId}
           initialValues={exercise}
           onSubmit={handleSubmit}
-          onCancel={() => navigate(-1)}
+          onCancel={() => navigate(`/exercise-types/${exercise.exerciseTypeId}`)}
         />
       </motion.div>
 
