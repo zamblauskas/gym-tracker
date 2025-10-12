@@ -1,8 +1,12 @@
+import { Range } from '../range';
+
+export type ExerciseId = string;
+
 export interface Exercise {
-  id: string;
+  id: ExerciseId;
   name: string;
   machineBrand?: string;
-  targetRepRange: string;
+  targetRepRange: Range<number>;
   targetRepsInReserve?: number;
   exerciseTypeId: string;
   createdAt: Date;
@@ -15,4 +19,12 @@ export interface CreateExerciseInput {
   targetRepRange: string;
   targetRepsInReserve?: number;
   exerciseTypeId: string;
+}
+
+export interface UpdateExerciseInput {
+  name?: string;
+  machineBrand?: string;
+  targetRepRange?: string;
+  targetRepsInReserve?: number;
+  exerciseTypeId?: string;
 }

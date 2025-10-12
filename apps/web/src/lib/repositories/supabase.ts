@@ -1,341 +1,142 @@
-import { IDataRepository } from './types'
-import { supabase } from '../supabase'
-import { logger } from '@/lib/utils/logger'
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import {
+    ExerciseType,
+    ExerciseTypeId,
+    CreateExerciseTypeInput,
+    UpdateExerciseTypeInput,
+} from '../../types/workout/exerciseType';
+import { ExerciseTypeRepository } from './types';
 
-/**
- * Type mapping for entity types to Supabase table names
- */
-type TableName = 'exercise_types' | 'exercises' | 'routines' | 'programs' | 'workout_sessions'
+interface ExerciseTypeRow {
+    id: string;
+    user_id: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+}
 
-/**
- * Supabase implementation of the data repository
- * Handles serialization/deserialization including Date objects and JSONB fields
- * Implements Row Level Security (RLS) with automatic user_id injection
- */
-export class SupabaseRepository<T extends { id: string }> implements IDataRepository<T> {
-  private readonly tableName: TableName
-  private readonly caseConversionCache: Map<string, string> = new Map()
+export class SupabaseExerciseTypeRepository implements ExerciseTypeRepository {
+    private client: SupabaseClient;
 
-  constructor(tableName: TableName) {
-    this.tableName = tableName
-  }
-
-  /**
-   * Get the current authenticated user's ID
-   * Throws error if user is not authenticated
-   */
-  private async getCurrentUserId(): Promise<string> {
-    const { data: { user }, error } = await supabase.auth.getUser()
-
-    if (error || !user) {
-      throw new Error('User must be authenticated to access data')
+    constructor(supabaseUrl: string, supabaseAnonKey: string) {
+        this.client = createClient(supabaseUrl, supabaseAnonKey);
     }
 
-    return user.id
-  }
-
-  async getAll(): Promise<T[]> {
-    try {
-      // RLS will automatically filter by user_id via auth.uid()
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        logger.error(`Error fetching from ${this.tableName}:`, error)
-        throw error
-      }
-
-      return (data || []).map(item => this.deserializeDates(item))
-    } catch (error) {
-      logger.error(`Error reading from Supabase (${this.tableName}):`, error)
-      // Return empty array for unauthenticated users
-      return []
+    private rowToEntity(row: ExerciseTypeRow): ExerciseType {
+        return {
+            id: row.id,
+            name: row.name,
+            createdAt: new Date(row.created_at),
+            updatedAt: new Date(row.updated_at),
+            deletedAt: row.deleted_at ? new Date(row.deleted_at) : undefined,
+        };
     }
-  }
 
-  async getById(id: string): Promise<T | null> {
-    try {
-      // RLS will automatically filter by user_id via auth.uid()
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .select('*')
-        .eq('id', id)
-        .single()
+    async findById(id: ExerciseTypeId): Promise<ExerciseType | null> {
+        const { data, error } = await this.client
+            .from('exercise_types')
+            .select('*')
+            .eq('id', id)
+            .is('deleted_at', null)
+            .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Not found or not authorized
-          return null
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No rows returned
+                return null;
+            }
+            throw new Error(`Failed to fetch exercise type: ${error.message}`);
         }
-        logger.error(`Error fetching from ${this.tableName}:`, error)
-        throw error
-      }
 
-      return data ? this.deserializeDates(data) : null
-    } catch (error) {
-      logger.error(`Error reading from Supabase (${this.tableName}):`, error)
-      return null
-    }
-  }
-
-  async create(item: T): Promise<T> {
-    try {
-      // Get current user ID for RLS
-      const userId = await this.getCurrentUserId()
-
-      const serializedItem = this.serializeForSupabase(item)
-
-      // Inject user_id into the item
-      const itemWithUser = {
-        ...serializedItem,
-        user_id: userId
-      }
-
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .insert([itemWithUser])
-        .select()
-        .single()
-
-      if (error) {
-        logger.error(`Error creating in ${this.tableName}:`, error)
-        throw error
-      }
-
-      return this.deserializeDates(data)
-    } catch (error) {
-      logger.error(`Error writing to Supabase (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  async update(id: string, item: T): Promise<T> {
-    try {
-      // Ensure user is authenticated
-      await this.getCurrentUserId()
-
-      const serializedItem = this.serializeForSupabase(item)
-
-      // RLS will automatically ensure user can only update their own data
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .update(serializedItem)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) {
-        logger.error(`Error updating in ${this.tableName}:`, error)
-        throw error
-      }
-
-      return this.deserializeDates(data)
-    } catch (error) {
-      logger.error(`Error updating in Supabase (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  async delete(id: string): Promise<void> {
-    try {
-      // Ensure user is authenticated
-      await this.getCurrentUserId()
-
-      // RLS will automatically ensure user can only delete their own data
-      const { error } = await supabase
-        .from(this.tableName)
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        logger.error(`Error deleting from ${this.tableName}:`, error)
-        throw error
-      }
-    } catch (error) {
-      logger.error(`Error deleting from Supabase (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  async clear(): Promise<void> {
-    try {
-      // Ensure user is authenticated
-      const userId = await this.getCurrentUserId()
-
-      // RLS will automatically ensure user can only delete their own data
-      // This will only clear the current user's data, not all data
-      const { error } = await supabase
-        .from(this.tableName)
-        .delete()
-        .eq('user_id', userId)
-
-      if (error) {
-        logger.error(`Error clearing ${this.tableName}:`, error)
-        throw error
-      }
-    } catch (error) {
-      logger.error(`Error clearing Supabase table (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  async batchCreate(items: T[]): Promise<T[]> {
-    try {
-      const userId = await this.getCurrentUserId()
-
-      const serializedItems = items.map(item => ({
-        ...this.serializeForSupabase(item),
-        user_id: userId
-      }))
-
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .insert(serializedItems)
-        .select()
-
-      if (error) {
-        logger.error(`Error batch creating in ${this.tableName}:`, error)
-        throw error
-      }
-
-      return (data || []).map(item => this.deserializeDates(item))
-    } catch (error) {
-      logger.error(`Error batch writing to Supabase (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  async batchUpdate(items: T[]): Promise<T[]> {
-    try {
-      await this.getCurrentUserId()
-
-      // Supabase doesn't have native batch update, use upsert
-      const serializedItems = items.map(item => this.serializeForSupabase(item))
-
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .upsert(serializedItems)
-        .select()
-
-      if (error) {
-        logger.error(`Error batch updating in ${this.tableName}:`, error)
-        throw error
-      }
-
-      return (data || []).map(item => this.deserializeDates(item))
-    } catch (error) {
-      logger.error(`Error batch updating in Supabase (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  async batchDelete(ids: string[]): Promise<void> {
-    try {
-      await this.getCurrentUserId()
-
-      // Supabase doesn't have native batch delete, delete in parallel
-      const deletePromises = ids.map(id =>
-        supabase.from(this.tableName).delete().eq('id', id)
-      )
-
-      const results = await Promise.all(deletePromises)
-
-      const errors = results.filter(r => r.error).map(r => r.error)
-      if (errors.length > 0) {
-        logger.error(`Error batch deleting from ${this.tableName}:`, errors)
-        throw new Error(`Failed to delete ${errors.length} items`)
-      }
-    } catch (error) {
-      logger.error(`Error batch deleting from Supabase (${this.tableName}):`, error)
-      throw error
-    }
-  }
-
-  /**
-   * Serialize data for Supabase storage
-   * Converts field names from camelCase to snake_case for database columns
-   */
-  private serializeForSupabase(obj: any): any {
-    if (obj === null || obj === undefined) return obj
-
-    // Handle Date objects
-    if (obj instanceof Date) {
-      return obj.toISOString()
+        return this.rowToEntity(data as ExerciseTypeRow);
     }
 
-    // Handle arrays
-    if (Array.isArray(obj)) {
-      return obj.map(item => this.serializeForSupabase(item))
+    async findAll(): Promise<ExerciseType[]> {
+        const { data, error } = await this.client
+            .from('exercise_types')
+            .select('*')
+            .is('deleted_at', null);
+
+        if (error) {
+            throw new Error(`Failed to fetch exercise types: ${error.message}`);
+        }
+
+        return (data as ExerciseTypeRow[]).map(this.rowToEntity);
     }
 
-    // Handle objects
-    if (typeof obj === 'object') {
-      const result: any = {}
-      for (const key in obj) {
-        // Convert camelCase to snake_case for database columns
-        const snakeKey = this.camelToSnake(key)
-        result[snakeKey] = this.serializeForSupabase(obj[key])
-      }
-      return result
+    async create(input: CreateExerciseTypeInput): Promise<ExerciseType> {
+        const { data: { user } } = await this.client.auth.getUser();
+
+        if (!user) {
+            throw new Error('User must be authenticated to create exercise type');
+        }
+
+        const { data, error } = await this.client
+            .from('exercise_types')
+            .insert({
+                user_id: user.id,
+                name: input.name,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(`Failed to create exercise type: ${error.message}`);
+        }
+
+        return this.rowToEntity(data as ExerciseTypeRow);
     }
 
-    return obj
-  }
+    async update(
+        id: ExerciseTypeId,
+        input: UpdateExerciseTypeInput
+    ): Promise<ExerciseType | null> {
+        const updateData: Partial<Record<string, unknown>> = {};
+        if (input.name !== undefined) {
+            updateData.name = input.name;
+        }
 
-  /**
-   * Recursively deserialize Date objects from Supabase response
-   * Converts ISO date strings back to Date objects
-   * Also converts snake_case field names back to camelCase
-   */
-  private deserializeDates(obj: any): any {
-    if (obj === null || obj === undefined) return obj
+        if (Object.keys(updateData).length === 0) {
+            return this.findById(id);
+        }
 
-    // Check if it's a date string (ISO 8601 format)
-    if (typeof obj === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(obj)) {
-      return new Date(obj)
+        const { data, error } = await this.client
+            .from('exercise_types')
+            .update(updateData)
+            .eq('id', id)
+            .is('deleted_at', null)
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No rows updated (not found or soft-deleted)
+                return null;
+            }
+            throw new Error(`Failed to update exercise type: ${error.message}`);
+        }
+
+        return this.rowToEntity(data as ExerciseTypeRow);
     }
 
-    // Recursively process objects
-    if (typeof obj === 'object') {
-      if (Array.isArray(obj)) {
-        return obj.map(item => this.deserializeDates(item))
-      }
+    async delete(id: ExerciseTypeId): Promise<boolean> {
+        const { data, error } = await this.client
+            .from('exercise_types')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', id)
+            .is('deleted_at', null)
+            .select('id')
+            .single();
 
-      const result: any = {}
-      for (const key in obj) {
-        // Convert snake_case to camelCase for TypeScript objects
-        const camelKey = this.snakeToCamel(key)
-        result[camelKey] = this.deserializeDates(obj[key])
-      }
-      return result
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No rows updated (not found or already deleted)
+                return false;
+            }
+            throw new Error(`Failed to delete exercise type: ${error.message}`);
+        }
+
+        return !!data;
     }
-
-    return obj
-  }
-
-  /**
-   * Convert camelCase to snake_case (memoized)
-   */
-  private camelToSnake(str: string): string {
-    const cached = this.caseConversionCache.get(`c2s:${str}`)
-    if (cached) return cached
-
-    const result = str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
-    this.caseConversionCache.set(`c2s:${str}`, result)
-    return result
-  }
-
-  /**
-   * Convert snake_case to camelCase (memoized)
-   */
-  private snakeToCamel(str: string): string {
-    const cached = this.caseConversionCache.get(`s2c:${str}`)
-    if (cached) return cached
-
-    const result = str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-    this.caseConversionCache.set(`s2c:${str}`, result)
-    return result
-  }
 }

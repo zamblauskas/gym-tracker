@@ -1,142 +1,160 @@
-import { IDataRepository } from './types'
-import { logger } from '@/lib/utils/logger'
+import {
+    ExerciseType,
+    ExerciseTypeId,
+    CreateExerciseTypeInput,
+    UpdateExerciseTypeInput,
+} from '../../types/workout/exerciseType';
+import { ExerciseTypeRepository } from './types';
 
-/**
- * LocalStorage implementation of the data repository
- * Handles serialization/deserialization including Date objects
- */
-export class LocalStorageRepository<T extends { id: string }> implements IDataRepository<T> {
-  private readonly storageKey: string
+interface ExerciseTypeStorageData {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt?: string;
+}
 
-  constructor(storageKey: string) {
-    this.storageKey = `gym-tracker:${storageKey}`
-  }
+export class LocalStorageExerciseTypeRepository implements ExerciseTypeRepository {
+    private readonly STORAGE_KEY = 'gym-tracker:exercise-types';
 
-  getAll(): Promise<T[]> {
-    try {
-      const data = localStorage.getItem(this.storageKey)
-      if (!data) return Promise.resolve([])
+    private loadAll(): Map<ExerciseTypeId, ExerciseType> {
+        try {
+            const json = localStorage.getItem(this.STORAGE_KEY);
+            if (!json) {
+                return new Map();
+            }
 
-      const items = JSON.parse(data)
-      return Promise.resolve(items.map((item: any) => this.deserializeDates(item)))
-    } catch (error) {
-      logger.error(`Error reading from localStorage (${this.storageKey})`, error, 'LocalStorageRepository')
-      return Promise.reject(new Error(`Failed to load data from localStorage: ${error instanceof Error ? error.message : 'Unknown error'}`))
-    }
-  }
+            const data: Record<string, ExerciseTypeStorageData> = JSON.parse(json);
+            const map = new Map<ExerciseTypeId, ExerciseType>();
 
-  getById(id: string): Promise<T | null> {
-    const items = this.getAllSync()
-    return Promise.resolve(items.find(item => item.id === id) || null)
-  }
+            for (const [id, item] of Object.entries(data)) {
+                map.set(id, this.deserialize(item));
+            }
 
-  create(item: T): Promise<T> {
-    const items = this.getAllSync()
-    items.push(item)
-    this.saveAllSync(items)
-    return Promise.resolve(item)
-  }
-
-  update(id: string, item: T): Promise<T> {
-    const items = this.getAllSync()
-    const index = items.findIndex(i => i.id === id)
-
-    if (index === -1) {
-      return Promise.reject(new Error(`Item with id ${id} not found`))
+            return map;
+        } catch (error) {
+            console.error('Failed to load exercise types from localStorage:', error);
+            return new Map();
+        }
     }
 
-    items[index] = item
-    this.saveAllSync(items)
-    return Promise.resolve(item)
-  }
+    private saveAll(items: Map<ExerciseTypeId, ExerciseType>): void {
+        try {
+            const data: Record<string, ExerciseTypeStorageData> = {};
 
-  delete(id: string): Promise<void> {
-    const items = this.getAllSync()
-    const filtered = items.filter(item => item.id !== id)
-    this.saveAllSync(filtered)
-    return Promise.resolve()
-  }
+            for (const [id, item] of items.entries()) {
+                data[id] = this.serialize(item);
+            }
 
-  clear(): Promise<void> {
-    localStorage.removeItem(this.storageKey)
-    return Promise.resolve()
-  }
-
-  batchCreate(items: T[]): Promise<T[]> {
-    const existingItems = this.getAllSync()
-    const newItems = [...existingItems, ...items]
-    this.saveAllSync(newItems)
-    return Promise.resolve(items)
-  }
-
-  batchUpdate(items: T[]): Promise<T[]> {
-    const existingItems = this.getAllSync()
-    const itemMap = new Map(items.map(item => [item.id, item]))
-
-    const updatedItems = existingItems.map(existing =>
-      itemMap.has(existing.id) ? itemMap.get(existing.id)! : existing
-    )
-
-    this.saveAllSync(updatedItems)
-    return Promise.resolve(items)
-  }
-
-  batchDelete(ids: string[]): Promise<void> {
-    const existingItems = this.getAllSync()
-    const idsSet = new Set(ids)
-    const filtered = existingItems.filter(item => !idsSet.has(item.id))
-    this.saveAllSync(filtered)
-    return Promise.resolve()
-  }
-
-  // Synchronous private methods for internal use
-  private getAllSync(): T[] {
-    try {
-      const data = localStorage.getItem(this.storageKey)
-      if (!data) return []
-
-      const items = JSON.parse(data)
-      return items.map((item: any) => this.deserializeDates(item))
-    } catch (error) {
-      logger.error(`Error reading from localStorage (${this.storageKey})`, error, 'LocalStorageRepository')
-      throw new Error(`Failed to read from localStorage: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
-  }
-
-  private saveAllSync(items: T[]): void {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(items))
-    } catch (error) {
-      logger.error(`Error writing to localStorage (${this.storageKey})`, error, 'LocalStorageRepository')
-      throw error
-    }
-  }
-
-  /**
-   * Recursively deserialize Date objects from JSON
-   * Converts ISO date strings back to Date objects
-   */
-  private deserializeDates(obj: any): any {
-    if (obj === null || obj === undefined) return obj
-
-    // Check if it's a date string (ISO 8601 format)
-    if (typeof obj === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(obj)) {
-      return new Date(obj)
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+        } catch (error) {
+            console.error('Failed to save exercise types to localStorage:', error);
+            throw new Error('Failed to save exercise types to localStorage');
+        }
     }
 
-    // Recursively process objects
-    if (typeof obj === 'object') {
-      if (Array.isArray(obj)) {
-        return obj.map(item => this.deserializeDates(item))
-      }
-
-      const result: any = {}
-      for (const key in obj) {
-        result[key] = this.deserializeDates(obj[key])
-      }
-      return result
+    private serialize(entity: ExerciseType): ExerciseTypeStorageData {
+        return {
+            id: entity.id,
+            name: entity.name,
+            createdAt: entity.createdAt.toISOString(),
+            updatedAt: entity.updatedAt.toISOString(),
+            deletedAt: entity.deletedAt?.toISOString(),
+        };
     }
 
-    return obj
-  }
+    private deserialize(data: ExerciseTypeStorageData): ExerciseType {
+        return {
+            id: data.id,
+            name: data.name,
+            createdAt: new Date(data.createdAt),
+            updatedAt: new Date(data.updatedAt),
+            deletedAt: data.deletedAt ? new Date(data.deletedAt) : undefined,
+        };
+    }
+
+    async findById(id: ExerciseTypeId): Promise<ExerciseType | null> {
+        const items = this.loadAll();
+        const item = items.get(id);
+
+        if (!item || item.deletedAt) {
+            return null;
+        }
+
+        return item;
+    }
+
+    async findAll(): Promise<ExerciseType[]> {
+        const items = this.loadAll();
+        const result: ExerciseType[] = [];
+
+        for (const item of items.values()) {
+            if (!item.deletedAt) {
+                result.push(item);
+            }
+        }
+
+        // Sort by createdAt descending (newest first)
+        return result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
+
+    async create(input: CreateExerciseTypeInput): Promise<ExerciseType> {
+        const items = this.loadAll();
+        const now = new Date();
+
+        const newItem: ExerciseType = {
+            id: crypto.randomUUID(),
+            name: input.name,
+            createdAt: now,
+            updatedAt: now,
+        };
+
+        items.set(newItem.id, newItem);
+        this.saveAll(items);
+
+        return newItem;
+    }
+
+    async update(
+        id: ExerciseTypeId,
+        input: UpdateExerciseTypeInput
+    ): Promise<ExerciseType | null> {
+        const items = this.loadAll();
+        const existing = items.get(id);
+
+        if (!existing || existing.deletedAt) {
+            return null;
+        }
+
+        const updated: ExerciseType = {
+            ...existing,
+            name: input.name !== undefined ? input.name : existing.name,
+            updatedAt: new Date(),
+        };
+
+        items.set(id, updated);
+        this.saveAll(items);
+
+        return updated;
+    }
+
+    async delete(id: ExerciseTypeId): Promise<boolean> {
+        const items = this.loadAll();
+        const existing = items.get(id);
+
+        if (!existing || existing.deletedAt) {
+            return false;
+        }
+
+        const updated: ExerciseType = {
+            ...existing,
+            deletedAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        items.set(id, updated);
+        this.saveAll(items);
+
+        return true;
+    }
 }

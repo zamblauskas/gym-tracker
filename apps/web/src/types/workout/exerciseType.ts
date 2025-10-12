@@ -1,8 +1,11 @@
+export type ExerciseTypeId = string;
+
 export interface ExerciseType {
-  id: string;
+  id: ExerciseTypeId;
   name: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 export interface CreateExerciseTypeInput {
