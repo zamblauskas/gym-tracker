@@ -37,13 +37,13 @@ export class RoutineCommandService {
       .is('deleted_at', null)
       .order('position', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(`Failed to find max routine position: ${error.message}`);
     }
 
-    return data.position ?? '0';
+    return data?.position ?? '0';
   }
 
   async updateRoutinePositions(input: Routine.UpdatePositions): Promise<void> {
