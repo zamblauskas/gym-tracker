@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import { SERVICES_KEY, type Services } from '$lib/context';
   import { ExerciseSelectorModel } from '../models/exercise-selector.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -19,7 +19,7 @@
 
   $effect(() => {
     if (open && exerciseTypeId) {
-      model.loadExercises(exerciseTypeId);
+      untrack(() => model.loadExercises(exerciseTypeId));
     }
   });
 
