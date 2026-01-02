@@ -234,7 +234,7 @@
                   <Label for={exerciseType.id} class="flex-1 cursor-pointer">
                     {exerciseType.name}
                   </Label>
-                  <Button size="icon" onclick={() => toggleExerciseType(exerciseType.id)}>
+                  <Button size="icon" onclick={() => toggleExerciseType(exerciseType.id)} onmousedown={(e) => e.preventDefault()}>
                     <Minus />
                   </Button>
                 </div>
@@ -256,7 +256,7 @@
                       {exerciseType.name}
                     </Label>
                   </div>
-                  <Button size="icon" onclick={() => toggleExerciseType(exerciseType.id)}>
+                  <Button size="icon" onclick={() => toggleExerciseType(exerciseType.id)} onmousedown={(e) => e.preventDefault()}>
                     <Plus />
                   </Button>
                 </div>
