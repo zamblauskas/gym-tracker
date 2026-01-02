@@ -203,49 +203,51 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content>
+      <Dialog.Content class="flex max-h-[95dvh] flex-col">
         <Dialog.Header>
           <Dialog.Title>Edit program</Dialog.Title>
           <Dialog.Description>Change the program name and reorder routines.</Dialog.Description>
         </Dialog.Header>
-        <Input placeholder="Program name" bind:value={editedProgramName} />
+        <div class="flex flex-col gap-4 overflow-y-auto pt-1">
+          <Input placeholder="Program name" bind:value={editedProgramName} />
 
-        <Separator class="my-4" />
+          <Separator class="my-4" />
 
-        {#if model.program && model.program.routines.length === 0}
-          <p class="text-center text-sm text-muted-foreground">No routines available.</p>
-        {:else}
-          <div class="flex flex-col gap-2">
-            {#each editedRoutineOrder as routine, index (routine.id)}
-              <div class="flex items-center gap-2 rounded-lg border p-3">
-                <div class="flex flex-col gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="h-5 w-5"
-                    disabled={!model.program || model.isActionInProgress || index === 0}
-                    onclick={() => moveRoutineUp(routine.id)}
-                  >
-                    <ChevronUp class="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="h-5 w-5"
-                    disabled={!model.program ||
-                      model.isActionInProgress ||
-                      index === model.program.routines.length - 1}
-                    onclick={() => moveRoutineDown(routine.id)}
-                  >
-                    <ChevronDown class="h-3 w-3" />
-                  </Button>
+          {#if model.program && model.program.routines.length === 0}
+            <p class="text-center text-sm text-muted-foreground">No routines available.</p>
+          {:else}
+            <div class="flex flex-col gap-2">
+              {#each editedRoutineOrder as routine, index (routine.id)}
+                <div class="flex items-center gap-2 rounded-lg border p-3">
+                  <div class="flex flex-col gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="h-5 w-5"
+                      disabled={!model.program || model.isActionInProgress || index === 0}
+                      onclick={() => moveRoutineUp(routine.id)}
+                    >
+                      <ChevronUp class="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="h-5 w-5"
+                      disabled={!model.program ||
+                        model.isActionInProgress ||
+                        index === model.program.routines.length - 1}
+                      onclick={() => moveRoutineDown(routine.id)}
+                    >
+                      <ChevronDown class="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  <span class="flex-1">{routine.name}</span>
                 </div>
-
-                <span class="flex-1">{routine.name}</span>
-              </div>
-            {/each}
-          </div>
-        {/if}
+              {/each}
+            </div>
+          {/if}
+        </div>
         <Dialog.Footer>
           <Button
             onclick={updateProgram}

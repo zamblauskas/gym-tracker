@@ -136,7 +136,7 @@
 {:else if model.view && model.currentExerciseLog}
   <div class="flex h-[calc(100vh-4rem)] flex-col">
     <!-- Header -->
-    <div class="flex flex-col gap-2 px-4">
+    <div class="flex flex-col gap-2 p-4">
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Exercise Type</span>
         <span class="font-medium">{model.currentExerciseLog.exerciseType.name}</span>
@@ -167,7 +167,7 @@
       {/if}
     </div>
 
-    <div class="p-4">
+    <div class="px-4">
       <Separator />
     </div>
 

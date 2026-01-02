@@ -190,19 +190,19 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content>
+      <Dialog.Content class="flex max-h-[95dvh] flex-col">
         <Dialog.Header>
           <Dialog.Title>Edit routine</Dialog.Title>
           <Dialog.Description>Update routine name and exercise types.</Dialog.Description>
         </Dialog.Header>
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 overflow-y-auto pt-1">
           <Input placeholder="Routine name" bind:value={editedRoutineName} />
           <Separator />
           {#if model.allExerciseTypes.length === 0}
             <p class="text-center text-sm text-muted-foreground">No exercise types available.</p>
           {:else}
             <div class="flex flex-col gap-2">
-              <div class="p-4 text-center text-base leading-none font-semibold">
+              <div class="pt-4 text-center text-base leading-none font-semibold">
                 Selected exercise types
               </div>
               {#if selectedExerciseTypes.length === 0}
@@ -241,7 +241,7 @@
               {/each}
               <Separator class="my-2" />
 
-              <div class="p-4 text-center text-base leading-none font-semibold">
+              <div class="pt-4 text-center text-base leading-none font-semibold">
                 Available exercise types
               </div>
               {#if unselectedExerciseTypes.length === 0}
