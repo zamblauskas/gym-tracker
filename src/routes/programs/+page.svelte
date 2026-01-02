@@ -101,7 +101,7 @@
         <Plus /> Create a new program
       </Button>
     </Dialog.Trigger>
-    <Dialog.Content>
+    <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
       <Dialog.Header>
         <Dialog.Title>Create a new program</Dialog.Title>
         <Dialog.Description>Enter a name for your new program.</Dialog.Description>

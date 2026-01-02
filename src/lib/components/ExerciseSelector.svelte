@@ -30,7 +30,7 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Content>
+  <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
     <Dialog.Header>
       <Dialog.Title>Choose Exercise</Dialog.Title>
     </Dialog.Header>

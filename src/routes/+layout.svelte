@@ -105,7 +105,7 @@
             <User class="size-4" />
           </Button>
         </Dialog.Trigger>
-        <Dialog.Content>
+        <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
           <Dialog.Header>
             <Dialog.Title>User</Dialog.Title>
           </Dialog.Header>

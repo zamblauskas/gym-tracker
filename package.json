@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --host",
     "test": "npm run check && vitest run",
     "test:watch": "vitest",
     "build": "vite build",

@@ -150,7 +150,7 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content>
+      <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Header>
           <Dialog.Title>Edit exercise</Dialog.Title>
           <Dialog.Description>Update exercise details.</Dialog.Description>

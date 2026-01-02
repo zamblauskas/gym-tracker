@@ -183,7 +183,7 @@
           <Plus /> Create exercise
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content>
+      <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Header>
           <Dialog.Title>Create a new exercise</Dialog.Title>
           <Dialog.Description>Add an exercise to this exercise type.</Dialog.Description>
@@ -252,7 +252,7 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content>
+      <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Header>
           <Dialog.Title>Edit exercise type</Dialog.Title>
           <Dialog.Description>Change the exercise type name.</Dialog.Description>

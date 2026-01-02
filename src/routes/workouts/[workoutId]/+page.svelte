@@ -290,7 +290,7 @@
 
   <!-- Add Set Dialog -->
   <Dialog.Root bind:open={addSetDialogOpen}>
-    <Dialog.Content>
+    <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
       <Dialog.Header>
         <Dialog.Title>Add Set</Dialog.Title>
       </Dialog.Header>
@@ -316,7 +316,7 @@
 
   <!-- Edit Set Dialog -->
   <Dialog.Root bind:open={editSetDialogOpen}>
-    <Dialog.Content>
+    <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
       <Dialog.Header>
         <Dialog.Title>Edit Set</Dialog.Title>
       </Dialog.Header>

@@ -173,7 +173,7 @@
           <Plus /> Create routine
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content>
+      <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Header>
           <Dialog.Title>Create a new routine</Dialog.Title>
           <Dialog.Description>Enter a name for your new routine.</Dialog.Description>
@@ -203,7 +203,10 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content class="flex max-h-[95dvh] flex-col">
+      <Dialog.Content
+        class="flex max-h-[95dvh] flex-col"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <Dialog.Header>
           <Dialog.Title>Edit program</Dialog.Title>
           <Dialog.Description>Change the program name and reorder routines.</Dialog.Description>

@@ -190,7 +190,10 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content class="flex max-h-[95dvh] flex-col">
+      <Dialog.Content
+        class="flex max-h-[95dvh] flex-col"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <Dialog.Header>
           <Dialog.Title>Edit routine</Dialog.Title>
           <Dialog.Description>Update routine name and exercise types.</Dialog.Description>
@@ -234,7 +237,11 @@
                   <Label for={exerciseType.id} class="flex-1 cursor-pointer">
                     {exerciseType.name}
                   </Label>
-                  <Button size="icon" onclick={() => toggleExerciseType(exerciseType.id)} onmousedown={(e) => e.preventDefault()}>
+                  <Button
+                    size="icon"
+                    onclick={() => toggleExerciseType(exerciseType.id)}
+                    onmousedown={(e) => e.preventDefault()}
+                  >
                     <Minus />
                   </Button>
                 </div>
@@ -256,7 +263,11 @@
                       {exerciseType.name}
                     </Label>
                   </div>
-                  <Button size="icon" onclick={() => toggleExerciseType(exerciseType.id)} onmousedown={(e) => e.preventDefault()}>
+                  <Button
+                    size="icon"
+                    onclick={() => toggleExerciseType(exerciseType.id)}
+                    onmousedown={(e) => e.preventDefault()}
+                  >
                     <Plus />
                   </Button>
                 </div>

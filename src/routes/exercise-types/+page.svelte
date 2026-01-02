@@ -106,7 +106,7 @@
         <Plus /> Create a new exercise type
       </Button>
     </Dialog.Trigger>
-    <Dialog.Content>
+    <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
       <Dialog.Header>
         <Dialog.Title>Create a new exercise type</Dialog.Title>
         <Dialog.Description>Enter a name for your new exercise type.</Dialog.Description>
