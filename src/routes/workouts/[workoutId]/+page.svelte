@@ -37,13 +37,13 @@
   let editSetDialogOpen = $state(false);
   let deleteSetConfirmOpen = $state(false);
 
-  let newSetWeight = $state(0);
-  let newSetReps = $state(0);
+  let newSetWeight = $state<number | null>(null);
+  let newSetReps = $state<number | null>(null);
   let newSetRepsInReserve = $state<number | null>(null);
 
   let editingSetId = $state<string | null>(null);
-  let editSetWeight = $state(0);
-  let editSetReps = $state(0);
+  let editSetWeight = $state<number | null>(null);
+  let editSetReps = $state<number | null>(null);
   let editSetRepsInReserve = $state<number | null>(null);
 
   let deletingSetId = $state<string | null>(null);
@@ -76,14 +76,16 @@
         newSetRepsInReserve = lastSet.repsInReserve;
       }
     } else {
-      newSetWeight = 0;
-      newSetReps = 0;
+      newSetWeight = null;
+      newSetReps = null;
       newSetRepsInReserve = null;
     }
     addSetDialogOpen = true;
   }
 
   async function addSet() {
+    if (!newSetWeight || !newSetReps) return;
+
     await model.addSet(newSetReps, newSetWeight, newSetRepsInReserve);
     addSetDialogOpen = false;
   }
@@ -97,7 +99,8 @@
   }
 
   async function updateSet() {
-    if (!editingSetId) return;
+    if (!editingSetId || !editSetReps || !editSetWeight) return;
+
     await model.updateSet(editingSetId, editSetReps, editSetWeight, editSetRepsInReserve);
     editSetDialogOpen = false;
     editingSetId = null;
@@ -347,7 +350,13 @@
         </div>
       </div>
       <Dialog.Footer>
-        <Button onclick={addSet} disabled={newSetWeight <= 0 || newSetReps <= 0}>Save</Button>
+        <Button
+          onclick={addSet}
+          disabled={newSetWeight === null ||
+            newSetReps === null ||
+            newSetWeight <= 0 ||
+            newSetReps <= 0}>Save</Button
+        >
       </Dialog.Footer>
     </Dialog.Content>
   </Dialog.Root>
