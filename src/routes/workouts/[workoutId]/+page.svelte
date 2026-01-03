@@ -1,8 +1,10 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount, getContext } from 'svelte';
-  import { ChevronLeft, ChevronRight, X, Plus, Pencil } from 'lucide-svelte';
+  import { resolve } from '$app/paths';
+  import { ChevronLeft, ChevronRight, X, Plus, Pencil, Group, Dumbbell } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import * as Item from '$lib/components/ui/item/index.js';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { WorkoutDetailModel } from '$lib/models/workout-detail.svelte';
   import * as Workout from '$lib/types/views/workout';
@@ -18,6 +20,7 @@
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
+  import Badge from '$lib/components/ui/badge/badge.svelte';
 
   const workoutId = page.params.workoutId!;
 
@@ -136,35 +139,70 @@
 {:else if model.view && model.currentExerciseLog}
   <div class="flex h-[calc(100vh-4rem)] flex-col">
     <!-- Header -->
+    <div class="flex flex-col gap-2 px-4 pt-4">
+      <span class="text-sm text-muted-foreground">Exercise Type</span>
+      <Item.Root variant="outline">
+        {#snippet child({ props })}
+          {#if model.currentExerciseLog}
+            <a
+              href={resolve(`/exercise-types/${model.currentExerciseLog.exerciseType.id}`)}
+              {...props}
+            >
+              <Item.Content>
+                <Item.Title>
+                  <Group />
+                  <span class="font-medium">{model.currentExerciseLog.exerciseType.name}</span>
+                </Item.Title>
+              </Item.Content>
+              <Item.Actions>
+                <ChevronRight class="size-4" />
+              </Item.Actions>
+            </a>
+          {/if}
+        {/snippet}
+      </Item.Root>
+    </div>
     <div class="flex flex-col gap-2 p-4">
-      <div class="flex flex-col gap-1">
-        <span class="text-sm text-muted-foreground">Exercise Type</span>
-        <span class="font-medium">{model.currentExerciseLog.exerciseType.name}</span>
-      </div>
-      {#if model.currentExerciseLog.exercise?.name}
-        <div class="flex flex-col gap-1">
-          <span class="text-sm text-muted-foreground">Exercise</span>
-          <div class="flex flex-wrap items-baseline gap-2">
-            <span class="font-medium">{model.currentExerciseLog.exercise.name}</span>
-            {#if model.currentExerciseLog.exercise.machineBrand}
-              <span class="text-sm text-muted-foreground"
-                >({model.currentExerciseLog.exercise.machineBrand})</span
-              >
-            {/if}
-            {#if model.currentExerciseLog.exercise.targetRepRange}
-              <span class="text-sm text-muted-foreground">
-                {model.currentExerciseLog.exercise.targetRepRange.min}–{model.currentExerciseLog
-                  .exercise.targetRepRange.max} reps
-              </span>
-            {/if}
-            {#if model.currentExerciseLog.exercise.targetRepsInReserve}
-              <span class="text-sm text-muted-foreground">
-                {model.currentExerciseLog.exercise.targetRepsInReserve} RIR
-              </span>
-            {/if}
-          </div>
-        </div>
-      {/if}
+      <span class="text-sm text-muted-foreground">Exercise</span>
+      <Item.Root variant="outline">
+        {#snippet child({ props })}
+          {#if model.currentExercise}
+            <a href={resolve(`/exercises/${model.currentExercise.id}`)} {...props}>
+              <Item.Content>
+                <Item.Title>
+                  <Dumbbell />
+                  <span class="font-medium">{model.currentExercise.name}</span>
+                </Item.Title>
+                {#if model.currentExercise.machineBrand || model.currentExercise.targetRepRange || model.currentExercise.targetRepsInReserve}
+                  <Item.Description>
+                    <div class="flex flex-wrap gap-2">
+                      {#if model.currentExercise.machineBrand}
+                        <Badge variant="default">
+                          {model.currentExercise.machineBrand}
+                        </Badge>
+                      {/if}
+                      {#if model.currentExercise.targetRepRange.min || model.currentExercise.targetRepRange.max}
+                        <Badge variant="secondary">
+                          {model.currentExercise.targetRepRange.min}-{model.currentExercise
+                            .targetRepRange.max} reps
+                        </Badge>
+                      {/if}
+                      {#if model.currentExercise.targetRepsInReserve}
+                        <Badge variant="secondary">
+                          {model.currentExercise.targetRepsInReserve} RIR
+                        </Badge>
+                      {/if}
+                    </div>
+                  </Item.Description>
+                {/if}
+              </Item.Content>
+              <Item.Actions>
+                <ChevronRight class="size-4" />
+              </Item.Actions>
+            </a>
+          {/if}
+        {/snippet}
+      </Item.Root>
     </div>
 
     <div class="px-4">

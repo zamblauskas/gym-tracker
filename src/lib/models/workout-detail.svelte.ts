@@ -11,6 +11,7 @@ export class WorkoutDetailModel {
 
   currentIndex = $state(0);
   currentExerciseLog = $derived(this.view?.exercises[this.currentIndex]);
+  currentExercise = $derived(this.currentExerciseLog?.exercise);
 
   isLoading = $state(true);
   errorMessage = $state<string | null>(null);
