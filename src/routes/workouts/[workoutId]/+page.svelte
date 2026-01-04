@@ -118,9 +118,8 @@
     deletingSetId = null;
   }
 
-  function handleNotesChange(e: Event) {
-    const target = e.target as HTMLTextAreaElement;
-    model.updateNotes(target.value);
+  function saveNotes() {
+    model.updateNotes();
   }
 </script>
 
@@ -140,7 +139,7 @@
     <Skeleton class="h-64 w-full" />
   </div>
 {:else if model.view && model.currentExerciseLog}
-  <div class="flex h-[calc(100vh-4rem)] flex-col">
+  <div class="flex flex-col">
     <!-- Header -->
     <div class="flex flex-col gap-2 px-4 pt-4">
       <span class="text-sm text-muted-foreground">Exercise Type</span>
@@ -165,48 +164,50 @@
         {/snippet}
       </Item.Root>
     </div>
-    <div class="flex flex-col gap-2 p-4">
-      <span class="text-sm text-muted-foreground">Exercise</span>
-      <Item.Root variant="outline">
-        {#snippet child({ props })}
-          {#if model.currentExercise}
-            <a href={resolve(`/exercises/${model.currentExercise.id}`)} {...props}>
-              <Item.Content>
-                <Item.Title>
-                  <Dumbbell />
-                  <span class="font-medium">{model.currentExercise.name}</span>
-                </Item.Title>
-                {#if model.currentExercise.machineBrand || model.currentExercise.targetRepRange || model.currentExercise.targetRepsInReserve}
-                  <Item.Description>
-                    <div class="flex flex-wrap gap-2">
-                      {#if model.currentExercise.machineBrand}
-                        <Badge variant="default">
-                          {model.currentExercise.machineBrand}
-                        </Badge>
-                      {/if}
-                      {#if model.currentExercise.targetRepRange.min || model.currentExercise.targetRepRange.max}
-                        <Badge variant="secondary">
-                          {model.currentExercise.targetRepRange.min}-{model.currentExercise
-                            .targetRepRange.max} reps
-                        </Badge>
-                      {/if}
-                      {#if model.currentExercise.targetRepsInReserve}
-                        <Badge variant="secondary">
-                          {model.currentExercise.targetRepsInReserve} RIR
-                        </Badge>
-                      {/if}
-                    </div>
-                  </Item.Description>
-                {/if}
-              </Item.Content>
-              <Item.Actions>
-                <ChevronRight class="size-4" />
-              </Item.Actions>
-            </a>
-          {/if}
-        {/snippet}
-      </Item.Root>
-    </div>
+    {#if model.currentExercise}
+      <div class="flex flex-col gap-2 p-4">
+        <span class="text-sm text-muted-foreground">Exercise</span>
+        <Item.Root variant="outline">
+          {#snippet child({ props })}
+            {#if model.currentExercise}
+              <a href={resolve(`/exercises/${model.currentExercise.id}`)} {...props}>
+                <Item.Content>
+                  <Item.Title>
+                    <Dumbbell />
+                    <span class="font-medium">{model.currentExercise.name}</span>
+                  </Item.Title>
+                  {#if model.currentExercise.machineBrand || model.currentExercise.targetRepRange || model.currentExercise.targetRepsInReserve}
+                    <Item.Description>
+                      <div class="flex flex-wrap gap-2">
+                        {#if model.currentExercise.machineBrand}
+                          <Badge variant="default">
+                            {model.currentExercise.machineBrand}
+                          </Badge>
+                        {/if}
+                        {#if model.currentExercise.targetRepRange.min || model.currentExercise.targetRepRange.max}
+                          <Badge variant="secondary">
+                            {model.currentExercise.targetRepRange.min}-{model.currentExercise
+                              .targetRepRange.max} reps
+                          </Badge>
+                        {/if}
+                        {#if model.currentExercise.targetRepsInReserve}
+                          <Badge variant="secondary">
+                            {model.currentExercise.targetRepsInReserve} RIR
+                          </Badge>
+                        {/if}
+                      </div>
+                    </Item.Description>
+                  {/if}
+                </Item.Content>
+                <Item.Actions>
+                  <ChevronRight class="size-4" />
+                </Item.Actions>
+              </a>
+            {/if}
+          {/snippet}
+        </Item.Root>
+      </div>
+    {/if}
 
     <div class="px-4">
       <Separator />
@@ -272,8 +273,8 @@
         <div class="mt-4">
           <Textarea
             placeholder="Add notes..."
-            value={model.currentExerciseLog.notes || ''}
-            onchange={handleNotesChange}
+            bind:value={model.currentExerciseLog.notes}
+            onchange={saveNotes}
           />
         </div>
 
@@ -337,15 +338,15 @@
       </Dialog.Header>
       <div class="grid gap-4 py-4">
         <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="weight" class="text-right">Weight (kg)</Label>
+          <Label for="weight">Weight</Label>
           <Input id="weight" type="number" bind:value={newSetWeight} class="col-span-3" />
         </div>
         <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="reps" class="text-right">Reps</Label>
+          <Label for="reps">Reps</Label>
           <Input id="reps" type="number" bind:value={newSetReps} class="col-span-3" />
         </div>
         <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="rir" class="text-right">RIR</Label>
+          <Label for="rir">RIR</Label>
           <Input id="rir" type="number" bind:value={newSetRepsInReserve} class="col-span-3" />
         </div>
       </div>

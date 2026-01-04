@@ -158,21 +158,24 @@ export class WorkoutDetailModel {
     }
   }
 
-  async updateNotes(notes: string) {
+  async updateNotes() {
     if (!this.currentExerciseLog) return;
-    logger.info('Updating notes', { workoutExerciseId: this.currentExerciseLog.id, notes });
+    logger.info('Updating notes', {
+      workoutExerciseId: this.currentExerciseLog.id,
+      notes: this.currentExerciseLog.notes
+    });
 
     try {
       await this.commandService.updateNotes({
         exerciseLogId: this.currentExerciseLog.id,
-        notes
+        notes: this.currentExerciseLog.notes ?? ''
       });
       logger.info('Notes updated', { workoutExerciseId: this.currentExerciseLog.id });
     } catch (error) {
       this.errorMessage = 'Failed to update notes';
       logger.error('Failed to update notes', {
         workoutExerciseId: this.currentExerciseLog.id,
-        notes,
+        notes: this.currentExerciseLog.notes,
         error
       });
     }
