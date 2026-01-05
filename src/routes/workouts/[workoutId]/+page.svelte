@@ -285,122 +285,128 @@
         />
       {/if}
     </div>
+  </div>
+{:else}
+  <div class="flex font-semibold items-center justify-center p-4">
+    No exercises
+  </div>
+{/if}
 
-    <!-- Navigation & Actions -->
-    <div class="mt-auto border-t bg-background p-4">
-      <div class="mb-4 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={model.currentIndex === 0}
-          onclick={() => model.navigateTo(model.currentIndex - 1)}
-        >
-          <ChevronLeft class="h-8 w-8" />
-        </Button>
+<!-- Navigation & Actions -->
+{#if model.view}
+  <div class="mt-auto border-t bg-background p-4">
+    <div class="mb-4 flex items-center justify-between">
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={model.currentIndex === 0}
+        onclick={() => model.navigateTo(model.currentIndex - 1)}
+      >
+        <ChevronLeft class="h-8 w-8" />
+      </Button>
 
+      {#if model.view?.exercises.length > 0}
         <span class="text-sm text-muted-foreground">
           {model.currentIndex + 1} / {model.view?.exercises.length}
         </span>
+      {/if}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={model.currentIndex === model.view?.exercises.length - 1}
-          onclick={() => model.navigateTo(model.currentIndex + 1)}
-        >
-          <ChevronRight class="h-8 w-8" />
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={model.currentIndex >= model.view?.exercises.length - 1}
+        onclick={() => model.navigateTo(model.currentIndex + 1)}
+      >
+        <ChevronRight class="h-8 w-8" />
+      </Button>
+    </div>
 
-      <div class="flex flex-col gap-2">
-        <Button class="w-full" onclick={() => model.completeWorkout()}>Complete</Button>
-        <Button variant="outline" class="w-full" onclick={() => model.cancelWorkout()}>
-          Cancel
-        </Button>
-      </div>
+    <div class="flex flex-col gap-2">
+      <Button class="w-full" onclick={() => model.completeWorkout()}>Complete</Button>
+      <Button variant="outline" class="w-full" onclick={() => model.cancelWorkout()}>Cancel</Button>
     </div>
   </div>
-
-  <!-- Choose Exercise Dialog -->
-  {#if model.currentExerciseLog}
-    <ExerciseSelector
-      bind:open={chooseExerciseDialogOpen}
-      exerciseTypeId={model.currentExerciseLog.exerciseType.id}
-      onSelect={(id) => model.selectExercise(id)}
-    />
-  {/if}
-
-  <!-- Add Set Dialog -->
-  <Dialog.Root bind:open={addSetDialogOpen}>
-    <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
-      <Dialog.Header>
-        <Dialog.Title>Add Set</Dialog.Title>
-      </Dialog.Header>
-      <div class="grid gap-4 py-4">
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="weight">Weight</Label>
-          <Input id="weight" type="number" bind:value={newSetWeight} class="col-span-3" />
-        </div>
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="reps">Reps</Label>
-          <Input id="reps" type="number" bind:value={newSetReps} class="col-span-3" />
-        </div>
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="rir">RIR</Label>
-          <Input id="rir" type="number" bind:value={newSetRepsInReserve} class="col-span-3" />
-        </div>
-      </div>
-      <Dialog.Footer>
-        <Button
-          onclick={addSet}
-          disabled={newSetWeight === null ||
-            newSetReps === null ||
-            newSetWeight <= 0 ||
-            newSetReps <= 0}>Save</Button
-        >
-      </Dialog.Footer>
-    </Dialog.Content>
-  </Dialog.Root>
-
-  <!-- Edit Set Dialog -->
-  <Dialog.Root bind:open={editSetDialogOpen}>
-    <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
-      <Dialog.Header>
-        <Dialog.Title>Edit Set</Dialog.Title>
-      </Dialog.Header>
-      <div class="grid gap-4 py-4">
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="edit-weight" class="text-right">Weight (kg)</Label>
-          <Input id="edit-weight" type="number" bind:value={editSetWeight} class="col-span-3" />
-        </div>
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="edit-reps" class="text-right">Reps</Label>
-          <Input id="edit-reps" type="number" bind:value={editSetReps} class="col-span-3" />
-        </div>
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="edit-rir" class="text-right">RIR</Label>
-          <Input id="edit-rir" type="number" bind:value={editSetRepsInReserve} class="col-span-3" />
-        </div>
-      </div>
-      <Dialog.Footer>
-        <Button onclick={updateSet}>Save</Button>
-      </Dialog.Footer>
-    </Dialog.Content>
-  </Dialog.Root>
-
-  <!-- Delete Set Confirmation -->
-  <AlertDialog.Root bind:open={deleteSetConfirmOpen}>
-    <AlertDialog.Content>
-      <AlertDialog.Header>
-        <AlertDialog.Title>Delete Set</AlertDialog.Title>
-        <AlertDialog.Description>
-          Are you sure you want to delete this set? This action cannot be undone.
-        </AlertDialog.Description>
-      </AlertDialog.Header>
-      <AlertDialog.Footer>
-        <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-        <AlertDialog.Action onclick={confirmDeleteSet}>Delete</AlertDialog.Action>
-      </AlertDialog.Footer>
-    </AlertDialog.Content>
-  </AlertDialog.Root>
 {/if}
+
+<!-- Choose Exercise Dialog -->
+{#if model.currentExerciseLog}
+  <ExerciseSelector
+    bind:open={chooseExerciseDialogOpen}
+    exerciseTypeId={model.currentExerciseLog.exerciseType.id}
+    onSelect={(id) => model.selectExercise(id)}
+  />
+{/if}
+
+<!-- Add Set Dialog -->
+<Dialog.Root bind:open={addSetDialogOpen}>
+  <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
+    <Dialog.Header>
+      <Dialog.Title>Add Set</Dialog.Title>
+    </Dialog.Header>
+    <div class="grid gap-4 py-4">
+      <div class="grid grid-cols-4 items-center gap-4">
+        <Label for="weight">Weight</Label>
+        <Input id="weight" type="number" bind:value={newSetWeight} class="col-span-3" />
+      </div>
+      <div class="grid grid-cols-4 items-center gap-4">
+        <Label for="reps">Reps</Label>
+        <Input id="reps" type="number" bind:value={newSetReps} class="col-span-3" />
+      </div>
+      <div class="grid grid-cols-4 items-center gap-4">
+        <Label for="rir">RIR</Label>
+        <Input id="rir" type="number" bind:value={newSetRepsInReserve} class="col-span-3" />
+      </div>
+    </div>
+    <Dialog.Footer>
+      <Button
+        onclick={addSet}
+        disabled={newSetWeight === null ||
+          newSetReps === null ||
+          newSetWeight <= 0 ||
+          newSetReps <= 0}>Save</Button
+      >
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Edit Set Dialog -->
+<Dialog.Root bind:open={editSetDialogOpen}>
+  <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
+    <Dialog.Header>
+      <Dialog.Title>Edit Set</Dialog.Title>
+    </Dialog.Header>
+    <div class="grid gap-4 py-4">
+      <div class="grid grid-cols-4 items-center gap-4">
+        <Label for="edit-weight" class="text-right">Weight (kg)</Label>
+        <Input id="edit-weight" type="number" bind:value={editSetWeight} class="col-span-3" />
+      </div>
+      <div class="grid grid-cols-4 items-center gap-4">
+        <Label for="edit-reps" class="text-right">Reps</Label>
+        <Input id="edit-reps" type="number" bind:value={editSetReps} class="col-span-3" />
+      </div>
+      <div class="grid grid-cols-4 items-center gap-4">
+        <Label for="edit-rir" class="text-right">RIR</Label>
+        <Input id="edit-rir" type="number" bind:value={editSetRepsInReserve} class="col-span-3" />
+      </div>
+    </div>
+    <Dialog.Footer>
+      <Button onclick={updateSet}>Save</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Delete Set Confirmation -->
+<AlertDialog.Root bind:open={deleteSetConfirmOpen}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete Set</AlertDialog.Title>
+      <AlertDialog.Description>
+        Are you sure you want to delete this set? This action cannot be undone.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Action onclick={confirmDeleteSet}>Delete</AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
