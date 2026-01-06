@@ -9,7 +9,7 @@
     Trash2,
     ChevronRight,
     CircleAlert,
-    Group,
+    PersonStanding,
     Play,
     ChevronUp,
     ChevronDown,
@@ -163,7 +163,7 @@
           >
             <Item.Content>
               <Item.Title>
-                <Group class="size-4" />
+                <PersonStanding class="size-4" />
                 {exerciseType.name}
               </Item.Title>
             </Item.Content>

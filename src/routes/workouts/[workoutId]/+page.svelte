@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { onMount, getContext } from 'svelte';
   import { resolve } from '$app/paths';
-  import { ChevronLeft, ChevronRight, X, Plus, Pencil, Group, Dumbbell } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, X, Plus, Pencil, PersonStanding, Dumbbell } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import * as Item from '$lib/components/ui/item/index.js';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -152,7 +152,7 @@
             >
               <Item.Content>
                 <Item.Title>
-                  <Group />
+                  <PersonStanding />
                   <span class="font-medium">{model.currentExerciseLog.exerciseType.name}</span>
                 </Item.Title>
               </Item.Content>

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   import { getContext } from 'svelte';
-  import { Plus, Group, ChevronRight } from 'lucide-svelte';
+  import { Plus, PersonStanding, ChevronRight } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import { ExerciseTypeListModel } from '$lib/models/exercise-type-list.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -70,7 +70,7 @@
         {#snippet child({ props })}
           <a href={resolve(`/exercise-types/${exerciseType.id}`)} {...props}>
             <Item.Content>
-              <Item.Title><Group class="size-4" /> {exerciseType.name}</Item.Title>
+              <Item.Title><PersonStanding class="size-4" /> {exerciseType.name}</Item.Title>
             </Item.Content>
             <Item.Actions>
               <ChevronRight class="size-4" />
@@ -84,7 +84,7 @@
     {:else}
       <Empty.Root>
         <Empty.Media>
-          <Group class="size-10 text-muted-foreground" />
+          <PersonStanding class="size-10 text-muted-foreground" />
         </Empty.Media>
         <Empty.Header>
           <Empty.Title>No exercise types found</Empty.Title>

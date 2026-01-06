@@ -8,7 +8,7 @@
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
-  import { Folder, Group, ChevronRight, Activity, CircleAlert, Play } from 'lucide-svelte';
+  import { MapPinned, Folder, PersonStanding, ChevronRight, Activity, CircleAlert, Play } from 'lucide-svelte';
   import Badge from '$lib/components/ui/badge/badge.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
@@ -146,7 +146,7 @@
     {#snippet child({ props })}
       <a href={resolve('/exercise-types')} {...props}>
         <Item.Content>
-          <Item.Title><Group />Exercise Types</Item.Title>
+          <Item.Title><PersonStanding />Exercise Types</Item.Title>
         </Item.Content>
         <Item.Actions>
           <ChevronRight class="size-4" />
@@ -159,7 +159,7 @@
     {#snippet child({ props })}
       <a href={resolve('/gyms')} {...props}>
         <Item.Content>
-          <Item.Title><Group />Gyms</Item.Title>
+          <Item.Title><MapPinned />Gyms</Item.Title>
         </Item.Content>
         <Item.Actions>
           <ChevronRight class="size-4" />

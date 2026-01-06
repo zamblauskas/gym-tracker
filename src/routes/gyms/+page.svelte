@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   import { getContext } from 'svelte';
-  import { Dumbbell, Plus, ChevronRight } from 'lucide-svelte';
+  import { MapPinned, Plus, ChevronRight } from 'lucide-svelte';
   import { SERVICES_KEY, PAGE_CHROME_KEY, type Services } from '$lib/context';
   import { GymListModel } from '$lib/models/gym-list.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -60,7 +60,7 @@
         {#snippet child({ props })}
           <a href={resolve(`/gyms/${gym.id}`)} {...props}>
             <Item.Content>
-              <Item.Title><Dumbbell /> {gym.name}</Item.Title>
+              <Item.Title><MapPinned /> {gym.name}</Item.Title>
             </Item.Content>
             <Item.Actions>
               <ChevronRight class="size-4" />
@@ -71,7 +71,7 @@
     {:else}
       <Empty.Root>
         <Empty.Media>
-          <Dumbbell class="size-10 text-muted-foreground" />
+          <MapPinned class="size-10 text-muted-foreground" />
         </Empty.Media>
         <Empty.Header>
           <Empty.Title>No gyms found</Empty.Title>
