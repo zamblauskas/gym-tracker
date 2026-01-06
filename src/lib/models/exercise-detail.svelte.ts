@@ -1,11 +1,13 @@
 import type { ExerciseViewService } from '$lib/services/exercise-view.service';
 import type { ExerciseCommandService } from '$lib/services/exercise-command.service';
-import * as Exercise from '$lib/types/views/exercise';
+import type { GymViewService } from '$lib/services/gym-view.service';
+import type { Exercise, Gym } from '$lib/types/views';
 import type { Range } from '$lib/types/range';
 import { logger } from '$lib/logger';
 
 export class ExerciseDetailModel {
   exercise = $state<Exercise.Detail | null>(null);
+  allGyms = $state<Gym.Compact[]>([]);
   isLoading = $state(true);
   isSaving = $state(false);
   isDeleting = $state(false);
@@ -14,8 +16,9 @@ export class ExerciseDetailModel {
 
   constructor(
     private exerciseId: string,
-    private viewService: ExerciseViewService,
-    private commandService: ExerciseCommandService
+    private exerciseViewSvc: ExerciseViewService,
+    private exerciseCommandSvc: ExerciseCommandService,
+    private gymViewSvc: GymViewService
   ) {}
 
   async loadData() {
@@ -24,8 +27,16 @@ export class ExerciseDetailModel {
     this.isLoading = true;
     this.errorMessage = '';
     try {
-      this.exercise = await this.viewService.getExerciseDetailById(this.exerciseId);
-      logger.info('Exercise data loaded', { exercise: $state.snapshot(this.exercise) });
+      const [exercise, allGyms] = await Promise.all([
+        this.exerciseViewSvc.getExerciseDetailById(this.exerciseId),
+        this.gymViewSvc.listGyms()
+      ]);
+      this.exercise = exercise;
+      this.allGyms = allGyms;
+      logger.info('Exercise data loaded', {
+        exercise: $state.snapshot(this.exercise),
+        allGyms: $state.snapshot(this.allGyms)
+      });
     } catch (error) {
       this.errorMessage = error instanceof Error ? error.message : 'Failed to load exercise';
       logger.error('Failed to load exercise', { exerciseId: this.exerciseId, error });
@@ -38,24 +49,27 @@ export class ExerciseDetailModel {
     name: string,
     machineBrand: string | null,
     targetRepRange: Range<number>,
-    targetRepsInReserve: number | null
+    targetRepsInReserve: number | null,
+    gymIds: string[]
   ): Promise<boolean> {
     logger.info('Updating exercise', {
       exerciseId: this.exerciseId,
       name,
       machineBrand,
       targetRepRange,
-      targetRepsInReserve
+      targetRepsInReserve,
+      gymIds
     });
 
     this.isSaving = true;
     this.errorMessage = '';
     try {
-      await this.commandService.updateExercise(this.exerciseId, {
+      await this.exerciseCommandSvc.updateExercise(this.exerciseId, {
         name,
         machineBrand,
         targetRepRange,
-        targetRepsInReserve
+        targetRepsInReserve,
+        gymIds
       });
       logger.info('Exercise updated', { exerciseId: this.exerciseId });
       await this.loadData();
@@ -75,7 +89,7 @@ export class ExerciseDetailModel {
     this.isDeleting = true;
     this.errorMessage = '';
     try {
-      await this.commandService.deleteExercise(this.exerciseId);
+      await this.exerciseCommandSvc.deleteExercise(this.exerciseId);
       logger.info('Exercise deleted', { exerciseId: this.exerciseId });
       return true;
     } catch (error) {

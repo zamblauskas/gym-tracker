@@ -6,6 +6,10 @@ export interface Detail {
   machineBrand: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
+  gyms: {
+    id: string;
+    name: string;
+  }[];
   exerciseType: {
     id: string;
     name: string;

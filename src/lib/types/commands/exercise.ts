@@ -13,4 +13,5 @@ export interface Update {
   machineBrand: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
+  gymIds: string[];
 }

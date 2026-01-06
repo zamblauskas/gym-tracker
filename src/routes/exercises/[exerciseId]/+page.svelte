@@ -4,7 +4,7 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { getContext } from 'svelte';
-  import { Pencil, Trash2, CircleAlert } from 'lucide-svelte';
+  import { Pencil, Trash2, CircleAlert, MapPinned, Plus, Minus } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { ExerciseDetailModel } from '$lib/models/exercise-detail.svelte';
@@ -25,7 +25,8 @@
   const model = new ExerciseDetailModel(
     exerciseId,
     services.exerciseViewService,
-    services.exerciseCommandService
+    services.exerciseCommandService,
+    services.gymViewService
   );
 
   let editDialogOpen = $state(false);
@@ -36,6 +37,7 @@
     targetRepRangeMax: null as number | null,
     targetRepsInReserve: null as number | null
   });
+  let selectedGymIds: string[] = $state([]);
 
   let breadcrumbItems = $derived(
     !model.exercise
@@ -73,8 +75,28 @@
       targetRepRangeMax: model.exercise.targetRepRange?.max,
       targetRepsInReserve: model.exercise.targetRepsInReserve
     };
+    selectedGymIds = model.exercise.gyms.map((g) => g.id);
     editDialogOpen = true;
   }
+
+  function toggleGym(gymId: string) {
+    if (selectedGymIds.includes(gymId)) {
+      selectedGymIds = selectedGymIds.filter((id) => id !== gymId);
+    } else {
+      selectedGymIds = [...selectedGymIds, gymId];
+    }
+  }
+
+  let selectedGyms = $derived(
+    selectedGymIds
+      .flatMap((id) => {
+        const g = model.allGyms.find((g) => g.id === id);
+        return g ? [g] : [];
+      })
+      .sort((a, b) => a.name.localeCompare(b.name))
+  );
+
+  let unselectedGyms = $derived(model.allGyms.filter((g) => !selectedGymIds.includes(g.id)));
 
   async function updateExercise() {
     if (!model.exercise) return;
@@ -84,7 +106,8 @@
       editedExercise.name,
       editedExercise.machineBrand,
       { min: editedExercise.targetRepRangeMin, max: editedExercise.targetRepRangeMax },
-      editedExercise.targetRepsInReserve
+      editedExercise.targetRepsInReserve,
+      selectedGymIds
     );
     if (!didUpdate) return;
     editDialogOpen = false;
@@ -134,6 +157,19 @@
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Reps in Reserve (RIR)</span>
         <span>{model.exercise.targetRepsInReserve}</span>
+      </div>
+    {/if}
+    {#if model.exercise.gyms.length > 0}
+      <div class="flex flex-col gap-1">
+        <span class="text-sm text-muted-foreground">Available at</span>
+        <div class="flex flex-wrap gap-2">
+          {#each model.allGyms.filter((g) => model.exercise?.gyms.find((g2) => g2.id === g.id)) as gym (gym.id)}
+            <div class="flex items-center gap-1 rounded-md border px-2 py-1 text-sm">
+              <MapPinned class="size-3" />
+              <span>{gym.name}</span>
+            </div>
+          {/each}
+        </div>
       </div>
     {/if}
   </div>
@@ -202,6 +238,48 @@
               max={99}
               bind:value={editedExercise.targetRepsInReserve}
             />
+          </div>
+          <Separator />
+          <div class="flex flex-col gap-2">
+            {#if model.allGyms.length === 0}
+              <p class="text-center text-sm text-muted-foreground">No gyms available.</p>
+            {:else}
+              <div class="flex flex-col gap-2">
+                {#if selectedGyms.length > 0}
+                  <div class="pt-4 text-center text-base leading-none font-semibold">Selected gyms</div>
+                  {#each selectedGyms as gym (gym.id)}
+                    <div class="flex items-center gap-2 rounded-lg border p-2">
+                      <span class="flex-1 text-sm">{gym.name}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onclick={() => toggleGym(gym.id)}
+                        onmousedown={(e) => e.preventDefault()}
+                      >
+                        <Minus />
+                      </Button>
+                    </div>
+                  {/each}
+                {/if}
+
+                {#if unselectedGyms.length > 0}
+                  <div class="pt-4 text-center text-base leading-none font-semibold">Available gyms</div>
+                  {#each unselectedGyms as gym (gym.id)}
+                    <div class="flex items-center gap-2 rounded-lg border p-2">
+                      <span class="flex-1 text-sm">{gym.name}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onclick={() => toggleGym(gym.id)}
+                        onmousedown={(e) => e.preventDefault()}
+                      >
+                        <Plus />
+                      </Button>
+                    </div>
+                  {/each}
+                {/if}
+              </div>
+            {/if}
           </div>
         </div>
         <Dialog.Footer>

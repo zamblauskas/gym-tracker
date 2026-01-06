@@ -15,11 +15,13 @@ export class ExerciseViewService {
         target_rep_range_min,
         target_rep_range_max,
         target_reps_in_reserve,
-        exercise_types!inner(id,name)`
+        exercise_types!inner(id,name),
+        gyms(id, name)`
       )
       .eq('id', exerciseId)
       .is('deleted_at', null)
       .is('exercise_types.deleted_at', null)
+      .is('gyms.deleted_at', null)
       .single();
 
     if (error) {
@@ -41,7 +43,8 @@ export class ExerciseViewService {
         min: data.target_rep_range_min,
         max: data.target_rep_range_max
       },
-      targetRepsInReserve: data.target_reps_in_reserve
+      targetRepsInReserve: data.target_reps_in_reserve,
+      gyms: data.gyms
     };
 
     return exercise;

@@ -239,6 +239,7 @@
                   </Label>
                   <Button
                     size="icon"
+                    variant="ghost"
                     onclick={() => toggleExerciseType(exerciseType.id)}
                     onmousedown={(e) => e.preventDefault()}
                   >
@@ -265,6 +266,7 @@
                   </div>
                   <Button
                     size="icon"
+                    variant="ghost"
                     onclick={() => toggleExerciseType(exerciseType.id)}
                     onmousedown={(e) => e.preventDefault()}
                   >

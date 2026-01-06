@@ -97,20 +97,20 @@ export class RoutineCommandService {
   ): Promise<void> {
     await this.deleteExerciseTypesForRoutine(routineId);
 
-    if (exerciseTypeIds.length > 0) {
-      const rows: RoutineExerciseTypeInsert[] = exerciseTypeIds.map((id, idx) => ({
-        routine_id: routineId,
-        exercise_type_id: id,
-        position: String(idx)
-      }));
+    if (exerciseTypeIds.length === 0) return;
 
-      const { error } = await this.client
-        .from('routine_exercise_types')
-        .insert(rows as Database['public']['Tables']['routine_exercise_types']['Insert'][]);
+    const rows: RoutineExerciseTypeInsert[] = exerciseTypeIds.map((id, idx) => ({
+      routine_id: routineId,
+      exercise_type_id: id,
+      position: String(idx)
+    }));
 
-      if (error) {
-        throw new Error(`Failed to update routine exercise types: ${error.message}`);
-      }
+    const { error } = await this.client
+      .from('routine_exercise_types')
+      .insert(rows as Database['public']['Tables']['routine_exercise_types']['Insert'][]);
+
+    if (error) {
+      throw new Error(`Failed to update routine exercise types: ${error.message}`);
     }
   }
 

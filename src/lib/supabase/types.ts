@@ -28,6 +28,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      exercise_gyms: {
+        Row: {
+          created_at: string;
+          exercise_id: string;
+          gym_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          exercise_id: string;
+          gym_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          exercise_id?: string;
+          gym_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'exercise_gyms_exercise_id_fkey';
+            columns: ['exercise_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercises';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'exercise_gyms_gym_id_fkey';
+            columns: ['gym_id'];
+            isOneToOne: false;
+            referencedRelation: 'gyms';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       exercise_types: {
         Row: {
           created_at: string;

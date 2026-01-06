@@ -8,7 +8,15 @@
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
-  import { MapPinned, Folder, PersonStanding, ChevronRight, Activity, CircleAlert, Play } from 'lucide-svelte';
+  import {
+    MapPinned,
+    Folder,
+    PersonStanding,
+    ChevronRight,
+    Activity,
+    CircleAlert,
+    Play
+  } from 'lucide-svelte';
   import Badge from '$lib/components/ui/badge/badge.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
