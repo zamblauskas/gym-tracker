@@ -2,6 +2,9 @@ import type { ExerciseCommandService } from './services/exercise-command.service
 import type { ExerciseTypeCommandService } from './services/exercise-type-command.service';
 import type { ExerciseTypeViewService } from './services/exercise-type-view.service';
 import type { ExerciseViewService } from './services/exercise-view.service';
+
+import type { GymCommandService } from './services/gym-command.service';
+import type { GymViewService } from './services/gym-view.service';
 import type { ProgramCommandService } from './services/program-command.service';
 import type { ProgramViewService } from './services/program-view.service';
 import type { RoutineCommandService } from './services/routine-command.service';
@@ -18,6 +21,8 @@ export interface Services {
   exerciseTypeCommandService: ExerciseTypeCommandService;
   exerciseViewService: ExerciseViewService;
   exerciseCommandService: ExerciseCommandService;
+  gymViewService: GymViewService;
+  gymCommandService: GymCommandService;
   programViewService: ProgramViewService;
   programCommandService: ProgramCommandService;
   routineViewService: RoutineViewService;

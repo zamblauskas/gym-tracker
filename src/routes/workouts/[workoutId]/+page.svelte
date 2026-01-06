@@ -287,9 +287,7 @@
     </div>
   </div>
 {:else}
-  <div class="flex font-semibold items-center justify-center p-4">
-    No exercises
-  </div>
+  <div class="flex items-center justify-center p-4 font-semibold">No exercises</div>
 {/if}
 
 <!-- Navigation & Actions -->

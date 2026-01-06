@@ -8,6 +8,12 @@ trigger: always_on
 
 A web application for tracking gym workouts with programs, routines, and exercises.
 
+## Problem statement
+
+Standard trackers assume all gym equipment is identical. Since I travel between gyms, I need a system that tracks my general exercise types while accounting for the specific differences of unique machines, allowing me to measure true progress.
+A "Lat Pulldown" is not the same everywhere. 35kg on a high-friction machine at Gym A feels heavier than 35kg at Gym B.
+You select an Exercise Type (e.g., Lat Pulldown) but log a specific Exercise Variation (e.g., "Technogym Vertical Traction" or "LifeFitness Cable Pull"). This keeps history accurate to the specific machine.
+
 ## Features
 
 1. **Programs & Routines**

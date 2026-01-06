@@ -154,4 +154,17 @@
       </a>
     {/snippet}
   </Item.Root>
+
+  <Item.Root variant="outline">
+    {#snippet child({ props })}
+      <a href={resolve('/gyms')} {...props}>
+        <Item.Content>
+          <Item.Title><Group />Gyms</Item.Title>
+        </Item.Content>
+        <Item.Actions>
+          <ChevronRight class="size-4" />
+        </Item.Actions>
+      </a>
+    {/snippet}
+  </Item.Root>
 </div>

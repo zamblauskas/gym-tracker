@@ -78,8 +78,8 @@
 
   async function updateExercise() {
     if (!model.exercise) return;
-
     if (!editedExercise.name.trim()) return;
+
     const didUpdate = await model.updateExercise(
       editedExercise.name,
       editedExercise.machineBrand,

@@ -87,3 +87,13 @@ export type WorkoutSetUpdate = Optional<
   Database['public']['Tables']['workout_sets']['Update'],
   'user_id' | 'created_at' | 'updated_at' | 'deleted_at'
 >;
+
+export type GymInsert = Optional<
+  Database['public']['Tables']['gyms']['Insert'],
+  'user_id' | 'created_at' | 'updated_at' | 'deleted_at'
+>;
+
+export type GymUpdate = Optional<
+  Database['public']['Tables']['gyms']['Update'],
+  'user_id' | 'created_at' | 'updated_at' | 'deleted_at'
+>;

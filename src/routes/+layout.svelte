@@ -19,6 +19,8 @@
   import { ExerciseTypeCommandService } from '$lib/services/exercise-type-command.service';
   import { ExerciseViewService } from '$lib/services/exercise-view.service';
   import { ExerciseCommandService } from '$lib/services/exercise-command.service';
+  import { GymViewService } from '$lib/services/gym-view.service';
+  import { GymCommandService } from '$lib/services/gym-command.service';
   import { ProgramViewService } from '$lib/services/program-view.service';
   import { ProgramCommandService } from '$lib/services/program-command.service';
   import { RoutineViewService } from '$lib/services/routine-view.service';
@@ -36,6 +38,8 @@
   const exerciseTypeCommandService = new ExerciseTypeCommandService(supabase);
   const exerciseViewService = new ExerciseViewService(supabase);
   const exerciseCommandService = new ExerciseCommandService(supabase);
+  const gymViewService = new GymViewService(supabase);
+  const gymCommandService = new GymCommandService(supabase);
   const programViewService = new ProgramViewService(supabase);
   const programCommandService = new ProgramCommandService(supabase);
   const routineViewService = new RoutineViewService(supabase);
@@ -54,6 +58,8 @@
     exerciseTypeCommandService,
     exerciseViewService,
     exerciseCommandService,
+    gymViewService,
+    gymCommandService,
     programViewService,
     programCommandService,
     routineViewService,
