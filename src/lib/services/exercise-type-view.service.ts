@@ -35,12 +35,14 @@ export class ExerciseTypeViewService {
           machine_brand,
           target_rep_range_min,
           target_rep_range_max,
-          target_reps_in_reserve
+          target_reps_in_reserve,
+          gyms(id,name)
         )`
       )
       .eq('id', id)
       .is('deleted_at', null)
       .is('exercises.deleted_at', null)
+      .is('exercises.gyms.deleted_at', null)
       .order('name', { referencedTable: 'exercises' })
       .single();
 
@@ -57,7 +59,8 @@ export class ExerciseTypeViewService {
           name: ex.name,
           machineBrand: ex.machine_brand,
           targetRepRange: { min: ex.target_rep_range_min, max: ex.target_rep_range_max },
-          targetRepsInReserve: ex.target_reps_in_reserve
+          targetRepsInReserve: ex.target_reps_in_reserve,
+          gyms: ex.gyms
         };
 
         return exercise;

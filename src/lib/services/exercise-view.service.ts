@@ -53,9 +53,10 @@ export class ExerciseViewService {
   async getExercisesByType(exerciseTypeId: string): Promise<Exercise.Compact[]> {
     const { data, error } = await this.client
       .from('exercises')
-      .select('id,name,machine_brand')
+      .select('id,name,machine_brand,gyms(id,name)')
       .eq('exercise_type_id', exerciseTypeId)
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .is('gyms.deleted_at', null);
 
     if (error) {
       throw new Error(`Failed to load exercises: ${error.message}`);
@@ -65,7 +66,8 @@ export class ExerciseViewService {
       const exercise: Exercise.Compact = {
         id: row.id,
         name: row.name,
-        machineBrand: row.machine_brand
+        machineBrand: row.machine_brand,
+        gyms: row.gyms
       };
 
       return exercise;

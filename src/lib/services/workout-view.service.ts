@@ -32,7 +32,8 @@ export class WorkoutViewService {
             machine_brand,
             target_rep_range_min,
             target_rep_range_max,
-            target_reps_in_reserve
+            target_reps_in_reserve,
+            gyms(id,name)
           ),
           workout_sets (
             id,
@@ -51,6 +52,7 @@ export class WorkoutViewService {
       .is('workout_exercises.deleted_at', null)
       .is('workout_exercises.exercise_types.deleted_at', null)
       .is('workout_exercises.exercises.deleted_at', null)
+      .is('workout_exercises.exercises.gyms.deleted_at', null)
       .is('workout_exercises.workout_sets.deleted_at', null)
       .order('index', { referencedTable: 'workout_exercises', ascending: true })
       .single();
@@ -94,7 +96,8 @@ export class WorkoutViewService {
                   min: exercise.exercises.target_rep_range_min,
                   max: exercise.exercises.target_rep_range_max
                 },
-                targetRepsInReserve: exercise.exercises.target_reps_in_reserve
+                targetRepsInReserve: exercise.exercises.target_reps_in_reserve,
+                gyms: exercise.exercises.gyms
               }
             : null,
           notes: exercise.notes

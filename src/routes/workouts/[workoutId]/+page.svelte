@@ -2,15 +2,7 @@
   import { page } from '$app/state';
   import { onMount, getContext } from 'svelte';
   import { resolve } from '$app/paths';
-  import {
-    ChevronLeft,
-    ChevronRight,
-    X,
-    Plus,
-    Pencil,
-    PersonStanding,
-    Dumbbell
-  } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, X, Plus, Pencil, PersonStanding } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import * as Item from '$lib/components/ui/item/index.js';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -28,7 +20,7 @@
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
-  import Badge from '$lib/components/ui/badge/badge.svelte';
+  import ExerciseCard from '$lib/components/ExerciseCard.svelte';
 
   const workoutId = page.params.workoutId!;
 
@@ -175,45 +167,7 @@
     {#if model.currentExercise}
       <div class="flex flex-col gap-2 p-4">
         <span class="text-sm text-muted-foreground">Exercise</span>
-        <Item.Root variant="outline">
-          {#snippet child({ props })}
-            {#if model.currentExercise}
-              <a href={resolve(`/exercises/${model.currentExercise.id}`)} {...props}>
-                <Item.Content>
-                  <Item.Title>
-                    <Dumbbell />
-                    <span class="font-medium">{model.currentExercise.name}</span>
-                  </Item.Title>
-                  {#if model.currentExercise.machineBrand || model.currentExercise.targetRepRange || model.currentExercise.targetRepsInReserve}
-                    <Item.Description>
-                      <div class="flex flex-wrap gap-2">
-                        {#if model.currentExercise.machineBrand}
-                          <Badge variant="default">
-                            {model.currentExercise.machineBrand}
-                          </Badge>
-                        {/if}
-                        {#if model.currentExercise.targetRepRange.min || model.currentExercise.targetRepRange.max}
-                          <Badge variant="secondary">
-                            {model.currentExercise.targetRepRange.min}-{model.currentExercise
-                              .targetRepRange.max} reps
-                          </Badge>
-                        {/if}
-                        {#if model.currentExercise.targetRepsInReserve}
-                          <Badge variant="secondary">
-                            {model.currentExercise.targetRepsInReserve} RIR
-                          </Badge>
-                        {/if}
-                      </div>
-                    </Item.Description>
-                  {/if}
-                </Item.Content>
-                <Item.Actions>
-                  <ChevronRight class="size-4" />
-                </Item.Actions>
-              </a>
-            {/if}
-          {/snippet}
-        </Item.Root>
+        <ExerciseCard exercise={model.currentExercise} />
       </div>
     {/if}
 

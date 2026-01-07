@@ -163,7 +163,7 @@
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Available at</span>
         <div class="flex flex-wrap gap-2">
-          {#each model.allGyms.filter((g) => model.exercise?.gyms.find((g2) => g2.id === g.id)) as gym (gym.id)}
+          {#each model.allGyms.filter( (g) => model.exercise?.gyms.find((g2) => g2.id === g.id) ) as gym (gym.id)}
             <div class="flex items-center gap-1 rounded-md border px-2 py-1 text-sm">
               <MapPinned class="size-3" />
               <span>{gym.name}</span>
@@ -246,7 +246,9 @@
             {:else}
               <div class="flex flex-col gap-2">
                 {#if selectedGyms.length > 0}
-                  <div class="pt-4 text-center text-base leading-none font-semibold">Selected gyms</div>
+                  <div class="pt-4 text-center text-base leading-none font-semibold">
+                    Selected gyms
+                  </div>
                   {#each selectedGyms as gym (gym.id)}
                     <div class="flex items-center gap-2 rounded-lg border p-2">
                       <span class="flex-1 text-sm">{gym.name}</span>
@@ -263,7 +265,9 @@
                 {/if}
 
                 {#if unselectedGyms.length > 0}
-                  <div class="pt-4 text-center text-base leading-none font-semibold">Available gyms</div>
+                  <div class="pt-4 text-center text-base leading-none font-semibold">
+                    Available gyms
+                  </div>
                   {#each unselectedGyms as gym (gym.id)}
                     <div class="flex items-center gap-2 rounded-lg border p-2">
                       <span class="flex-1 text-sm">{gym.name}</span>

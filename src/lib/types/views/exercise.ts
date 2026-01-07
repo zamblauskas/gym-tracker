@@ -20,4 +20,8 @@ export interface Compact {
   id: string;
   name: string;
   machineBrand: string | null;
+  gyms: {
+    id: string;
+    name: string;
+  }[];
 }

@@ -12,6 +12,10 @@ export interface ExerciseDetail {
   machineBrand: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
+  gyms: {
+    id: string;
+    name: string;
+  }[];
 }
 
 export interface Detail {

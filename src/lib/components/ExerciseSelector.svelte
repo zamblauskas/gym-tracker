@@ -2,9 +2,11 @@
   import { getContext, untrack } from 'svelte';
   import { SERVICES_KEY, type Services } from '$lib/context';
   import { ExerciseSelectorModel } from '../models/exercise-selector.svelte';
+  import { MapPinned } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import Button from '$lib/components/ui/button/button.svelte';
+  import * as Item from '$lib/components/ui/item/index.js';
   import { Spinner } from '$lib/components/ui/spinner/index.js';
+  import Badge from './ui/badge/badge.svelte';
 
   interface Props {
     open: boolean;
@@ -43,12 +45,22 @@
         <p class="py-4 text-center text-destructive">{model.errorMessage}</p>
       {:else}
         {#each model.exercises as exercise (exercise.id)}
-          <Button variant="outline" class="justify-start" onclick={() => handleSelect(exercise.id)}>
-            {exercise.name}
-            {#if exercise.machineBrand}
-              <span class="text-muted-foreground">({exercise.machineBrand})</span>
-            {/if}
-          </Button>
+          <Item.Root onclick={() => handleSelect(exercise.id)} variant="outline">
+            <Item.Content>
+              <Item.Title>{exercise.name}</Item.Title>
+              <Item.Description>
+                {#if exercise.machineBrand}
+                  <Badge>{exercise.machineBrand}</Badge>
+                {/if}
+                {#each exercise.gyms as gym (gym.id)}
+                  <Badge variant="secondary">
+                    <MapPinned class="size-4" />
+                    {gym.name}
+                  </Badge>
+                {/each}
+              </Item.Description>
+            </Item.Content>
+          </Item.Root>
         {/each}
         {#if model.exercises.length === 0}
           <p class="py-4 text-center text-muted-foreground">No exercises found for this type.</p>
