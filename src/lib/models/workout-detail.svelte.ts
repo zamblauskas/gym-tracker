@@ -14,6 +14,23 @@ export class WorkoutDetailModel {
   currentExercise = $derived(this.currentExerciseLog?.exercise);
 
   isLoading = $state(true);
+  isSelecting = $state(false);
+  isAddingSet = $state(false);
+  isUpdatingSet = $state(false);
+  isDeletingSet = $state(false);
+  isSavingNotes = $state(false);
+  isCompleting = $state(false);
+  isCancelling = $state(false);
+  isActionInProgress = $derived(
+    this.isLoading ||
+      this.isSelecting ||
+      this.isAddingSet ||
+      this.isUpdatingSet ||
+      this.isDeletingSet ||
+      this.isSavingNotes ||
+      this.isCompleting ||
+      this.isCancelling
+  );
   errorMessage = $state<string | null>(null);
 
   constructor(
@@ -50,6 +67,7 @@ export class WorkoutDetailModel {
       exerciseId
     });
 
+    this.isSelecting = true;
     try {
       await this.commandService.selectExercise({
         exerciseLogId: this.currentExerciseLog.id,
@@ -64,6 +82,8 @@ export class WorkoutDetailModel {
         exerciseId,
         error
       });
+    } finally {
+      this.isSelecting = false;
     }
   }
 
@@ -109,6 +129,7 @@ export class WorkoutDetailModel {
       repsInReserve
     });
 
+    this.isAddingSet = true;
     try {
       await this.commandService.addSet({
         exerciseLogId: this.currentExerciseLog.id,
@@ -127,6 +148,8 @@ export class WorkoutDetailModel {
         repsInReserve,
         error
       });
+    } finally {
+      this.isAddingSet = false;
     }
   }
 
@@ -134,6 +157,7 @@ export class WorkoutDetailModel {
     if (!this.currentExerciseLog) return;
     logger.info('Updating set', { setId, reps, weight, repsInReserve });
 
+    this.isUpdatingSet = true;
     try {
       await this.commandService.updateSet(setId, { reps, weight, repsInReserve });
       logger.info('Set updated', { setId });
@@ -141,6 +165,8 @@ export class WorkoutDetailModel {
     } catch (error) {
       this.errorMessage = 'Failed to update set';
       logger.error('Failed to update set', { setId, reps, weight, repsInReserve, error });
+    } finally {
+      this.isUpdatingSet = false;
     }
   }
 
@@ -148,6 +174,7 @@ export class WorkoutDetailModel {
     if (!this.currentExerciseLog) return;
     logger.info('Deleting set', { setId });
 
+    this.isDeletingSet = true;
     try {
       await this.commandService.deleteSet(setId);
       logger.info('Set deleted', { setId });
@@ -155,6 +182,8 @@ export class WorkoutDetailModel {
     } catch (error) {
       this.errorMessage = 'Failed to delete set';
       logger.error('Failed to delete set', { setId, error });
+    } finally {
+      this.isDeletingSet = false;
     }
   }
 
@@ -165,6 +194,7 @@ export class WorkoutDetailModel {
       notes: this.currentExerciseLog.notes
     });
 
+    this.isSavingNotes = true;
     try {
       await this.commandService.updateNotes({
         exerciseLogId: this.currentExerciseLog.id,
@@ -178,6 +208,8 @@ export class WorkoutDetailModel {
         notes: this.currentExerciseLog.notes,
         error
       });
+    } finally {
+      this.isSavingNotes = false;
     }
   }
 
@@ -185,6 +217,7 @@ export class WorkoutDetailModel {
     if (!this.view) return;
     logger.info('Completing workout', { workoutId: this.view.id });
 
+    this.isCompleting = true;
     try {
       await this.commandService.completeWorkout(this.view.id);
       logger.info('Workout completed', { workoutId: this.view.id });
@@ -192,6 +225,8 @@ export class WorkoutDetailModel {
     } catch (error) {
       this.errorMessage = 'Failed to complete workout';
       logger.error('Failed to complete workout', { workoutId: this.view.id, error });
+    } finally {
+      this.isCompleting = false;
     }
   }
 
@@ -199,6 +234,7 @@ export class WorkoutDetailModel {
     if (!this.view) return;
     logger.info('Cancelling workout', { workoutId: this.view.id });
 
+    this.isCancelling = true;
     try {
       await this.commandService.cancelWorkout(this.view.id);
       logger.info('Workout cancelled', { workoutId: this.view.id });
@@ -206,6 +242,8 @@ export class WorkoutDetailModel {
     } catch (error) {
       this.errorMessage = 'Failed to cancel workout';
       logger.error('Failed to cancel workout', { workoutId: this.view.id, error });
+    } finally {
+      this.isCancelling = false;
     }
   }
 }

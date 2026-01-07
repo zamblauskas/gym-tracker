@@ -182,7 +182,7 @@
         <Dialog.Footer>
           <Button
             onclick={createRoutine}
-            disabled={newRoutineName.trim() === '' || model.isCreating}
+            disabled={newRoutineName.trim() === '' || model.isActionInProgress}
           >
             {#if model.isCreating}
               <Spinner class="mr-2" />

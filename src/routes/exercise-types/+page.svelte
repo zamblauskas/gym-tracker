@@ -102,7 +102,7 @@
 <div class="p-4">
   <Dialog.Root bind:open={dialogOpen}>
     <Dialog.Trigger class="w-full">
-      <Button class="w-full" variant="outline">
+      <Button class="w-full" variant="outline" disabled={model.isActionInProgress}>
         <Plus /> Create a new exercise type
       </Button>
     </Dialog.Trigger>

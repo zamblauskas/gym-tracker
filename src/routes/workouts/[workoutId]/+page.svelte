@@ -182,6 +182,7 @@
           <Button
             variant="outline"
             class="w-full max-w-xs"
+            disabled={model.isActionInProgress}
             onclick={() => (chooseExerciseDialogOpen = true)}>Choose exercise</Button
           >
         </div>
@@ -203,6 +204,7 @@
                   variant="ghost"
                   size="icon"
                   class="h-8 w-8"
+                  disabled={model.isActionInProgress}
                   onclick={() => openEditSetDialog(set)}
                 >
                   <Pencil class="h-4 w-4" />
@@ -211,6 +213,7 @@
                   variant="ghost"
                   size="icon"
                   class="h-8 w-8"
+                  disabled={model.isActionInProgress}
                   onclick={() => openDeleteConfirmation(set.id)}
                 >
                   <X class="h-4 w-4" />
@@ -220,7 +223,12 @@
           {/each}
         </div>
 
-        <Button variant="outline" class="mt-2 w-full" onclick={openAddSetDialog}>
+        <Button
+          variant="outline"
+          class="mt-2 w-full"
+          disabled={model.isActionInProgress}
+          onclick={openAddSetDialog}
+        >
           <Plus class="mr-2 h-4 w-4" /> Create set
         </Button>
 
@@ -228,6 +236,7 @@
           <Button
             variant="outline"
             class="mt-2 w-full"
+            disabled={model.isActionInProgress}
             onclick={() => (chooseExerciseDialogOpen = true)}>Change exercise</Button
           >
         {/if}
@@ -259,7 +268,7 @@
       <Button
         variant="ghost"
         size="icon"
-        disabled={model.currentIndex === 0}
+        disabled={model.currentIndex === 0 || model.isActionInProgress}
         onclick={() => model.navigateTo(model.currentIndex - 1)}
       >
         <ChevronLeft class="h-8 w-8" />
@@ -274,7 +283,8 @@
       <Button
         variant="ghost"
         size="icon"
-        disabled={model.currentIndex >= model.view?.exercises.length - 1}
+        disabled={model.currentIndex >= model.view?.exercises.length - 1 ||
+          model.isActionInProgress}
         onclick={() => model.navigateTo(model.currentIndex + 1)}
       >
         <ChevronRight class="h-8 w-8" />
@@ -284,7 +294,7 @@
     <div class="flex flex-col gap-2">
       <AlertDialog.Root>
         <AlertDialog.Trigger>
-          <Button class="w-full">Complete</Button>
+          <Button class="w-full" disabled={model.isActionInProgress}>Complete</Button>
         </AlertDialog.Trigger>
         <AlertDialog.Content>
           <AlertDialog.Header>
@@ -295,14 +305,20 @@
           </AlertDialog.Header>
           <AlertDialog.Footer>
             <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-            <AlertDialog.Action onclick={() => model.completeWorkout()}>Complete</AlertDialog.Action
-            >
+            <AlertDialog.Action onclick={() => model.completeWorkout()}>
+              {#if model.isCompleting}
+                <Spinner class="mr-2" />
+              {/if}
+              Complete
+            </AlertDialog.Action>
           </AlertDialog.Footer>
         </AlertDialog.Content>
       </AlertDialog.Root>
       <AlertDialog.Root>
         <AlertDialog.Trigger>
-          <Button variant="outline" class="w-full">Cancel</Button>
+          <Button variant="outline" class="w-full" disabled={model.isActionInProgress}
+            >Cancel</Button
+          >
         </AlertDialog.Trigger>
         <AlertDialog.Content>
           <AlertDialog.Header>
@@ -313,9 +329,12 @@
           </AlertDialog.Header>
           <AlertDialog.Footer>
             <AlertDialog.Cancel>Go back</AlertDialog.Cancel>
-            <AlertDialog.Action onclick={() => model.cancelWorkout()}
-              >Cancel workout</AlertDialog.Action
-            >
+            <AlertDialog.Action onclick={() => model.cancelWorkout()}>
+              {#if model.isCancelling}
+                <Spinner class="mr-2" />
+              {/if}
+              Cancel workout
+            </AlertDialog.Action>
           </AlertDialog.Footer>
         </AlertDialog.Content>
       </AlertDialog.Root>
@@ -355,11 +374,17 @@
     <Dialog.Footer>
       <Button
         onclick={addSet}
-        disabled={newSetWeight === null ||
+        disabled={model.isActionInProgress ||
+          newSetWeight === null ||
           newSetReps === null ||
           newSetWeight <= 0 ||
-          newSetReps <= 0}>Save</Button
+          newSetReps <= 0}
       >
+        {#if model.isAddingSet}
+          <Spinner class="mr-2" />
+        {/if}
+        Save
+      </Button>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
@@ -385,7 +410,12 @@
       </div>
     </div>
     <Dialog.Footer>
-      <Button onclick={updateSet}>Save</Button>
+      <Button onclick={updateSet} disabled={model.isActionInProgress}>
+        {#if model.isUpdatingSet}
+          <Spinner class="mr-2" />
+        {/if}
+        Save
+      </Button>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
@@ -401,7 +431,12 @@
     </AlertDialog.Header>
     <AlertDialog.Footer>
       <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={confirmDeleteSet}>Delete</AlertDialog.Action>
+      <AlertDialog.Action onclick={confirmDeleteSet}>
+        {#if model.isDeletingSet}
+          <Spinner class="mr-2" />
+        {/if}
+        Delete
+      </AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>
 </AlertDialog.Root>
