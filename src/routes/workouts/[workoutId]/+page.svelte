@@ -282,8 +282,43 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <Button class="w-full" onclick={() => model.completeWorkout()}>Complete</Button>
-      <Button variant="outline" class="w-full" onclick={() => model.cancelWorkout()}>Cancel</Button>
+      <AlertDialog.Root>
+        <AlertDialog.Trigger>
+          <Button class="w-full">Complete</Button>
+        </AlertDialog.Trigger>
+        <AlertDialog.Content>
+          <AlertDialog.Header>
+            <AlertDialog.Title>Complete workout?</AlertDialog.Title>
+            <AlertDialog.Description>
+              This will mark the workout as completed and save your progress.
+            </AlertDialog.Description>
+          </AlertDialog.Header>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+            <AlertDialog.Action onclick={() => model.completeWorkout()}>Complete</AlertDialog.Action
+            >
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+      <AlertDialog.Root>
+        <AlertDialog.Trigger>
+          <Button variant="outline" class="w-full">Cancel</Button>
+        </AlertDialog.Trigger>
+        <AlertDialog.Content>
+          <AlertDialog.Header>
+            <AlertDialog.Title>Cancel workout?</AlertDialog.Title>
+            <AlertDialog.Description>
+              This will discard the workout and all recorded sets.
+            </AlertDialog.Description>
+          </AlertDialog.Header>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>Go back</AlertDialog.Cancel>
+            <AlertDialog.Action onclick={() => model.cancelWorkout()}
+              >Cancel workout</AlertDialog.Action
+            >
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </div>
   </div>
 {/if}
