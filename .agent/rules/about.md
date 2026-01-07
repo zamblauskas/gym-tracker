@@ -178,9 +178,11 @@ Key tables:
 - `routines` - belong to programs, have exercise types
 - `exercise_types` - categories (e.g., "Chest", "Biceps")
 - `exercises` - specific exercises, belong to exercise types
-- `routine_exercise_types` - junction table (hard delete)
+- `routine_exercise_types` - junction table (hard delete), for one to many, routine -> [exercise_types]
 - `workouts` - workout sessions, belong to routines
 - `workout_exercises` - exercises in a workout
 - `workout_sets` - sets logged during workout
+- `gyms` - specific locations, we can assign specific exercises to one or more gyms
+- `exercise_gyms` - junction table (hard delete), for one to many, exercise -> [gyms]
 
 All entities have `created_at`, `updated_at`, `deleted_at` (soft delete).

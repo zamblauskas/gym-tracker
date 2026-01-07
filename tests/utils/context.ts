@@ -8,6 +8,7 @@ import { RoutineCommandService } from '$lib/services/routine-command.service';
 import { RoutineViewService } from '$lib/services/routine-view.service';
 import { WorkoutCommandService } from '$lib/services/workout-command.service';
 import { WorkoutViewService } from '$lib/services/workout-view.service';
+import { GymCommandService } from '$lib/services/gym-command.service';
 
 export class TestContext {
   public exerciseCommandService: ExerciseCommandService;
@@ -18,6 +19,7 @@ export class TestContext {
   public routineViewService: RoutineViewService;
   public workoutCommandService: WorkoutCommandService;
   public workoutViewService: WorkoutViewService;
+  public gymCommandService: GymCommandService;
 
   private constructor(supabase: SupabaseClient) {
     this.exerciseCommandService = new ExerciseCommandService(supabase);
@@ -28,6 +30,7 @@ export class TestContext {
     this.routineViewService = new RoutineViewService(supabase);
     this.workoutCommandService = new WorkoutCommandService(supabase);
     this.workoutViewService = new WorkoutViewService(supabase);
+    this.gymCommandService = new GymCommandService(supabase);
   }
 
   static async create(): Promise<TestContext> {

@@ -6,6 +6,7 @@ export interface Create {
   machineBrand: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
+  gymIds: string[];
 }
 
 export interface Update {

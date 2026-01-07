@@ -11,7 +11,6 @@
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
-  import Label from '$lib/components/ui/label/label.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
@@ -20,6 +19,7 @@
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
+  import AddEditExercise from '$lib/components/AddEditExercise.svelte';
 
   const exerciseTypeId = page.params.exerciseTypeId || '';
 
@@ -30,7 +30,8 @@
     exerciseTypeId,
     services.exerciseTypeViewService,
     services.exerciseTypeCommandService,
-    services.exerciseCommandService
+    services.exerciseCommandService,
+    services.gymViewService
   );
 
   let editDialogOpen = $state(false);
@@ -43,6 +44,7 @@
     targetRepRangeMax: null as number | null,
     targetRepsInReserve: null as number | null
   });
+  let newExerciseGymIds: string[] = $state([]);
 
   let breadcrumbItems = $derived(
     !model.exerciseType
@@ -86,6 +88,15 @@
       targetRepRangeMax: null,
       targetRepsInReserve: null
     };
+    newExerciseGymIds = [];
+  }
+
+  function toggleNewExerciseGym(gymId: string) {
+    if (newExerciseGymIds.includes(gymId)) {
+      newExerciseGymIds = newExerciseGymIds.filter((id) => id !== gymId);
+    } else {
+      newExerciseGymIds = [...newExerciseGymIds, gymId];
+    }
   }
 
   async function createExercise() {
@@ -93,7 +104,8 @@
       newExercise.name,
       newExercise.machineBrand,
       { min: newExercise.targetRepRangeMin, max: newExercise.targetRepRangeMax },
-      newExercise.targetRepsInReserve
+      newExercise.targetRepsInReserve,
+      newExerciseGymIds
     );
     if (!didCreate) return;
     resetNewExercise();
@@ -155,51 +167,12 @@
           <Dialog.Title>Create a new exercise</Dialog.Title>
           <Dialog.Description>Add an exercise to this exercise type.</Dialog.Description>
         </Dialog.Header>
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-2">
-            <Label for="new-name">Name</Label>
-            <Input id="new-name" placeholder="e.g., Bench Press" bind:value={newExercise.name} />
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label for="new-brand">Machine Brand</Label>
-            <Input
-              id="new-brand"
-              placeholder="e.g., Life Fitness"
-              bind:value={newExercise.machineBrand}
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label>Target Rep Range</Label>
-            <div class="flex items-center gap-2">
-              <Input
-                type="number"
-                placeholder="Min"
-                min={1}
-                max={99}
-                bind:value={newExercise.targetRepRangeMin}
-              />
-              <span class="text-muted-foreground">—</span>
-              <Input
-                type="number"
-                placeholder="Max"
-                min={1}
-                max={99}
-                bind:value={newExercise.targetRepRangeMax}
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label for="new-rir">Reps in Reserve (RIR)</Label>
-            <Input
-              id="new-rir"
-              type="number"
-              placeholder="e.g., 2"
-              min={0}
-              max={99}
-              bind:value={newExercise.targetRepsInReserve}
-            />
-          </div>
-        </div>
+        <AddEditExercise
+          bind:formData={newExercise}
+          allGyms={model.allGyms}
+          selectedGymIds={newExerciseGymIds}
+          onGymToggle={toggleNewExerciseGym}
+        />
         <Dialog.Footer>
           <Button
             onclick={createExercise}

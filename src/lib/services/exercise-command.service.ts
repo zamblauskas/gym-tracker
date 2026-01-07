@@ -26,6 +26,10 @@ export class ExerciseCommandService {
       throw new Error(`Failed to create exercise: ${error.message}`);
     }
 
+    if (input.gymIds.length > 0) {
+      await this.updateExerciseGyms(data.id, input.gymIds);
+    }
+
     return data.id;
   }
 

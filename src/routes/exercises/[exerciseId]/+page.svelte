@@ -4,20 +4,19 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { getContext } from 'svelte';
-  import { Pencil, Trash2, CircleAlert, MapPinned, Plus, Minus } from 'lucide-svelte';
+  import { Pencil, Trash2, CircleAlert, MapPinned } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { ExerciseDetailModel } from '$lib/models/exercise-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
-  import Input from '$lib/components/ui/input/input.svelte';
-  import Label from '$lib/components/ui/label/label.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
   import * as Alert from '$lib/components/ui/alert/index.js';
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
+  import AddEditExercise from '$lib/components/AddEditExercise.svelte';
 
   const exerciseId = page.params.exerciseId || '';
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
@@ -86,17 +85,6 @@
       selectedGymIds = [...selectedGymIds, gymId];
     }
   }
-
-  let selectedGyms = $derived(
-    selectedGymIds
-      .flatMap((id) => {
-        const g = model.allGyms.find((g) => g.id === id);
-        return g ? [g] : [];
-      })
-      .sort((a, b) => a.name.localeCompare(b.name))
-  );
-
-  let unselectedGyms = $derived(model.allGyms.filter((g) => !selectedGymIds.includes(g.id)));
 
   async function updateExercise() {
     if (!model.exercise) return;
@@ -191,101 +179,12 @@
           <Dialog.Title>Edit exercise</Dialog.Title>
           <Dialog.Description>Update exercise details.</Dialog.Description>
         </Dialog.Header>
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-2">
-            <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              placeholder="e.g., Bench Press"
-              bind:value={editedExercise.name}
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label for="edit-brand">Machine Brand</Label>
-            <Input
-              id="edit-brand"
-              placeholder="e.g., Life Fitness"
-              bind:value={editedExercise.machineBrand}
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label>Target Rep Range</Label>
-            <div class="flex items-center gap-2">
-              <Input
-                type="number"
-                placeholder="Min"
-                min={1}
-                max={99}
-                bind:value={editedExercise.targetRepRangeMin}
-              />
-              <span class="text-muted-foreground">—</span>
-              <Input
-                type="number"
-                placeholder="Max"
-                min={1}
-                max={99}
-                bind:value={editedExercise.targetRepRangeMax}
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label for="edit-rir">Reps in Reserve (RIR)</Label>
-            <Input
-              id="edit-rir"
-              type="number"
-              placeholder="e.g., 2"
-              min={0}
-              max={99}
-              bind:value={editedExercise.targetRepsInReserve}
-            />
-          </div>
-          <Separator />
-          <div class="flex flex-col gap-2">
-            {#if model.allGyms.length === 0}
-              <p class="text-center text-sm text-muted-foreground">No gyms available.</p>
-            {:else}
-              <div class="flex flex-col gap-2">
-                {#if selectedGyms.length > 0}
-                  <div class="pt-4 text-center text-base leading-none font-semibold">
-                    Selected gyms
-                  </div>
-                  {#each selectedGyms as gym (gym.id)}
-                    <div class="flex items-center gap-2 rounded-lg border p-2">
-                      <span class="flex-1 text-sm">{gym.name}</span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onclick={() => toggleGym(gym.id)}
-                        onmousedown={(e) => e.preventDefault()}
-                      >
-                        <Minus />
-                      </Button>
-                    </div>
-                  {/each}
-                {/if}
-
-                {#if unselectedGyms.length > 0}
-                  <div class="pt-4 text-center text-base leading-none font-semibold">
-                    Available gyms
-                  </div>
-                  {#each unselectedGyms as gym (gym.id)}
-                    <div class="flex items-center gap-2 rounded-lg border p-2">
-                      <span class="flex-1 text-sm">{gym.name}</span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onclick={() => toggleGym(gym.id)}
-                        onmousedown={(e) => e.preventDefault()}
-                      >
-                        <Plus />
-                      </Button>
-                    </div>
-                  {/each}
-                {/if}
-              </div>
-            {/if}
-          </div>
-        </div>
+        <AddEditExercise
+          bind:formData={editedExercise}
+          allGyms={model.allGyms}
+          {selectedGymIds}
+          onGymToggle={toggleGym}
+        />
         <Dialog.Footer>
           <Button
             onclick={updateExercise}

@@ -110,7 +110,6 @@ export class WorkoutCommandService {
       .from('workout_sets')
       .update(setUpdate)
       .eq('id', setId)
-      // TODO: do we need to check for deleted_at?
       .is('deleted_at', null);
 
     if (error) {
