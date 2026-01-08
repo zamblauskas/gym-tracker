@@ -19,7 +19,6 @@ export class RoutineViewService {
       .from('routines')
       .select('id,name,programs(id,name),routine_exercise_types(exercise_type_id)')
       .eq('id', routineId)
-      .is('deleted_at', null)
       .single();
 
     if (error) {

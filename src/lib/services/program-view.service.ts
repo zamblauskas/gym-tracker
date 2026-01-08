@@ -29,7 +29,6 @@ export class ProgramViewService {
       .from('programs')
       .select('id,name,routines(id,name,position)')
       .eq('id', programId)
-      .is('deleted_at', null)
       .is('routines.deleted_at', null)
       .order('position', { referencedTable: 'routines', ascending: true })
       .single();

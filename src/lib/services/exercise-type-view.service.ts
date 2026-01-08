@@ -40,7 +40,6 @@ export class ExerciseTypeViewService {
         )`
       )
       .eq('id', id)
-      .is('deleted_at', null)
       .is('exercises.deleted_at', null)
       .is('exercises.gyms.deleted_at', null)
       .order('name', { referencedTable: 'exercises' })

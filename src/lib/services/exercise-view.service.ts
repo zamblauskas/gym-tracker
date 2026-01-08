@@ -19,8 +19,6 @@ export class ExerciseViewService {
         gyms(id, name)`
       )
       .eq('id', exerciseId)
-      .is('deleted_at', null)
-      .is('exercise_types.deleted_at', null)
       .is('gyms.deleted_at', null)
       .single();
 

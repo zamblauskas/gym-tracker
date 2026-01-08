@@ -27,7 +27,6 @@ export class GymViewService {
       .from('gyms')
       .select('id,name')
       .eq('id', gymId)
-      .is('deleted_at', null)
       .single();
 
     if (error) {

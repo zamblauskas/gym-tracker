@@ -53,8 +53,6 @@ export class WorkoutViewService {
       .is('routines.deleted_at', null)
       .is('routines.programs.deleted_at', null)
       .is('workout_exercises.deleted_at', null)
-      .is('workout_exercises.exercise_types.deleted_at', null)
-      .is('workout_exercises.exercises.deleted_at', null)
       .is('workout_exercises.exercises.gyms.deleted_at', null)
       .is('workout_exercises.workout_sets.deleted_at', null)
       .order('index', { referencedTable: 'workout_exercises', ascending: true })
@@ -205,7 +203,6 @@ export class WorkoutViewService {
       .eq('workouts.status', 'completed')
       .is('deleted_at', null)
       .is('workouts.deleted_at', null)
-      .is('exercises.deleted_at', null)
       .is('workout_sets.deleted_at', null)
       .order('workouts(completed_at)', { ascending: false })
       .limit(limit);
