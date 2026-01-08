@@ -5,7 +5,9 @@ import * as Workout from '$lib/types/views/workout';
 export class WorkoutViewService {
   constructor(private client: SupabaseClient<Database>) {}
 
-  async getWorkoutDetail(workoutId: string): Promise<Workout.Detail> {
+  async getWorkoutDetail(workoutId: string, index: number): Promise<Workout.Detail> {
+    const exerciseCount = await this.getWorkoutExerciseCount(workoutId);
+
     const { data: workout, error } = await this.client
       .from('workouts')
       .select(
@@ -46,6 +48,7 @@ export class WorkoutViewService {
       `
       )
       .eq('id', workoutId)
+      .eq('workout_exercises.index', index)
       .is('deleted_at', null)
       .is('routines.deleted_at', null)
       .is('routines.programs.deleted_at', null)
@@ -65,6 +68,42 @@ export class WorkoutViewService {
       throw new Error('Workout not found');
     }
 
+    const exercise = workout.workout_exercises[0];
+
+    if (!exercise) {
+      throw new Error('Exercise not found');
+    }
+
+    const sets: Workout.SetDetail[] = exercise.workout_sets.map((ws) => ({
+      id: ws.id,
+      weight: ws.weight,
+      reps: ws.reps,
+      repsInReserve: ws.reps_in_reserve
+    }));
+
+    const detail: Workout.ExerciseDetail = {
+      id: exercise.id,
+      exerciseType: {
+        id: exercise.exercise_type_id,
+        name: exercise.exercise_types.name
+      },
+      sets,
+      exercise: exercise.exercises
+        ? {
+            id: exercise.exercises.id,
+            name: exercise.exercises.name,
+            machineBrand: exercise.exercises.machine_brand,
+            targetRepRange: {
+              min: exercise.exercises.target_rep_range_min,
+              max: exercise.exercises.target_rep_range_max
+            },
+            targetRepsInReserve: exercise.exercises.target_reps_in_reserve,
+            gyms: exercise.exercises.gyms
+          }
+        : null,
+      notes: exercise.notes
+    };
+
     return {
       id: workout.id,
       routine: {
@@ -73,42 +112,9 @@ export class WorkoutViewService {
           name: workout.routines.programs.name
         }
       },
-      exercises: workout.workout_exercises.map((exercise) => {
-        const sets: Workout.SetDetail[] = exercise.workout_sets.map((ws) => ({
-          id: ws.id,
-          weight: ws.weight,
-          reps: ws.reps,
-          repsInReserve: ws.reps_in_reserve
-        }));
-        const detail: Workout.ExerciseDetail = {
-          id: exercise.id,
-          exerciseType: {
-            id: exercise.exercise_type_id,
-            name: exercise.exercise_types.name
-          },
-          sets,
-          exercise: exercise.exercises
-            ? {
-                id: exercise.exercises.id,
-                name: exercise.exercises.name,
-                machineBrand: exercise.exercises.machine_brand,
-                targetRepRange: {
-                  min: exercise.exercises.target_rep_range_min,
-                  max: exercise.exercises.target_rep_range_max
-                },
-                targetRepsInReserve: exercise.exercises.target_reps_in_reserve,
-                gyms: exercise.exercises.gyms
-              }
-            : null,
-          notes: exercise.notes
-        };
-
-        return detail;
-      }),
-      status: this.mapStatus(workout.status),
-      exerciseCount: workout.workout_exercises.length,
-      completedExerciseCount: workout.workout_exercises.filter((we) => we.workout_sets.length > 0)
-        .length
+      exercise: detail,
+      exerciseCount,
+      status: this.mapStatus(workout.status)
     };
   }
 
@@ -221,6 +227,20 @@ export class WorkoutViewService {
         notes: log.notes
       };
     });
+  }
+
+  async getWorkoutExerciseCount(workoutId: string): Promise<number> {
+    const { data, error } = await this.client
+      .from('workout_exercises')
+      .select('id', { count: 'exact' })
+      .eq('workout_id', workoutId)
+      .is('deleted_at', null);
+
+    if (error) {
+      throw new Error(`Failed to load exercise count: ${error.message}`);
+    }
+
+    return data.length;
   }
 
   private mapStatus(status: string): Workout.Status {

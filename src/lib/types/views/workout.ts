@@ -49,10 +49,9 @@ export interface Detail {
       name: string;
     };
   };
-  exercises: ExerciseDetail[];
-  status: Status;
+  exercise: ExerciseDetail;
   exerciseCount: number;
-  completedExerciseCount: number;
+  status: Status;
 }
 
 export interface Compact {

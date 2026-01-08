@@ -128,7 +128,7 @@
 
     const workoutId = await model.startWorkout();
     if (workoutId) {
-      await goto(resolve(`/workouts/${workoutId}`));
+      await goto(resolve(`/workouts/${workoutId}/0`));
     }
   }
 </script>

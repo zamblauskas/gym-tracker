@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { onMount, getContext } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import { resolve } from '$app/paths';
   import { ChevronLeft, ChevronRight, X, Plus, Pencil, PersonStanding } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
@@ -22,7 +22,8 @@
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
 
-  const workoutId = page.params.workoutId!;
+  const workoutId = $derived(page.params.workoutId!);
+  const index = $derived(Number(page.params.index!));
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
   const services = getContext<Services>(SERVICES_KEY);
@@ -30,7 +31,7 @@
   const viewService = services.workoutViewService;
   const commandService = services.workoutCommandService;
 
-  const model = new WorkoutDetailModel(viewService, commandService, workoutId);
+  let model = $derived(new WorkoutDetailModel(viewService, commandService, workoutId, index));
 
   let chooseExerciseDialogOpen = $state(false);
   let addSetDialogOpen = $state(false);
@@ -53,18 +54,29 @@
       ? []
       : [
           {
-            label: `Workout • ${model.view.routine.program.name} • ${model.view.routine.name}`,
-            href: `/workouts/${workoutId}`
+            label: `Workout • ${model.view.routine.program.name} • ${model.view.routine.name}`
           }
         ]
   );
 
   $effect(() => {
-    chrome.breadcrumbItems = breadcrumbItems;
+    // Load data when model changes (identity changes due to params change)
+    const activeModel = model;
+    untrack(() => {
+      activeModel.loadData();
+    });
+
+    // Reset local UI state on navigation
+    chooseExerciseDialogOpen = false;
+    addSetDialogOpen = false;
+    editSetDialogOpen = false;
+    deleteSetConfirmOpen = false;
+    editingSetId = null;
+    deletingSetId = null;
   });
 
-  onMount(async () => {
-    await model.loadData();
+  $effect(() => {
+    chrome.breadcrumbItems = breadcrumbItems;
   });
 
   function openAddSetDialog() {
@@ -268,24 +280,23 @@
       <Button
         variant="ghost"
         size="icon"
-        disabled={model.currentIndex === 0 || model.isActionInProgress}
-        onclick={() => model.navigateTo(model.currentIndex - 1)}
+        disabled={index === 0 || model.isActionInProgress}
+        href={resolve(`/workouts/${workoutId}/${index - 1}`)}
       >
         <ChevronLeft class="h-8 w-8" />
       </Button>
 
-      {#if model.view?.exercises.length > 0}
+      {#if model.view?.exerciseCount > 0}
         <span class="text-sm text-muted-foreground">
-          {model.currentIndex + 1} / {model.view?.exercises.length}
+          {index + 1} / {model.view?.exerciseCount}
         </span>
       {/if}
 
       <Button
         variant="ghost"
         size="icon"
-        disabled={model.currentIndex >= model.view?.exercises.length - 1 ||
-          model.isActionInProgress}
-        onclick={() => model.navigateTo(model.currentIndex + 1)}
+        disabled={index >= model.view?.exerciseCount - 1 || model.isActionInProgress}
+        href={resolve(`/workouts/${workoutId}/${index + 1}`)}
       >
         <ChevronRight class="h-8 w-8" />
       </Button>

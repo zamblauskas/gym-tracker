@@ -9,8 +9,7 @@ export class WorkoutDetailModel {
   view = $state<Workout.Detail | null>(null);
   exerciseHistory = $state<Workout.ExerciseHistory[]>([]);
 
-  currentIndex = $state(0);
-  currentExerciseLog = $derived(this.view?.exercises[this.currentIndex]);
+  currentExerciseLog = $derived(this.view?.exercise);
   currentExercise = $derived(this.currentExerciseLog?.exercise);
 
   isLoading = $state(true);
@@ -36,7 +35,8 @@ export class WorkoutDetailModel {
   constructor(
     private viewService: WorkoutViewService,
     private commandService: WorkoutCommandService,
-    private workoutId: string
+    private workoutId: string,
+    private index: number
   ) {}
 
   async loadData() {
@@ -45,7 +45,7 @@ export class WorkoutDetailModel {
     this.isLoading = true;
     this.errorMessage = null;
     try {
-      this.view = await this.viewService.getWorkoutDetail(this.workoutId);
+      this.view = await this.viewService.getWorkoutDetail(this.workoutId, this.index);
       if (this.currentExerciseLog?.exercise?.id) {
         await this.loadExerciseHistory(this.currentExerciseLog.exercise.id);
       }
@@ -106,17 +106,6 @@ export class WorkoutDetailModel {
         workoutId: this.workoutId,
         error
       });
-    }
-  }
-
-  async navigateTo(index: number) {
-    if (!this.view) return;
-    if (index < 0 || index >= this.view.exercises.length) return;
-    this.currentIndex = index;
-    if (this.currentExerciseLog?.exercise?.id) {
-      await this.loadExerciseHistory(this.currentExerciseLog.exercise.id);
-    } else {
-      this.exerciseHistory = [];
     }
   }
 

@@ -46,7 +46,7 @@
     startError = '';
     try {
       const workoutId = await commandService.startWorkoutForRoutine(routineId);
-      await goto(resolve(`/workouts/${workoutId}`));
+      await goto(resolve(`/workouts/${workoutId}/0`));
     } catch (e) {
       console.error(e);
       startError = 'Failed to start workout';
@@ -88,7 +88,7 @@
     {#each model.workouts as workout (workout.id)}
       <Item.Root variant="outline">
         {#snippet child({ props })}
-          <a href={resolve(`/workouts/${workout.id}`)} {...props}>
+          <a href={resolve(`/workouts/${workout.id}/0`)} {...props}>
             <Item.Content>
               <Item.Title><Activity class="mr-2" />{workout.routine.program.name}</Item.Title>
               <Item.Description>{workout.routine.name}</Item.Description>
