@@ -174,7 +174,10 @@
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
+      <Dialog.Content
+        class="flex max-h-[95dvh] flex-col"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <Dialog.Header>
           <Dialog.Title>Edit exercise</Dialog.Title>
           <Dialog.Description>Update exercise details.</Dialog.Description>
@@ -187,6 +190,7 @@
         />
         <Dialog.Footer>
           <Button
+            class="w-full"
             onclick={updateExercise}
             disabled={editedExercise.name.trim() === '' || model.isActionInProgress}
           >

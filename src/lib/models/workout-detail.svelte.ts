@@ -17,16 +17,15 @@ export class WorkoutDetailModel {
   isAddingSet = $state(false);
   isUpdatingSet = $state(false);
   isDeletingSet = $state(false);
-  isSavingNotes = $state(false);
   isCompleting = $state(false);
   isCancelling = $state(false);
+
   isActionInProgress = $derived(
     this.isLoading ||
       this.isSelecting ||
       this.isAddingSet ||
       this.isUpdatingSet ||
       this.isDeletingSet ||
-      this.isSavingNotes ||
       this.isCompleting ||
       this.isCancelling
   );
@@ -176,6 +175,17 @@ export class WorkoutDetailModel {
     }
   }
 
+  /*
+   * We don't track isSavingNotes state to prevent blocking user input while saving notes.
+   * If we track it we get into a situation:
+   * - User is typing in the notes <Textarea>
+   * - User taps the next/previous navigation button
+   * - This causes the textarea to lose focus
+   * - The onchange event fires, triggering updateNotes()
+   * - This makes isActionInProgress = true
+   * - The button becomes disabled before the tap/click event is processed
+   * - Result: The navigation doesn't happen
+   */
   async updateNotes() {
     if (!this.currentExerciseLog) return;
     logger.info('Updating notes', {
@@ -183,7 +193,6 @@ export class WorkoutDetailModel {
       notes: this.currentExerciseLog.notes
     });
 
-    this.isSavingNotes = true;
     try {
       await this.commandService.updateNotes({
         exerciseLogId: this.currentExerciseLog.id,
@@ -197,8 +206,6 @@ export class WorkoutDetailModel {
         notes: this.currentExerciseLog.notes,
         error
       });
-    } finally {
-      this.isSavingNotes = false;
     }
   }
 

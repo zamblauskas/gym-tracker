@@ -35,7 +35,7 @@
   let unselectedGyms = $derived(allGyms.filter((g) => !selectedGymIds.includes(g.id)));
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-4 overflow-y-auto">
   <div class="flex flex-col gap-2">
     <Label for="exercise-name">Name</Label>
     <Input id="exercise-name" placeholder="e.g., Bench Press" bind:value={formData.name} />

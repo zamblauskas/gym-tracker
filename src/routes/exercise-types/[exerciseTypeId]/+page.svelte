@@ -162,7 +162,10 @@
           <Plus /> Create exercise
         </Button>
       </Dialog.Trigger>
-      <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
+      <Dialog.Content
+        class="flex max-h-[95dvh] flex-col"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <Dialog.Header>
           <Dialog.Title>Create a new exercise</Dialog.Title>
           <Dialog.Description>Add an exercise to this exercise type.</Dialog.Description>
@@ -175,6 +178,7 @@
         />
         <Dialog.Footer>
           <Button
+            class="w-full"
             onclick={createExercise}
             disabled={newExercise.name.trim() === '' || model.isActionInProgress}
           >
@@ -200,6 +204,7 @@
         <Input placeholder="Exercise type name" bind:value={editedExerciseTypeName} />
         <Dialog.Footer>
           <Button
+            class="w-full"
             onclick={updateExerciseType}
             disabled={editedExerciseTypeName.trim() === '' || model.isActionInProgress}
           >
