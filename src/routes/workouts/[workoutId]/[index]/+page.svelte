@@ -2,7 +2,15 @@
   import { page } from '$app/state';
   import { getContext, untrack } from 'svelte';
   import { resolve } from '$app/paths';
-  import { ChevronLeft, ChevronRight, X, Plus, Pencil, PersonStanding } from 'lucide-svelte';
+  import {
+    ChevronLeft,
+    ChevronRight,
+    X,
+    Repeat,
+    Plus,
+    Pencil,
+    PersonStanding
+  } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import * as Item from '$lib/components/ui/item/index.js';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -244,14 +252,14 @@
           <Plus class="mr-2 h-4 w-4" /> Create set
         </Button>
 
-        {#if model.currentExerciseLog.sets.length === 0}
-          <Button
-            variant="outline"
-            class="mt-2 w-full"
-            disabled={model.isActionInProgress}
-            onclick={() => (chooseExerciseDialogOpen = true)}>Change exercise</Button
-          >
-        {/if}
+        <Button
+          variant="outline"
+          class="mt-2 w-full"
+          disabled={model.isActionInProgress}
+          onclick={() => (chooseExerciseDialogOpen = true)}
+        >
+          <Repeat class="mr-2 h-4 w-4" />Change exercise
+        </Button>
 
         <div class="mt-4">
           <Textarea
