@@ -4,6 +4,7 @@
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import * as Workout from '$lib/types/views/workout';
   import { timeAgo } from '$lib/utils/time-ago';
+  import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
 
   interface Props {
     history: Workout.ExerciseHistory[];
@@ -37,6 +38,7 @@
       return '0 sets';
     }
 
+    const volume = calculateTotalVolume(item.sets);
     return [
       formatSetCount(item.sets.length),
       formatWeightRange(
@@ -58,7 +60,8 @@
           },
           { min: Infinity, max: -Infinity }
         )
-      )
+      ),
+      formatVolume(volume)
     ].join(' • ');
   }
 </script>
@@ -104,6 +107,11 @@
                   {/if}
                 </div>
               {/each}
+            {/if}
+            {#if item.sets.length > 0}
+              <div class="mt-2 text-xs text-muted-foreground">
+                Volume: {formatVolume(calculateTotalVolume(item.sets))}
+              </div>
             {/if}
           </div>
           {#if item.notes}

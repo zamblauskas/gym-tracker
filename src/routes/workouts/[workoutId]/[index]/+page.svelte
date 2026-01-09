@@ -29,6 +29,7 @@
   import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
+  import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
 
   const workoutId = $derived(page.params.workoutId!);
   const index = $derived(Number(page.params.index!));
@@ -242,6 +243,12 @@
             </div>
           {/each}
         </div>
+
+        {#if model.currentExerciseLog.sets.length > 0}
+          <div class="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+            Volume: {formatVolume(calculateTotalVolume(model.currentExerciseLog.sets))}
+          </div>
+        {/if}
 
         <Button
           variant="outline"
