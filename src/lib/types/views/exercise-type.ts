@@ -4,6 +4,8 @@ export interface Compact {
   id: string;
   name: string;
   exerciseCount: number;
+  targetRepRange: Range<number>;
+  targetRepsInReserve: number | null;
 }
 
 export interface ExerciseDetail {
@@ -21,5 +23,8 @@ export interface ExerciseDetail {
 export interface Detail {
   id: string;
   name: string;
+  // TODO: need to show this in the UI
+  targetRepRange: Range<number>;
+  targetRepsInReserve: number | null;
   exercises: ExerciseDetail[];
 }

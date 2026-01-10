@@ -30,6 +30,7 @@
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
   import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
+  import Badge from '$lib/components/ui/badge/badge.svelte';
 
   const workoutId = $derived(page.params.workoutId!);
   const index = $derived(Number(page.params.index!));
@@ -176,6 +177,19 @@
                   <PersonStanding />
                   <span class="font-medium">{model.currentExerciseLog.exerciseType.name}</span>
                 </Item.Title>
+                <Item.Description>
+                  {#if model.currentExerciseLog.exerciseType.targetRepRange}
+                    <Badge variant="secondary">
+                      {model.currentExerciseLog.exerciseType.targetRepRange.min}-{model
+                        .currentExerciseLog.exerciseType.targetRepRange.max} reps
+                    </Badge>
+                  {/if}
+                  {#if model.currentExerciseLog.exerciseType.targetRepsInReserve}
+                    <Badge variant="secondary"
+                      >{model.currentExerciseLog.exerciseType.targetRepsInReserve} RIR</Badge
+                    >
+                  {/if}
+                </Item.Description>
               </Item.Content>
               <Item.Actions>
                 <ChevronRight class="size-4" />

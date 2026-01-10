@@ -25,6 +25,8 @@ export interface ExerciseDetail {
   exerciseType: {
     id: string;
     name: string;
+    targetRepRange: Range<number>;
+    targetRepsInReserve: number | null;
   };
   exercise: {
     id: string;

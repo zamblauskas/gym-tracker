@@ -2,6 +2,7 @@ import type { ExerciseTypeViewService } from '$lib/services/exercise-type-view.s
 import type { ExerciseTypeCommandService } from '$lib/services/exercise-type-command.service';
 import * as ExerciseType from '$lib/types/views/exercise-type';
 import { logger } from '$lib/logger';
+import type { Range } from '$lib/types/range';
 
 export class ExerciseTypeListModel {
   exerciseTypes = $state<ExerciseType.Compact[]>([]);
@@ -31,13 +32,21 @@ export class ExerciseTypeListModel {
     }
   }
 
-  async createExerciseType(name: string): Promise<boolean> {
+  async createExerciseType(
+    name: string,
+    targetRepRange: Range<number>,
+    targetRepsInReserve: number | null
+  ): Promise<boolean> {
     logger.info('Creating exercise type', { name });
 
     this.isCreating = true;
     this.errorMessage = '';
     try {
-      const exerciseTypeId = await this.commandService.createExerciseType({ name });
+      const exerciseTypeId = await this.commandService.createExerciseType({
+        name,
+        targetRepRange,
+        targetRepsInReserve
+      });
       logger.info('Exercise type created', { exerciseTypeId });
       await this.loadData();
       return true;

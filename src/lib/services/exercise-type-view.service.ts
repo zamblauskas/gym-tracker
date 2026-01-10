@@ -8,7 +8,9 @@ export class ExerciseTypeViewService {
   async listExerciseTypes(): Promise<ExerciseType.Compact[]> {
     const { data, error } = await this.client
       .from('exercise_types')
-      .select('id,name,exercises(count)')
+      .select(
+        'id,name,exercises(count),target_rep_range_min,target_rep_range_max,target_reps_in_reserve'
+      )
       .is('deleted_at', null)
       .order('name');
 
@@ -19,7 +21,9 @@ export class ExerciseTypeViewService {
     return data.map((row) => ({
       id: row.id,
       name: row.name,
-      exerciseCount: row.exercises?.[0]?.count ?? 0
+      exerciseCount: row.exercises?.[0]?.count ?? 0,
+      targetRepRange: { min: row.target_rep_range_min, max: row.target_rep_range_max },
+      targetRepsInReserve: row.target_reps_in_reserve
     }));
   }
 
@@ -29,15 +33,18 @@ export class ExerciseTypeViewService {
       .select(
         `id,
         name,
-        exercises(
-          id,
-          name,
-          machine_brand,
           target_rep_range_min,
           target_rep_range_max,
           target_reps_in_reserve,
-          gyms(id,name)
-        )`
+          exercises(
+            id,
+            name,
+            machine_brand,
+            target_rep_range_min,
+            target_rep_range_max,
+            target_reps_in_reserve,
+            gyms(id,name)
+          )`
       )
       .eq('id', id)
       .is('exercises.deleted_at', null)
@@ -52,6 +59,8 @@ export class ExerciseTypeViewService {
     return {
       id: data.id,
       name: data.name,
+      targetRepRange: { min: data.target_rep_range_min, max: data.target_rep_range_max },
+      targetRepsInReserve: data.target_reps_in_reserve,
       exercises: data.exercises.map((ex) => {
         const exercise: ExerciseType.ExerciseDetail = {
           id: ex.id,

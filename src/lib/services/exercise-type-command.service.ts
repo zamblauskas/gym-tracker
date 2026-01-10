@@ -8,7 +8,10 @@ export class ExerciseTypeCommandService {
 
   async createExerciseType(input: ExerciseType.Create): Promise<string> {
     const exerciseTypeInsert: ExerciseTypeInsert = {
-      name: input.name
+      name: input.name,
+      target_rep_range_min: input.targetRepRange.min,
+      target_rep_range_max: input.targetRepRange.max,
+      target_reps_in_reserve: input.targetRepsInReserve
     };
 
     const { data, error } = await this.client
@@ -26,7 +29,10 @@ export class ExerciseTypeCommandService {
 
   async updateExerciseType(exerciseTypeId: string, input: ExerciseType.Update): Promise<void> {
     const exerciseTypeUpdate: ExerciseTypeUpdate = {
-      name: input.name
+      name: input.name,
+      target_rep_range_min: input.targetRepRange.min,
+      target_rep_range_max: input.targetRepRange.max,
+      target_reps_in_reserve: input.targetRepsInReserve
     };
 
     const { error } = await this.client

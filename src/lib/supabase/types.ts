@@ -70,6 +70,9 @@ export type Database = {
           deleted_at: string | null;
           id: string;
           name: string;
+          target_rep_range_max: number | null;
+          target_rep_range_min: number | null;
+          target_reps_in_reserve: number | null;
           updated_at: string;
           user_id: string;
         };
@@ -78,6 +81,9 @@ export type Database = {
           deleted_at?: string | null;
           id?: string;
           name: string;
+          target_rep_range_max?: number | null;
+          target_rep_range_min?: number | null;
+          target_reps_in_reserve?: number | null;
           updated_at?: string;
           user_id: string;
         };
@@ -86,6 +92,9 @@ export type Database = {
           deleted_at?: string | null;
           id?: string;
           name?: string;
+          target_rep_range_max?: number | null;
+          target_rep_range_min?: number | null;
+          target_reps_in_reserve?: number | null;
           updated_at?: string;
           user_id?: string;
         };

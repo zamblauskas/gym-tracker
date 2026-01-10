@@ -15,7 +15,10 @@ export class ExerciseViewService {
         target_rep_range_min,
         target_rep_range_max,
         target_reps_in_reserve,
-        exercise_types!inner(id,name),
+        exercise_types!inner(
+          id,
+          name
+        ),
         gyms(id, name)`
       )
       .eq('id', exerciseId)

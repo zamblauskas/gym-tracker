@@ -10,7 +10,6 @@
   import { ExerciseTypeDetailModel } from '$lib/models/exercise-type-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
-  import Input from '$lib/components/ui/input/input.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
@@ -20,6 +19,7 @@
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
   import AddEditExercise from '$lib/components/AddEditExercise.svelte';
+  import AddEditExerciseType from '$lib/components/AddEditExerciseType.svelte';
 
   const exerciseTypeId = page.params.exerciseTypeId || '';
 
@@ -35,7 +35,13 @@
   );
 
   let editDialogOpen = $state(false);
-  let editedExerciseTypeName = $state('');
+
+  let editedExerciseType = $state({
+    name: '',
+    targetRepRangeMin: null as number | null,
+    targetRepRangeMax: null as number | null,
+    targetRepsInReserve: null as number | null
+  });
   let addExerciseDialogOpen = $state(false);
   let newExercise = $state({
     name: '',
@@ -64,12 +70,21 @@
   });
 
   function openEditDialog() {
-    editedExerciseTypeName = model.exerciseType?.name || '';
+    editedExerciseType = {
+      name: model.exerciseType?.name || '',
+      targetRepRangeMin: model.exerciseType?.targetRepRange.min ?? null,
+      targetRepRangeMax: model.exerciseType?.targetRepRange.max ?? null,
+      targetRepsInReserve: model.exerciseType?.targetRepsInReserve ?? null
+    };
     editDialogOpen = true;
   }
 
   async function updateExerciseType() {
-    const didUpdate = await model.updateExerciseType(editedExerciseTypeName);
+    const didUpdate = await model.updateExerciseType(
+      editedExerciseType.name,
+      { min: editedExerciseType.targetRepRangeMin, max: editedExerciseType.targetRepRangeMax },
+      editedExerciseType.targetRepsInReserve
+    );
     if (!didUpdate) return;
     editDialogOpen = false;
   }
@@ -131,6 +146,27 @@
   </div>
 {:else if model.exerciseType}
   <div class="flex w-full flex-col gap-4 p-4">
+    {#if model.exerciseType.targetRepRange && (model.exerciseType.targetRepRange.min || model.exerciseType.targetRepRange.max)}
+      <div class="flex flex-col gap-1">
+        <span class="text-sm text-muted-foreground">Target Rep Range</span>
+        <span
+          >{model.exerciseType.targetRepRange.min}–{model.exerciseType.targetRepRange.max} reps</span
+        >
+      </div>
+    {/if}
+    {#if model.exerciseType.targetRepsInReserve}
+      <div class="flex flex-col gap-1">
+        <span class="text-sm text-muted-foreground">Reps in Reserve (RIR)</span>
+        <span>{model.exerciseType.targetRepsInReserve}</span>
+      </div>
+    {/if}
+  </div>
+
+  <div class="px-4">
+    <Separator />
+  </div>
+
+  <div class="flex w-full flex-col gap-4 p-4">
     {#each model.exerciseType.exercises as exercise (exercise.id)}
       <ExerciseCard {exercise} />
     {:else}
@@ -144,10 +180,6 @@
         </Empty.Header>
       </Empty.Root>
     {/each}
-  </div>
-
-  <div class="p-4">
-    <Separator />
   </div>
 {/if}
 
@@ -201,12 +233,12 @@
           <Dialog.Title>Edit exercise type</Dialog.Title>
           <Dialog.Description>Change the exercise type name.</Dialog.Description>
         </Dialog.Header>
-        <Input placeholder="Exercise type name" bind:value={editedExerciseTypeName} />
+        <AddEditExerciseType bind:formData={editedExerciseType} />
         <Dialog.Footer>
           <Button
             class="w-full"
             onclick={updateExerciseType}
-            disabled={editedExerciseTypeName.trim() === '' || model.isActionInProgress}
+            disabled={editedExerciseType.name.trim() === '' || model.isActionInProgress}
           >
             {#if model.isSaving}
               <Spinner class="mr-2" />

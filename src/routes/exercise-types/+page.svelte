@@ -15,7 +15,7 @@
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import Badge from '$lib/components/ui/badge/badge.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
-  import Input from '$lib/components/ui/input/input.svelte';
+  import AddEditExerciseType from '$lib/components/AddEditExerciseType.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
   const services = getContext<Services>(SERVICES_KEY);
@@ -26,7 +26,12 @@
   );
 
   let dialogOpen = $state(false);
-  let newExerciseTypeName = $state('');
+  let newExerciseType = $state({
+    name: '',
+    targetRepRangeMin: null as number | null,
+    targetRepRangeMax: null as number | null,
+    targetRepsInReserve: null as number | null
+  });
 
   chrome.setBreadcrumbItems([{ label: 'Exercise Types', href: '/exercise-types' }]);
 
@@ -35,10 +40,19 @@
   });
 
   async function createExerciseType() {
-    const didCreate = await model.createExerciseType(newExerciseTypeName);
+    const didCreate = await model.createExerciseType(
+      newExerciseType.name,
+      { min: newExerciseType.targetRepRangeMin, max: newExerciseType.targetRepRangeMax },
+      newExerciseType.targetRepsInReserve
+    );
     if (!didCreate) return;
 
-    newExerciseTypeName = '';
+    newExerciseType = {
+      name: '',
+      targetRepRangeMin: null,
+      targetRepRangeMax: null,
+      targetRepsInReserve: null
+    };
     dialogOpen = false;
   }
 
@@ -76,7 +90,21 @@
               <ChevronRight class="size-4" />
             </Item.Actions>
             <Item.Footer>
-              <Badge variant="secondary">{getExerciseCountLabel(exerciseType.exerciseCount)}</Badge>
+              <div class="flex gap-2">
+                <Badge variant="secondary"
+                  >{getExerciseCountLabel(exerciseType.exerciseCount)}</Badge
+                >
+                {#if exerciseType.targetRepRange && (exerciseType.targetRepRange.min || exerciseType.targetRepRange.max)}
+                  <Badge variant="outline">
+                    {exerciseType.targetRepRange.min}-{exerciseType.targetRepRange.max} reps
+                  </Badge>
+                {/if}
+                {#if exerciseType.targetRepsInReserve}
+                  <Badge variant="outline">
+                    {exerciseType.targetRepsInReserve} RIR
+                  </Badge>
+                {/if}
+              </div>
             </Item.Footer>
           </a>
         {/snippet}
@@ -111,11 +139,12 @@
         <Dialog.Title>Create a new exercise type</Dialog.Title>
         <Dialog.Description>Enter a name for your new exercise type.</Dialog.Description>
       </Dialog.Header>
-      <Input placeholder="Exercise type name" bind:value={newExerciseTypeName} />
+      <AddEditExerciseType bind:formData={newExerciseType} />
       <Dialog.Footer>
         <Button
+          class="w-full"
           onclick={createExerciseType}
-          disabled={newExerciseTypeName.trim() === '' || model.isActionInProgress}
+          disabled={newExerciseType.name.trim() === '' || model.isActionInProgress}
         >
           {#if model.isCreating}
             <Spinner class="mr-2" />

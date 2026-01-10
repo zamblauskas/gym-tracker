@@ -26,7 +26,10 @@ export class WorkoutViewService {
           notes,
           exercise_types!inner (
             id,
-            name
+            name,
+            target_rep_range_min,
+            target_rep_range_max,
+            target_reps_in_reserve
           ),
           exercises (
             id,
@@ -83,7 +86,13 @@ export class WorkoutViewService {
       id: exercise.id,
       exerciseType: {
         id: exercise.exercise_type_id,
-        name: exercise.exercise_types.name
+
+        name: exercise.exercise_types.name,
+        targetRepRange: {
+          min: exercise.exercise_types.target_rep_range_min,
+          max: exercise.exercise_types.target_rep_range_max
+        },
+        targetRepsInReserve: exercise.exercise_types.target_reps_in_reserve
       },
       sets,
       exercise: exercise.exercises

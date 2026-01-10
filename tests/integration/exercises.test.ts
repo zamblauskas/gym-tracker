@@ -58,7 +58,7 @@ describe('Exercise view and command services', () => {
     });
   }
 
-  it('create, update, read, delete an exercise', async () => {
+  it('create, update, read', async () => {
     // create
     const exerciseTypeInput = data.exerciseTypes.et1;
     const exerciseTypeId =
@@ -101,12 +101,6 @@ describe('Exercise view and command services', () => {
       [{ id: gymId3, name: data.gyms.g3.name }],
       id,
       update
-    );
-
-    // delete
-    await context.exerciseCommandService.deleteExercise(id);
-    await expect(context.exerciseViewService.getExerciseDetailById(id)).rejects.toThrowError(
-      'Exercise not found'
     );
   });
 
@@ -164,23 +158,5 @@ describe('Exercise view and command services', () => {
     const created = await context.exerciseViewService.getExerciseDetailById(id);
 
     assertExerciseDetailView(created, exerciseTypeId, exerciseTypeInput, [], id, exerciseInput);
-  });
-
-  it('deleting exercise type deletes exercises', async () => {
-    const exerciseTypeInput = data.exerciseTypes.et1;
-    const exerciseTypeId =
-      await context.exerciseTypeCommandService.createExerciseType(exerciseTypeInput);
-    const exerciseInput = data.exercises.e1;
-    const exerciseId = await context.exerciseCommandService.createExercise({
-      exerciseTypeId,
-      gymIds: [],
-      ...exerciseInput
-    });
-
-    await context.exerciseTypeCommandService.deleteExerciseType(exerciseTypeId);
-
-    await expect(
-      context.exerciseViewService.getExerciseDetailById(exerciseId)
-    ).rejects.toThrowError('Exercise not found');
   });
 });

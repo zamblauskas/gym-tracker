@@ -1,10 +1,14 @@
 export const data = {
   exerciseTypes: {
     et1: {
-      name: 'Test Exercise Type'
+      name: 'Test Exercise Type',
+      targetRepRange: { min: 8, max: 12 },
+      targetRepsInReserve: 2
     },
     et2: {
-      name: 'Test Exercise Type 2'
+      name: 'Test Exercise Type 2',
+      targetRepRange: { min: null, max: null },
+      targetRepsInReserve: null
     }
   },
 

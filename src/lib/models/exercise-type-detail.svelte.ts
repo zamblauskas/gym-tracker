@@ -51,13 +51,26 @@ export class ExerciseTypeDetailModel {
     }
   }
 
-  async updateExerciseType(name: string): Promise<boolean> {
-    logger.info('Updating exercise type', { exerciseTypeId: this.exerciseTypeId, name });
+  async updateExerciseType(
+    name: string,
+    targetRepRange: Range<number>,
+    targetRepsInReserve: number | null
+  ): Promise<boolean> {
+    logger.info('Updating exercise type', {
+      exerciseTypeId: this.exerciseTypeId,
+      name,
+      targetRepRange,
+      targetRepsInReserve
+    });
 
     this.isSaving = true;
     this.errorMessage = '';
     try {
-      await this.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, { name });
+      await this.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, {
+        name,
+        targetRepRange,
+        targetRepsInReserve
+      });
       logger.info('Exercise type updated', { exerciseTypeId: this.exerciseTypeId });
       await this.loadData();
       return true;
