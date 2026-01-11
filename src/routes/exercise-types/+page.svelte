@@ -1,21 +1,22 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { resolve } from '$app/paths';
+
   import { getContext } from 'svelte';
-  import { Plus, PersonStanding, ChevronRight } from 'lucide-svelte';
+  import { Plus, PersonStanding } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import { ExerciseTypeListModel } from '$lib/models/exercise-type-list.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
-  import * as Item from '$lib/components/ui/item/index.js';
+
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as Alert from '$lib/components/ui/alert/index.js';
   import * as Empty from '$lib/components/ui/empty/index.js';
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
-  import Badge from '$lib/components/ui/badge/badge.svelte';
+
   import Button from '$lib/components/ui/button/button.svelte';
   import AddEditExerciseType from '$lib/components/AddEditExerciseType.svelte';
+  import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
   const services = getContext<Services>(SERVICES_KEY);
@@ -55,10 +56,6 @@
     };
     dialogOpen = false;
   }
-
-  function getExerciseCountLabel(exerciseCount: number): string {
-    return exerciseCount === 1 ? '1 exercise' : `${exerciseCount} exercises`;
-  }
 </script>
 
 {#if model.errorMessage}
@@ -80,35 +77,7 @@
 {:else}
   <div class="flex w-full flex-col gap-4 p-4">
     {#each model.exerciseTypes as exerciseType (exerciseType.id)}
-      <Item.Root variant="outline">
-        {#snippet child({ props })}
-          <a href={resolve(`/exercise-types/${exerciseType.id}`)} {...props}>
-            <Item.Content>
-              <Item.Title><PersonStanding class="size-4" /> {exerciseType.name}</Item.Title>
-            </Item.Content>
-            <Item.Actions>
-              <ChevronRight class="size-4" />
-            </Item.Actions>
-            <Item.Footer>
-              <div class="flex gap-2">
-                <Badge variant="secondary"
-                  >{getExerciseCountLabel(exerciseType.exerciseCount)}</Badge
-                >
-                {#if exerciseType.targetRepRange && (exerciseType.targetRepRange.min || exerciseType.targetRepRange.max)}
-                  <Badge variant="outline">
-                    {exerciseType.targetRepRange.min}-{exerciseType.targetRepRange.max} reps
-                  </Badge>
-                {/if}
-                {#if exerciseType.targetRepsInReserve}
-                  <Badge variant="outline">
-                    {exerciseType.targetRepsInReserve} RIR
-                  </Badge>
-                {/if}
-              </div>
-            </Item.Footer>
-          </a>
-        {/snippet}
-      </Item.Root>
+      <ExerciseTypeCard {exerciseType} />
     {:else}
       <Empty.Root>
         <Empty.Media>

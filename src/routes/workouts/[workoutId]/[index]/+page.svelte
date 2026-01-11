@@ -3,17 +3,9 @@
   import { getContext, untrack } from 'svelte';
   import { resolve } from '$app/paths';
   import { PUBLIC_TIMER_DURATION } from '$env/static/public';
-  import {
-    ChevronLeft,
-    ChevronRight,
-    X,
-    Repeat,
-    Plus,
-    Pencil,
-    PersonStanding
-  } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, X, Repeat, Plus, Pencil } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
-  import * as Item from '$lib/components/ui/item/index.js';
+
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { WorkoutDetailModel } from '$lib/models/workout-detail.svelte';
   import * as Workout from '$lib/types/views/workout';
@@ -30,9 +22,9 @@
   import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
+  import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
   import Timer from '$lib/components/Timer.svelte';
   import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
-  import Badge from '$lib/components/ui/badge/badge.svelte';
 
   const workoutId = $derived(page.params.workoutId!);
   const index = $derived(Number(page.params.index!));
@@ -172,39 +164,9 @@
     <!-- Header -->
     <div class="flex flex-col gap-2 px-4 pt-4">
       <span class="text-sm text-muted-foreground">Exercise Type</span>
-      <Item.Root variant="outline">
-        {#snippet child({ props })}
-          {#if model.currentExerciseLog}
-            <a
-              href={resolve(`/exercise-types/${model.currentExerciseLog.exerciseType.id}`)}
-              {...props}
-            >
-              <Item.Content>
-                <Item.Title>
-                  <PersonStanding />
-                  <span class="font-medium">{model.currentExerciseLog.exerciseType.name}</span>
-                </Item.Title>
-                <Item.Description>
-                  {#if model.currentExerciseLog.exerciseType.targetRepRange}
-                    <Badge variant="secondary">
-                      {model.currentExerciseLog.exerciseType.targetRepRange.min}-{model
-                        .currentExerciseLog.exerciseType.targetRepRange.max} reps
-                    </Badge>
-                  {/if}
-                  {#if model.currentExerciseLog.exerciseType.targetRepsInReserve}
-                    <Badge variant="secondary"
-                      >{model.currentExerciseLog.exerciseType.targetRepsInReserve} RIR</Badge
-                    >
-                  {/if}
-                </Item.Description>
-              </Item.Content>
-              <Item.Actions>
-                <ChevronRight class="size-4" />
-              </Item.Actions>
-            </a>
-          {/if}
-        {/snippet}
-      </Item.Root>
+      {#if model.currentExerciseLog}
+        <ExerciseTypeCard exerciseType={model.currentExerciseLog.exerciseType} />
+      {/if}
     </div>
     {#if model.currentExercise}
       <div class="flex flex-col gap-2 p-4">
