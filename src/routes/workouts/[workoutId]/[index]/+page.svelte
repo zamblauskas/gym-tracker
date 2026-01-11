@@ -2,6 +2,7 @@
   import { page } from '$app/state';
   import { getContext, untrack } from 'svelte';
   import { resolve } from '$app/paths';
+  import { PUBLIC_TIMER_DURATION } from '$env/static/public';
   import {
     ChevronLeft,
     ChevronRight,
@@ -29,6 +30,7 @@
   import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
   import ExerciseCard from '$lib/components/ExerciseCard.svelte';
+  import Timer from '$lib/components/Timer.svelte';
   import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
   import Badge from '$lib/components/ui/badge/badge.svelte';
 
@@ -47,6 +49,9 @@
   let addSetDialogOpen = $state(false);
   let editSetDialogOpen = $state(false);
   let deleteSetConfirmOpen = $state(false);
+
+  let showTimer = $state(false);
+  let timerDuration = Number(PUBLIC_TIMER_DURATION);
 
   let newSetWeight = $state<number | null>(null);
   let newSetReps = $state<number | null>(null);
@@ -81,6 +86,7 @@
     addSetDialogOpen = false;
     editSetDialogOpen = false;
     deleteSetConfirmOpen = false;
+    showTimer = false;
     editingSetId = null;
     deletingSetId = null;
   });
@@ -110,6 +116,7 @@
 
     await model.addSet(newSetReps, newSetWeight, newSetRepsInReserve);
     addSetDialogOpen = false;
+    showTimer = true;
   }
 
   function openEditSetDialog(set: Workout.SetDetail) {
@@ -262,6 +269,14 @@
           <div class="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
             Volume: {formatVolume(calculateTotalVolume(model.currentExerciseLog.sets))}
           </div>
+        {/if}
+
+        {#if showTimer}
+          <Timer
+            duration={timerDuration}
+            onDismiss={() => (showTimer = false)}
+            onComplete={() => (showTimer = false)}
+          />
         {/if}
 
         <Button

@@ -1,59 +1,85 @@
 #!/usr/bin/env python3
 import subprocess
-import time
-from pathlib import Path
+import re
 
 
-def get_modified_files():
+def run_git_command(args):
     result = subprocess.run(
-        ["git", "diff", "--name-only"],
+        ["git"] + args,
         capture_output=True,
         text=True,
         check=True
     )
-    return [f for f in result.stdout.strip().split("\n") if f]
+    return result.stdout.strip()
 
 
-def get_new_files():
-    result = subprocess.run(
-        ["git", "ls-files", "-o", "--exclude-standard"],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-    return [f for f in result.stdout.strip().split("\n") if f]
+def get_unstaged_modified_files():
+    output = run_git_command(["diff", "--name-only", "--diff-filter=d"])
+    return [f for f in output.split("\n") if f]
 
 
-def create_audit_file(modified_files, new_files):
-    timestamp = int(time.time())
-    filename = f"audit-{timestamp}.md"
+def get_untracked_files():
+    output = run_git_command(["ls-files", "-o", "--exclude-standard"])
+    return [f for f in output.split("\n") if f]
+
+
+def parse_hunk_header(line):
+    match = re.match(r"^@@.*?\+(\d+)(?:,(\d+))?\s@@", line)
+    if not match:
+        return None
     
-    content_parts = []
+    start = int(match.group(1))
+    count = int(match.group(2)) if match.group(2) else 1
+    
+    if count == 0:
+        return None
+    
+    if count == 1:
+        return str(start)
+    return f"[{start}-{start + count - 1}]"
+
+
+def get_modified_lines(file_path):
+    output = run_git_command(["diff", "--unified=0", "--", file_path])
+    
+    line_ranges = []
+    for line in output.split("\n"):
+        if line.startswith("@@"):
+            range_str = parse_hunk_header(line)
+            if range_str:
+                line_ranges.append(range_str)
+    
+    return line_ranges
+
+
+def format_output(modified_files, new_files):
+    lines = []
     
     if modified_files:
-        content_parts.append("# Modified files\n")
-        for file_path in modified_files:
-            content_parts.append(f"### File: {file_path}\n")
+        lines.append("# Modified files")
+        for file_path in sorted(modified_files):
+            lines.append("- " + file_path)
+            line_ranges = get_modified_lines(file_path)
+            if line_ranges:
+                lines.append(f"  Lines: {', '.join(line_ranges)}")
     
     if new_files:
-        if content_parts:
-            content_parts.append("\n")
-        content_parts.append("# New files\n")
-        for file_path in new_files:
-            content_parts.append(f"### File: {file_path}\n")
+        if lines:
+            lines.append("")
+        lines.append("# New files")
+        for file_path in sorted(new_files):
+            lines.append("- " + file_path)
     
-    content = "\n".join(content_parts)
-    
-    Path(filename).write_text(content)
-    return filename
+    return "\n".join(lines)
 
 
 def main():
-    modified_files = get_modified_files()
-    new_files = get_new_files()
+    modified_files = get_unstaged_modified_files()
+    new_files = get_untracked_files()
     
-    filename = create_audit_file(modified_files, new_files)
-    print(filename)
+    output = format_output(modified_files, new_files)
+    if output:
+        print(output)
 
 
 if __name__ == "__main__":

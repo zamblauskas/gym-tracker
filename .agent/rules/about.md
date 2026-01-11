@@ -186,3 +186,13 @@ Key tables:
 - `exercise_gyms` - junction table (hard delete), for one to many, exercise -> [gyms]
 
 All entities have `created_at`, `updated_at`, `deleted_at` (soft delete).
+
+## Accessibility
+
+Mainly intended for mobile browser usage.
+**Not required:**
+
+- Screen reader support
+- ARIA attributes
+- WCAG compliance
+- Advanced keyboard navigation

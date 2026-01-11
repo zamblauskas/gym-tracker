@@ -40,3 +40,12 @@ Strict mode is enabled. See `tsconfig.json` for all flags.
 **Generics:**
 
 - Use generic types for reusable patterns: `Range<T>` with `min: T | null`, `max: T | null`
+
+**Type philosophy:**
+
+- Prefer explicit, well-known types over derived/inferred utility types
+- Use utility types (`ReturnType`, `Awaited`, etc.) only when:
+  - The explicit type is unavailable or internal
+  - You're deriving from code you don't control
+  - The type might change with implementation
+- When a standard type exists (e.g., `NodeJS.Timeout`, `Promise<T>`), use it directly
