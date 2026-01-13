@@ -7,9 +7,7 @@
   import {
     Pencil,
     Trash2,
-    ChevronRight,
     CircleAlert,
-    PersonStanding,
     Play,
     ChevronUp,
     ChevronDown,
@@ -23,13 +21,13 @@
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
   import Label from '$lib/components/ui/label/label.svelte';
-  import * as Item from '$lib/components/ui/item/index.js';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
   import * as Alert from '$lib/components/ui/alert/index.js';
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
+  import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
 
   const routineId = page.params.routineId || '';
   const services = getContext<Services>(SERVICES_KEY);
@@ -154,25 +152,7 @@
   <!-- Exercise type list -->
   <div class="flex w-full flex-col gap-4 p-4">
     {#each model.exerciseTypes as exerciseType (exerciseType.id)}
-      <Item.Root variant="outline">
-        {#snippet child({ props })}
-          <a
-            href={resolve(`/exercise-types/${exerciseType.id}`)}
-            class="flex flex-1 items-center"
-            {...props}
-          >
-            <Item.Content>
-              <Item.Title>
-                <PersonStanding class="size-4" />
-                {exerciseType.name}
-              </Item.Title>
-            </Item.Content>
-            <Item.Actions>
-              <ChevronRight class="size-5 text-muted-foreground" />
-            </Item.Actions>
-          </a>
-        {/snippet}
-      </Item.Root>
+      <ExerciseTypeCard {exerciseType} />
     {/each}
   </div>
 {/if}
