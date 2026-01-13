@@ -8,11 +8,10 @@
     Pencil,
     Plus,
     Trash2,
-    ChevronRight,
     CircleAlert,
-    ScrollText,
     ChevronUp,
-    ChevronDown
+    ChevronDown,
+    ScrollText
   } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -20,7 +19,7 @@
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
-  import * as Item from '$lib/components/ui/item/index.js';
+  import RoutineCard from '$lib/components/RoutineCard.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
@@ -130,18 +129,7 @@
 {:else if model.program}
   <div class="flex w-full flex-col gap-4 p-4">
     {#each model.program.routines as routine (routine.id)}
-      <Item.Root variant="outline">
-        {#snippet child({ props })}
-          <a href={resolve(`/routines/${routine.id}`)} {...props}>
-            <Item.Content>
-              <Item.Title><ScrollText class="size-4" /> {routine.name}</Item.Title>
-            </Item.Content>
-            <Item.Actions>
-              <ChevronRight class="size-5 text-muted-foreground" />
-            </Item.Actions>
-          </a>
-        {/snippet}
-      </Item.Root>
+      <RoutineCard {routine} />
     {:else}
       <Empty.Root>
         <Empty.Media>
