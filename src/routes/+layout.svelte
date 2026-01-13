@@ -27,6 +27,7 @@
   import { RoutineCommandService } from '$lib/services/routine-command.service';
   import { WorkoutViewService } from '$lib/services/workout-view.service';
   import { WorkoutCommandService } from '$lib/services/workout-command.service';
+  import { WorkoutHistoryViewService } from '$lib/services/workout-history-view.service';
 
   let { children } = $props();
 
@@ -46,6 +47,7 @@
   const routineCommandService = new RoutineCommandService(supabase);
   const workoutViewService = new WorkoutViewService(supabase);
   const workoutCommandService = new WorkoutCommandService(supabase);
+  const workoutHistoryViewService = new WorkoutHistoryViewService(supabase);
 
   let userDialogOpen = $state(false);
   let loginEmail = $state('');
@@ -65,7 +67,8 @@
     routineViewService,
     routineCommandService,
     workoutViewService,
-    workoutCommandService
+    workoutCommandService,
+    workoutHistoryViewService
   });
 
   onMount(async () => {

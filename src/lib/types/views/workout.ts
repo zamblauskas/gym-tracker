@@ -69,3 +69,14 @@ export interface Compact {
   completedExerciseCount: number;
   createdAt: Date;
 }
+
+export interface HistoryItem {
+  id: string;
+  routine: {
+    name: string;
+    program: {
+      name: string;
+    };
+  };
+  completedAt: Date;
+}

@@ -15,7 +15,8 @@
     ChevronRight,
     Activity,
     CircleAlert,
-    Play
+    Play,
+    History
   } from 'lucide-svelte';
   import Badge from '$lib/components/ui/badge/badge.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
@@ -114,7 +115,7 @@
 <!-- Next routines -->
 {#if !model.isLoading && model.nextRoutines.length > 0}
   <div class="flex w-full flex-col gap-4 p-4">
-    <span class="text-center text-sm font-bold text-muted-foreground">Next routines</span>
+    <span class="text-center text-sm font-bold text-muted-foreground">Next workout</span>
     {#each model.nextRoutines as item (item.id)}
       <Item.Root variant="outline">
         {#snippet child({ props })}
@@ -168,6 +169,19 @@
       <a href={resolve('/gyms')} {...props}>
         <Item.Content>
           <Item.Title><MapPinned />Gyms</Item.Title>
+        </Item.Content>
+        <Item.Actions>
+          <ChevronRight class="size-4" />
+        </Item.Actions>
+      </a>
+    {/snippet}
+  </Item.Root>
+
+  <Item.Root variant="outline">
+    {#snippet child({ props })}
+      <a href={resolve('/workout-history')} {...props}>
+        <Item.Content>
+          <Item.Title><History />History</Item.Title>
         </Item.Content>
         <Item.Actions>
           <ChevronRight class="size-4" />
