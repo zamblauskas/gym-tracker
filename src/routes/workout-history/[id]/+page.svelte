@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { onMount, getContext } from 'svelte';
   import { resolve } from '$app/paths';
-  import { Trash2, Clock, CheckCircle, MessageCircle } from 'lucide-svelte';
+  import { Trash2, Clock, CheckCircle } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { WorkoutHistoryDetailModel } from '$lib/models/workout-history-detail.svelte';
@@ -17,7 +17,7 @@
   import ProgramCard from '$lib/components/ProgramCard.svelte';
   import RoutineCard from '$lib/components/RoutineCard.svelte';
   import { formatDuration } from '$lib/utils/duration';
-  import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
+  import ExerciseHistoryDetail from '$lib/components/ExerciseHistoryDetail.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
   const services = getContext<Services>(SERVICES_KEY);
@@ -106,59 +106,7 @@
             {/if}
           </div>
 
-          <!-- Sets Table -->
-          {#if exerciseDetail.sets.length > 0}
-            <div class="mt-4 rounded-md border">
-              <table class="w-full text-sm">
-                <thead class="[&_tr]:border-b">
-                  <tr
-                    class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                  >
-                    <th
-                      class="h-10 w-[50px] px-2 text-left align-middle font-medium text-muted-foreground"
-                      >Set</th
-                    >
-                    <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground"
-                      >Weight</th
-                    >
-                    <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground"
-                      >Reps</th
-                    >
-                    <th class="h-10 px-2 text-right align-middle font-medium text-muted-foreground"
-                      >RIR</th
-                    >
-                  </tr>
-                </thead>
-                <tbody class="[&_tr:last-child]:border-0">
-                  {#each exerciseDetail.sets as set, i (set.id)}
-                    <tr
-                      class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                    >
-                      <td class="p-2 align-middle font-medium">{i + 1}</td>
-                      <td class="p-2 align-middle">{set.weight} kg</td>
-                      <td class="p-2 align-middle">{set.reps}</td>
-                      <td class="p-2 text-right align-middle">
-                        {set.repsInReserve !== null ? set.repsInReserve : '-'}
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Volume -->
-            <div class="px-2 pt-2 text-sm text-muted-foreground">
-              Volume: {formatVolume(calculateTotalVolume(exerciseDetail.sets))}
-            </div>
-          {/if}
-
-          <!-- Notes -->
-          {#if exerciseDetail.notes}
-            <div class="flex gap-1 px-2 pt-2 text-sm text-muted-foreground italic">
-              <MessageCircle class="size-4" />
-              {exerciseDetail.notes}
-            </div>
-          {/if}
+          <ExerciseHistoryDetail sets={exerciseDetail.sets} notes={exerciseDetail.notes} />
         </div>
       {/each}
     </div>

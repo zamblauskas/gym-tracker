@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { History, MessageSquare, ChevronsUpDown } from 'lucide-svelte';
+  import { History, ChevronsUpDown } from 'lucide-svelte';
   import * as Collapsible from '$lib/components/ui/collapsible/index.js';
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import * as Workout from '$lib/types/views/workout';
   import { timeAgo } from '$lib/utils/time-ago';
   import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
+  import ExerciseHistoryDetail from './ExerciseHistoryDetail.svelte';
 
   interface Props {
     history: Workout.ExerciseHistory[];
@@ -94,31 +95,7 @@
             {formatDate(item.workoutDate)}
             <span class="text-muted-foreground">({timeAgo(item.workoutDate)})</span>
           </div>
-          <div class="space-y-1 pl-4">
-            {#if item.sets.length === 0}
-              <div class="flex gap-3 text-sm text-muted-foreground">No sets</div>
-            {:else}
-              {#each item.sets as set, setIndex (set.id)}
-                <div class="flex gap-3 text-sm">
-                  <span class="w-6 text-muted-foreground">#{setIndex + 1}</span>
-                  <span>{set.weight} kg × {set.reps} reps</span>
-                  {#if set.repsInReserve}
-                    <span class="text-muted-foreground">{set.repsInReserve} RIR</span>
-                  {/if}
-                </div>
-              {/each}
-            {/if}
-            {#if item.sets.length > 0}
-              <div class="mt-2 text-xs text-muted-foreground">
-                Volume: {formatVolume(calculateTotalVolume(item.sets))}
-              </div>
-            {/if}
-          </div>
-          {#if item.notes}
-            <div class="pl-4 text-sm text-muted-foreground italic">
-              <MessageSquare class="inline-block h-4 w-4" /> "{item.notes}"
-            </div>
-          {/if}
+          <ExerciseHistoryDetail sets={item.sets} notes={item.notes} />
           {#if i < history.length - 1}
             <Separator class="mt-3" />
           {/if}
