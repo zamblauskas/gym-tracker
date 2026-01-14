@@ -20,6 +20,7 @@ You select an Exercise Type (e.g., Lat Pulldown) but log a specific Exercise Var
    - Program: collection of routines (e.g., "Strength Training")
    - Routine: set of exercise types to complete in one gym session
    - Each exercise type can have multiple exercises (variations/machines)
+   - Specific exercise can be assigned to one or more gyms (locations)
 
 2. **Workout Tracking**
    - Start a routine to create a workout session
@@ -28,7 +29,10 @@ You select an Exercise Type (e.g., Lat Pulldown) but log a specific Exercise Var
    - View exercise history from past workouts
    - Complete or cancel workout
 
-3. **Home Page**
+3. **Workout History**
+   - Browse past completed workouts and view their details
+
+4. **Home Page**
    - View in-progress workouts with progress and elapsed time
    - See next routine for each program (auto-determined based on last completed)
 
@@ -154,6 +158,7 @@ WorkoutDetailPage
 
 Import: `import { logger } from '$lib/logger'`
 
+Log full data after loading.
 Pattern:
 
 ```typescript

@@ -62,7 +62,7 @@
 </script>
 
 {#if history.length > 0}
-  <Collapsible.Root class="mt-6">
+  <Collapsible.Root>
     <Collapsible.Trigger
       class="flex w-full items-center justify-between rounded-lg border bg-muted/50 p-3 text-sm hover:bg-muted"
     >

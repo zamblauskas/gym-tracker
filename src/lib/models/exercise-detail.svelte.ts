@@ -1,13 +1,15 @@
 import type { ExerciseViewService } from '$lib/services/exercise-view.service';
 import type { ExerciseCommandService } from '$lib/services/exercise-command.service';
 import type { GymViewService } from '$lib/services/gym-view.service';
-import type { Exercise, Gym } from '$lib/types/views';
+import type { WorkoutViewService } from '$lib/services/workout-view.service';
+import type { Exercise, Gym, Workout } from '$lib/types/views';
 import type { Range } from '$lib/types/range';
 import { logger } from '$lib/logger';
 
 export class ExerciseDetailModel {
   exercise = $state<Exercise.Detail | null>(null);
   allGyms = $state<Gym.Compact[]>([]);
+  history = $state<Workout.ExerciseHistory[]>([]);
   isLoading = $state(true);
   isSaving = $state(false);
   isDeleting = $state(false);
@@ -18,7 +20,8 @@ export class ExerciseDetailModel {
     private exerciseId: string,
     private exerciseViewSvc: ExerciseViewService,
     private exerciseCommandSvc: ExerciseCommandService,
-    private gymViewSvc: GymViewService
+    private gymViewSvc: GymViewService,
+    private workoutViewSvc: WorkoutViewService
   ) {}
 
   async loadData() {
@@ -27,15 +30,18 @@ export class ExerciseDetailModel {
     this.isLoading = true;
     this.errorMessage = '';
     try {
-      const [exercise, allGyms] = await Promise.all([
+      const [exercise, allGyms, history] = await Promise.all([
         this.exerciseViewSvc.getExerciseDetailById(this.exerciseId),
-        this.gymViewSvc.listGyms()
+        this.gymViewSvc.listGyms(),
+        this.workoutViewSvc.getExerciseHistory(this.exerciseId)
       ]);
       this.exercise = exercise;
       this.allGyms = allGyms;
+      this.history = history;
       logger.info('Exercise data loaded', {
         exercise: $state.snapshot(this.exercise),
-        allGyms: $state.snapshot(this.allGyms)
+        allGyms: $state.snapshot(this.allGyms),
+        historyCount: $state.snapshot(this.history)
       });
     } catch (error) {
       this.errorMessage = error instanceof Error ? error.message : 'Failed to load exercise';

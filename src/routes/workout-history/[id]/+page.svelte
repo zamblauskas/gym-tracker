@@ -21,12 +21,12 @@
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
   const services = getContext<Services>(SERVICES_KEY);
+  const workoutId = page.params.id ?? '';
   const model = new WorkoutHistoryDetailModel(
+    workoutId,
     services.workoutHistoryViewService,
     services.workoutHistoryCommandService
   );
-
-  const workoutId = page.params.id ?? '';
 
   chrome.setBreadcrumbItems([
     { label: 'Workout History', href: resolve('/workout-history') },
@@ -35,21 +35,21 @@
 
   onMount(async () => {
     if (workoutId) {
-      await model.load(workoutId);
+      await model.loadData();
     }
   });
 </script>
 
-{#if model.error}
+{#if model.errorMessage}
   <div class="p-4">
     <Alert.Root variant="destructive">
       <Alert.Title>Error</Alert.Title>
-      <Alert.Description>{model.error}</Alert.Description>
+      <Alert.Description>{model.errorMessage}</Alert.Description>
     </Alert.Root>
   </div>
 {/if}
 
-{#if model.loading}
+{#if model.isLoading}
   <div class="flex h-[50vh] w-full items-center justify-center">
     <Spinner class="h-8 w-8" />
   </div>

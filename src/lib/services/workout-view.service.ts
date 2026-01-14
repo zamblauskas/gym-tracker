@@ -184,10 +184,10 @@ export class WorkoutViewService {
 
   async getExerciseHistory(
     exerciseId: string,
-    currentWorkoutId: string,
+    excludeWorkoutId?: string,
     limit: number = 5
   ): Promise<Workout.ExerciseHistory[]> {
-    const { data, error } = await this.client
+    let query = this.client
       .from('workout_exercises')
       .select(
         `
@@ -209,13 +209,18 @@ export class WorkoutViewService {
         )
       `
       )
-      .eq('exercise_id', exerciseId)
-      .neq('workout_id', currentWorkoutId)
+      .eq('exercise_id', exerciseId);
+
+    if (excludeWorkoutId) {
+      query = query.neq('workout_id', excludeWorkoutId);
+    }
+
+    const { data, error } = await query
       .eq('workouts.status', 'completed')
       .is('deleted_at', null)
       .is('workouts.deleted_at', null)
       .is('workout_sets.deleted_at', null)
-      .order('workouts(completed_at)', { ascending: false })
+      .order('completed_at', { referencedTable: 'workouts', ascending: false })
       .limit(limit);
 
     if (error) {

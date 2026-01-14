@@ -17,6 +17,7 @@
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import AddEditExercise from '$lib/components/AddEditExercise.svelte';
+  import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import { formatRepRange } from '$lib/utils/range';
 
   const exerciseId = page.params.exerciseId || '';
@@ -26,7 +27,8 @@
     exerciseId,
     services.exerciseViewService,
     services.exerciseCommandService,
-    services.gymViewService
+    services.gymViewService,
+    services.workoutViewService
   );
 
   let editDialogOpen = $state(false);
@@ -173,6 +175,8 @@
         </div>
       </div>
     {/if}
+
+    <ExerciseHistory history={model.history} showEmptyState={true} />
   </div>
 {/if}
 <div class="p-4">

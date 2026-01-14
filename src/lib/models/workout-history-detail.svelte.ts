@@ -7,44 +7,51 @@ import { logger } from '$lib/logger';
 
 export class WorkoutHistoryDetailModel {
   workout = $state<HistoryDetail | null>(null);
-  loading = $state(true);
+  isLoading = $state(true);
   isDeleting = $state(false);
-  isActionInProgress = $derived(this.loading || this.isDeleting);
-  error = $state<string | null>(null);
+  isActionInProgress = $derived(this.isLoading || this.isDeleting);
+  errorMessage = $state('');
 
   constructor(
+    private workoutId: string,
     private viewService: WorkoutHistoryViewService,
     private commandService: WorkoutHistoryCommandService
   ) {}
 
-  async load(id: string) {
-    this.loading = true;
-    this.error = null;
+  async loadData() {
+    logger.info('Loading workout history', { workoutId: this.workoutId });
+
+    this.isLoading = true;
+    this.errorMessage = '';
 
     try {
-      this.workout = await this.viewService.getHistoryDetail(id);
-      logger.info('Workout history loaded', { id });
+      this.workout = await this.viewService.getHistoryDetail(this.workoutId);
+      logger.info('Workout history loaded', {
+        workout: $state.snapshot(this.workout)
+      });
     } catch (e) {
-      this.error = e instanceof Error ? e.message : 'Failed to load workout history';
-      logger.error('Failed to load workout history', { error: e });
+      this.errorMessage = e instanceof Error ? e.message : 'Failed to load workout history';
+      logger.error('Failed to load workout history', { workoutId: this.workoutId, error: e });
     } finally {
-      this.loading = false;
+      this.isLoading = false;
     }
   }
 
   async delete() {
     if (!this.workout) return;
 
+    logger.info('Deleting workout', { workoutId: this.workoutId });
+
     this.isDeleting = true;
-    this.error = null;
+    this.errorMessage = '';
 
     try {
       await this.commandService.deleteWorkout(this.workout.id);
-      logger.info('Workout deleted', { id: this.workout.id });
+      logger.info('Workout deleted', { workoutId: this.workoutId });
       await goto(resolve('/workout-history'));
     } catch (e) {
-      this.error = e instanceof Error ? e.message : 'Failed to delete workout';
-      logger.error('Failed to delete workout', { error: e });
+      this.errorMessage = e instanceof Error ? e.message : 'Failed to delete workout';
+      logger.error('Failed to delete workout', { workoutId: this.workoutId, error: e });
     } finally {
       this.isDeleting = false;
     }
