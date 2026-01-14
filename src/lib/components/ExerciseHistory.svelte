@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { History, ChevronsUpDown } from 'lucide-svelte';
+  import { History, ChevronsUpDown, MessageCircle } from 'lucide-svelte';
   import * as Collapsible from '$lib/components/ui/collapsible/index.js';
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import * as Workout from '$lib/types/views/workout';
@@ -34,35 +34,29 @@
     return range.min === range.max ? `${range.min} reps` : `${range.min}-${range.max} reps`;
   }
 
-  function formatHistorySummary(item: Workout.ExerciseHistory): string {
+  function formatHistorySummary(item: Workout.ExerciseHistory) {
     if (item.sets.length === 0) {
       return '0 sets';
     }
 
-    const volume = calculateTotalVolume(item.sets);
+    const ranges = item.sets.reduce(
+      (acc, set) => {
+        acc.weight.min = Math.min(acc.weight.min, set.weight);
+        acc.weight.max = Math.max(acc.weight.max, set.weight);
+        acc.reps.min = Math.min(acc.reps.min, set.reps);
+        acc.reps.max = Math.max(acc.reps.max, set.reps);
+        return acc;
+      },
+      {
+        weight: { min: Infinity, max: -Infinity },
+        reps: { min: Infinity, max: -Infinity }
+      }
+    );
+
     return [
       formatSetCount(item.sets.length),
-      formatWeightRange(
-        item.sets.reduce(
-          (acc, set) => {
-            acc.min = Math.min(acc.min, set.weight);
-            acc.max = Math.max(acc.max, set.weight);
-            return acc;
-          },
-          { min: Infinity, max: -Infinity }
-        )
-      ),
-      formatRepRange(
-        item.sets.reduce(
-          (acc, set) => {
-            acc.min = Math.min(acc.min, set.reps);
-            acc.max = Math.max(acc.max, set.reps);
-            return acc;
-          },
-          { min: Infinity, max: -Infinity }
-        )
-      ),
-      formatVolume(volume)
+      formatWeightRange(ranges.weight),
+      formatRepRange(ranges.reps)
     ].join(' • ');
   }
 </script>
@@ -78,9 +72,15 @@
             <History class="inline-block h-4 w-4" />
             <span>Last workout - {formatDate(history[0].workoutDate)}</span>
           </div>
-          <div class="text-muted-foreground">{formatHistorySummary(history[0])}</div>
+          <div class="align-left flex flex-col gap-1 text-left text-muted-foreground">
+            <span>{formatHistorySummary(history[0])}</span>
+            <span>{formatVolume(calculateTotalVolume(history[0].sets))}</span>
+          </div>
           {#if history[0].notes}
-            <div class="text-muted-foreground italic">"{history[0].notes}"</div>
+            <div class="flex gap-1 text-sm text-muted-foreground italic">
+              <MessageCircle class="size-4" />
+              {history[0].notes}
+            </div>
           {/if}
         </div>
       {/if}
