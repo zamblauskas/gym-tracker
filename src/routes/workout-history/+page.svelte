@@ -18,7 +18,7 @@
   const services = getContext<Services>(SERVICES_KEY);
   const model = new WorkoutHistoryListModel(services.workoutHistoryViewService);
 
-  chrome.setBreadcrumbItems([{ label: 'History' }]);
+  chrome.setBreadcrumbItems([{ label: 'Workout History' }]);
 
   onMount(async () => {
     await model.loadData();

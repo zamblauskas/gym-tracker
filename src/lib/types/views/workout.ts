@@ -80,3 +80,39 @@ export interface HistoryItem {
   };
   completedAt: Date;
 }
+
+export interface HistoryExerciseDetail {
+  id: string;
+  exerciseType: {
+    id: string;
+    name: string;
+    targetRepRange: Range<number>;
+    targetRepsInReserve: number | null;
+  };
+  exercise: {
+    id: string;
+    name: string;
+    machineBrand: string | null;
+    targetRepRange: Range<number>;
+    targetRepsInReserve: number | null;
+    gyms: { id: string; name: string }[];
+  } | null;
+  sets: SetDetail[];
+  notes: string | null;
+}
+
+export interface HistoryDetail {
+  id: string;
+  status: Status;
+  startedAt: Date;
+  completedAt: Date | null;
+  routine: {
+    id: string;
+    name: string;
+    program: {
+      id: string;
+      name: string;
+    };
+  };
+  exercises: HistoryExerciseDetail[];
+}

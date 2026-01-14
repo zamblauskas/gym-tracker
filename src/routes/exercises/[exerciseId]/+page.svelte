@@ -17,6 +17,7 @@
   import { Spinner } from '$lib/components/ui/spinner/index.js';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import AddEditExercise from '$lib/components/AddEditExercise.svelte';
+  import { formatRepRange } from '$lib/utils/range';
 
   const exerciseId = page.params.exerciseId || '';
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
@@ -135,10 +136,10 @@
         <span>{model.exercise.machineBrand}</span>
       </div>
     {/if}
-    {#if model.exercise.targetRepRange}
+    {#if model.exercise.targetRepRange.min || model.exercise.targetRepRange.max}
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Target Rep Range</span>
-        <span>{model.exercise.targetRepRange.min}–{model.exercise.targetRepRange.max} reps</span>
+        <span>{formatRepRange(model.exercise.targetRepRange)} reps</span>
       </div>
     {/if}
     {#if model.exercise.targetRepsInReserve}

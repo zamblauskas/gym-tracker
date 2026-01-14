@@ -23,7 +23,6 @@ export interface ExerciseDetail {
 export interface Detail {
   id: string;
   name: string;
-  // TODO: need to show this in the UI
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
   exercises: ExerciseDetail[];

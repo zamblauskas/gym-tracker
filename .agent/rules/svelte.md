@@ -17,3 +17,5 @@ $effect(() => {
   });
 });
 ```
+
+- All destructive actions must have a confirmation popup

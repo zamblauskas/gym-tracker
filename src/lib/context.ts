@@ -12,6 +12,7 @@ import type { RoutineViewService } from './services/routine-view.service';
 import type { WorkoutCommandService } from './services/workout-command.service';
 import type { WorkoutViewService } from './services/workout-view.service';
 import type { WorkoutHistoryViewService } from './services/workout-history-view.service';
+import type { WorkoutHistoryCommandService } from './services/workout-history-command.service';
 
 export const AUTH_KEY = Symbol('auth');
 export const PAGE_CHROME_KEY = Symbol('pageChrome');
@@ -31,4 +32,5 @@ export interface Services {
   workoutViewService: WorkoutViewService;
   workoutCommandService: WorkoutCommandService;
   workoutHistoryViewService: WorkoutHistoryViewService;
+  workoutHistoryCommandService: WorkoutHistoryCommandService;
 }
