@@ -4,6 +4,7 @@ export interface Detail {
   id: string;
   name: string;
   machineBrand: string | null;
+  notes: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
   gyms: {

@@ -34,6 +34,7 @@ export interface ExerciseDetail {
     machineBrand: string | null;
     targetRepRange: Range<number>;
     targetRepsInReserve: number | null;
+    notes: string | null;
     gyms: {
       id: string;
       name: string;

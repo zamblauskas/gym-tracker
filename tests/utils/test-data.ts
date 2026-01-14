@@ -28,18 +28,21 @@ export const data = {
     e1: {
       name: 'Test Exercise',
       machineBrand: 'Test Machine',
+      notes: 'Test note',
       targetRepRange: { min: 1, max: 2 },
       targetRepsInReserve: 3
     },
     e2: {
       name: 'Test Exercise 2',
       machineBrand: 'Test Machine 2',
+      notes: 'Test note 2',
       targetRepRange: { min: 4, max: 5 },
       targetRepsInReserve: 6
     },
     eNull: {
       name: 'Test Exercise',
       machineBrand: null,
+      notes: null,
       targetRepRange: { min: null, max: null },
       targetRepsInReserve: null
     }

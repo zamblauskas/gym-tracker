@@ -11,6 +11,7 @@ export class ExerciseViewService {
       .select(
         `id,
         name,
+        notes,
         machine_brand,
         target_rep_range_min,
         target_rep_range_max,
@@ -40,6 +41,7 @@ export class ExerciseViewService {
         name: data.exercise_types.name
       },
       machineBrand: data.machine_brand,
+      notes: data.notes,
       targetRepRange: {
         min: data.target_rep_range_min,
         max: data.target_rep_range_max

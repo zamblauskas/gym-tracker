@@ -1,0 +1,2 @@
+ALTER TABLE exercises
+    ADD COLUMN notes TEXT DEFAULT NULL;

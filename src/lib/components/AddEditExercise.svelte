@@ -5,10 +5,12 @@
   import Input from '$lib/components/ui/input/input.svelte';
   import Label from '$lib/components/ui/label/label.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
+  import { Textarea } from '$lib/components/ui/textarea';
 
   interface ExerciseFormData {
     name: string;
     machineBrand: string | null;
+    notes: string | null;
     targetRepRangeMin: number | null;
     targetRepRangeMax: number | null;
     targetRepsInReserve: number | null;
@@ -77,6 +79,14 @@
       min={0}
       max={99}
       bind:value={formData.targetRepsInReserve}
+    />
+  </div>
+  <div class="flex flex-col gap-2">
+    <Label for="exercise-notes">Notes</Label>
+    <Textarea
+      id="exercise-notes"
+      placeholder="e.g., Seat height 4, wide grip..."
+      bind:value={formData.notes}
     />
   </div>
   <Separator />

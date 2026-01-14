@@ -4,6 +4,7 @@ export interface Create {
   exerciseTypeId: string;
   name: string;
   machineBrand: string | null;
+  notes: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
   gymIds: string[];
@@ -12,6 +13,7 @@ export interface Create {
 export interface Update {
   name: string;
   machineBrand: string | null;
+  notes: string | null;
   targetRepRange: Range<number>;
   targetRepsInReserve: number | null;
   gymIds: string[];

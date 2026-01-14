@@ -34,6 +34,7 @@ export class WorkoutViewService {
           exercises (
             id,
             name,
+            notes,
             machine_brand,
             target_rep_range_min,
             target_rep_range_max,
@@ -100,6 +101,7 @@ export class WorkoutViewService {
             id: exercise.exercises.id,
             name: exercise.exercises.name,
             machineBrand: exercise.exercises.machine_brand,
+            notes: exercise.exercises.notes,
             targetRepRange: {
               min: exercise.exercises.target_rep_range_min,
               max: exercise.exercises.target_rep_range_max

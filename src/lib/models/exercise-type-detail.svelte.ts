@@ -111,6 +111,7 @@ export class ExerciseTypeDetailModel {
   async createExercise(
     name: string,
     machineBrand: string | null,
+    notes: string | null,
     targetRepRange: Range<number>,
     targetRepsInReserve: number | null,
     gymIds: string[]
@@ -131,6 +132,7 @@ export class ExerciseTypeDetailModel {
         exerciseTypeId: this.exerciseTypeId,
         name,
         machineBrand,
+        notes,
         targetRepRange,
         targetRepsInReserve,
         gymIds

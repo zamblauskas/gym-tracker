@@ -108,6 +108,7 @@ export type Database = {
           id: string;
           machine_brand: string | null;
           name: string;
+          notes: string | null;
           target_rep_range_max: number | null;
           target_rep_range_min: number | null;
           target_reps_in_reserve: number | null;
@@ -121,6 +122,7 @@ export type Database = {
           id?: string;
           machine_brand?: string | null;
           name: string;
+          notes?: string | null;
           target_rep_range_max?: number | null;
           target_rep_range_min?: number | null;
           target_reps_in_reserve?: number | null;
@@ -134,6 +136,7 @@ export type Database = {
           id?: string;
           machine_brand?: string | null;
           name?: string;
+          notes?: string | null;
           target_rep_range_max?: number | null;
           target_rep_range_min?: number | null;
           target_reps_in_reserve?: number | null;

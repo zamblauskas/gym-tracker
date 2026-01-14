@@ -28,6 +28,8 @@ For **EACH** file in the inventory:
     - **Rationale:** [Why is this a match or a break?]
     ```
 
+4.  Write full audit to consistency-audit-{timestamp}.md
+
 ## Phase 3: The Final Report
 
 Once **ALL** files in the inventory have been analyzed, output the final report to the user (in the chat):

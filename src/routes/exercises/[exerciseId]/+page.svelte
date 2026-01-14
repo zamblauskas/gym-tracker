@@ -4,7 +4,7 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { getContext } from 'svelte';
-  import { Pencil, Trash2, CircleAlert, MapPinned } from 'lucide-svelte';
+  import { Pencil, Trash2, CircleAlert, MapPinned, NotebookPen } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { ExerciseDetailModel } from '$lib/models/exercise-detail.svelte';
@@ -33,6 +33,7 @@
   let editedExercise = $state({
     name: '',
     machineBrand: null as string | null,
+    notes: null as string | null,
     targetRepRangeMin: null as number | null,
     targetRepRangeMax: null as number | null,
     targetRepsInReserve: null as number | null
@@ -71,6 +72,7 @@
     editedExercise = {
       name: model.exercise.name,
       machineBrand: model.exercise.machineBrand,
+      notes: model.exercise.notes,
       targetRepRangeMin: model.exercise.targetRepRange?.min,
       targetRepRangeMax: model.exercise.targetRepRange?.max,
       targetRepsInReserve: model.exercise.targetRepsInReserve
@@ -94,6 +96,7 @@
     const didUpdate = await model.updateExercise(
       editedExercise.name,
       editedExercise.machineBrand,
+      editedExercise.notes,
       { min: editedExercise.targetRepRangeMin, max: editedExercise.targetRepRangeMax },
       editedExercise.targetRepsInReserve,
       selectedGymIds
@@ -134,6 +137,15 @@
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Machine Brand</span>
         <span>{model.exercise.machineBrand}</span>
+      </div>
+    {/if}
+    {#if model.exercise.notes}
+      <div class="flex flex-col gap-1">
+        <span class="text-sm text-muted-foreground">Notes</span>
+        <div class="flex items-start gap-1">
+          <NotebookPen class="mt-0.5 size-4 text-muted-foreground" />
+          <span class="text-sm whitespace-pre-wrap italic">{model.exercise.notes}</span>
+        </div>
       </div>
     {/if}
     {#if model.exercise.targetRepRange.min || model.exercise.targetRepRange.max}

@@ -21,6 +21,7 @@ describe('Exercise view and command services', () => {
     exercise: {
       name: string;
       machineBrand: string | null;
+      notes: string | null;
       targetRepRange: Range<number>;
       targetRepsInReserve: number | null;
     }
@@ -29,6 +30,7 @@ describe('Exercise view and command services', () => {
       id: exerciseId,
       name: exercise.name,
       machineBrand: exercise.machineBrand,
+      notes: exercise.notes,
       targetRepRange: exercise.targetRepRange,
       targetRepsInReserve: exercise.targetRepsInReserve,
       gyms: gyms,

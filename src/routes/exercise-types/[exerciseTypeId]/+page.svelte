@@ -46,6 +46,7 @@
   let newExercise = $state({
     name: '',
     machineBrand: null as string | null,
+    notes: null as string | null,
     targetRepRangeMin: null as number | null,
     targetRepRangeMax: null as number | null,
     targetRepsInReserve: null as number | null
@@ -99,6 +100,7 @@
     newExercise = {
       name: '',
       machineBrand: null,
+      notes: null,
       targetRepRangeMin: null,
       targetRepRangeMax: null,
       targetRepsInReserve: null
@@ -118,6 +120,7 @@
     const didCreate = await model.createExercise(
       newExercise.name,
       newExercise.machineBrand,
+      newExercise.notes,
       { min: newExercise.targetRepRangeMin, max: newExercise.targetRepRangeMax },
       newExercise.targetRepsInReserve,
       newExerciseGymIds

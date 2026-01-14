@@ -48,6 +48,7 @@ export class ExerciseDetailModel {
   async updateExercise(
     name: string,
     machineBrand: string | null,
+    notes: string | null,
     targetRepRange: Range<number>,
     targetRepsInReserve: number | null,
     gymIds: string[]
@@ -67,6 +68,7 @@ export class ExerciseDetailModel {
       await this.exerciseCommandSvc.updateExercise(this.exerciseId, {
         name,
         machineBrand,
+        notes,
         targetRepRange,
         targetRepsInReserve,
         gymIds

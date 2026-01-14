@@ -3,7 +3,7 @@
   import { getContext, untrack } from 'svelte';
   import { resolve } from '$app/paths';
   import { PUBLIC_TIMER_DURATION } from '$env/static/public';
-  import { ChevronLeft, ChevronRight, X, Repeat, Plus, Pencil } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, X, Repeat, Plus, Pencil, NotebookPen } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
 
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
@@ -172,6 +172,12 @@
       <div class="flex flex-col gap-2 p-4">
         <span class="text-sm text-muted-foreground">Exercise</span>
         <ExerciseCard exercise={model.currentExercise} />
+        {#if model.currentExercise.notes}
+          <div class="flex items-start gap-1 pl-1 text-muted-foreground">
+            <NotebookPen class="mt-0.5 size-4" />
+            <span class="text-sm whitespace-pre-wrap italic">{model.currentExercise.notes}</span>
+          </div>
+        {/if}
       </div>
     {/if}
 

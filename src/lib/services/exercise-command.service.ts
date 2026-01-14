@@ -11,6 +11,7 @@ export class ExerciseCommandService {
       exercise_type_id: input.exerciseTypeId,
       name: input.name,
       machine_brand: input.machineBrand,
+      notes: input.notes,
       target_rep_range_min: input.targetRepRange.min,
       target_rep_range_max: input.targetRepRange.max,
       target_reps_in_reserve: input.targetRepsInReserve
@@ -44,6 +45,7 @@ export class ExerciseCommandService {
     const exerciseUpdate: ExerciseUpdate = {
       name: input.name,
       machine_brand: input.machineBrand,
+      notes: input.notes,
       target_rep_range_min: input.targetRepRange.min,
       target_rep_range_max: input.targetRepRange.max,
       target_reps_in_reserve: input.targetRepsInReserve
