@@ -91,23 +91,25 @@
     <!-- Exercises -->
     <div class="flex flex-col gap-4">
       {#each model.workout.exercises as exerciseDetail (exerciseDetail.id)}
-        <div class="rounded-xl border bg-card p-4 text-card-foreground shadow">
-          <div class="flex flex-col gap-1">
-            <span class="flex items-center gap-1 text-xs text-muted-foreground">
-              Exercise Type
-            </span>
-            <ExerciseTypeCard exerciseType={exerciseDetail.exerciseType} />
-          </div>
+        {#if exerciseDetail.exercise}
+          <div class="rounded-xl border bg-card p-4 text-card-foreground shadow">
+            <div class="flex flex-col gap-1">
+              <span class="flex items-center gap-1 text-xs text-muted-foreground">
+                Exercise Type
+              </span>
+              <ExerciseTypeCard exerciseType={exerciseDetail.exerciseType} />
+            </div>
 
-          <div class="flex flex-col gap-1 pt-2">
-            <span class="flex items-center gap-1 text-xs text-muted-foreground"> Exercise </span>
-            {#if exerciseDetail.exercise}
-              <ExerciseCard exercise={exerciseDetail.exercise} />
-            {/if}
-          </div>
+            <div class="flex flex-col gap-1 pt-2">
+              <span class="flex items-center gap-1 text-xs text-muted-foreground"> Exercise </span>
+              {#if exerciseDetail.exercise}
+                <ExerciseCard exercise={exerciseDetail.exercise} />
+              {/if}
+            </div>
 
-          <ExerciseHistoryDetail sets={exerciseDetail.sets} notes={exerciseDetail.notes} />
-        </div>
+            <ExerciseHistoryDetail sets={exerciseDetail.sets} notes={exerciseDetail.notes} />
+          </div>
+        {/if}
       {/each}
     </div>
 
