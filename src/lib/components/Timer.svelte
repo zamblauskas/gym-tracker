@@ -16,8 +16,9 @@
 
   onMount(() => {
     timeLeft = duration;
+    const startedAt = new Date();
     interval = setInterval(() => {
-      timeLeft -= 1;
+      timeLeft = duration - secondsFrom(startedAt);
       if (timeLeft <= 0) {
         if (interval) clearInterval(interval);
         onComplete();
@@ -28,6 +29,10 @@
   onDestroy(() => {
     if (interval) clearInterval(interval);
   });
+
+  function secondsFrom(start: Date): number {
+    return Math.floor((new Date().getTime() - start.getTime()) / 1000);
+  }
 
   function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
