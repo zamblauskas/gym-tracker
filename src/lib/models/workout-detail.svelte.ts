@@ -99,7 +99,7 @@ export class WorkoutDetailModel {
         exerciseHistory: $state.snapshot(this.exerciseHistory)
       });
     } catch (error) {
-      this.exerciseHistory = [];
+      this.errorMessage = 'Failed to load exercise history';
       logger.error('Failed to load exercise history', {
         exerciseId,
         workoutId: this.workoutId,

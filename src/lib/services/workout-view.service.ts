@@ -220,7 +220,7 @@ export class WorkoutViewService {
       .is('deleted_at', null)
       .is('workouts.deleted_at', null)
       .is('workout_sets.deleted_at', null)
-      .order('completed_at', { referencedTable: 'workouts', ascending: false })
+      .order('workouts(completed_at)', { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -230,7 +230,7 @@ export class WorkoutViewService {
     return data.map((log) => {
       return {
         workoutExerciseId: log.id,
-        workoutDate: log.workouts.completed_at ? new Date(log.workouts.completed_at) : new Date(),
+        workoutDate: new Date(log.workouts.completed_at ?? ''),
         sets: log.workout_sets.map((s) => ({
           id: s.id,
           weight: s.weight,
