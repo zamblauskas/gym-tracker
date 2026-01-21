@@ -1,5 +1,9 @@
 # Local development
 
+```bash
+npm run dev
+```
+
 ## Supabase
 
 ```bash

@@ -21,7 +21,7 @@ export class ExerciseTypeViewService {
     return data.map((row) => ({
       id: row.id,
       name: row.name,
-      exerciseCount: row.exercises?.[0]?.count ?? 0,
+      exerciseCount: row.exercises[0]?.count ?? 0,
       targetRepRange: { min: row.target_rep_range_min, max: row.target_rep_range_max },
       targetRepsInReserve: row.target_reps_in_reserve
     }));

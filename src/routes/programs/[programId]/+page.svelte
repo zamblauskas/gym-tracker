@@ -71,7 +71,7 @@
     editDialogOpen = false;
   }
 
-  async function moveRoutineUp(routineId: string) {
+  function moveRoutineUp(routineId: string) {
     const index = editedRoutineOrder.findIndex((r) => r.id === routineId);
     if (index >= 0) {
       const temp1 = editedRoutineOrder[index - 1];
@@ -83,7 +83,7 @@
     }
   }
 
-  async function moveRoutineDown(routineId: string) {
+  function moveRoutineDown(routineId: string) {
     const index = editedRoutineOrder.findIndex((r) => r.id === routineId);
     if (index >= 0) {
       const temp1 = editedRoutineOrder[index + 1];

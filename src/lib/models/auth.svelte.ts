@@ -30,7 +30,7 @@ export class AuthModel {
         return;
       }
 
-      this.email = data.session?.user?.email ?? null;
+      this.email = data.session?.user.email ?? null;
       logger.info('Auth session refreshed', { email: this.email });
     } finally {
       this.isLoading = false;
@@ -41,7 +41,7 @@ export class AuthModel {
     if (this.unsubscribeAuthStateChange) return;
 
     const { data } = this.supabase.auth.onAuthStateChange((_event, session) => {
-      this.email = session?.user?.email ?? null;
+      this.email = session?.user.email ?? null;
     });
 
     this.unsubscribeAuthStateChange = () => data.subscription.unsubscribe();

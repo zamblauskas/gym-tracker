@@ -21,7 +21,7 @@
 
   $effect(() => {
     if (open && exerciseTypeId) {
-      untrack(() => model.loadExercises(exerciseTypeId));
+      untrack(() => void model.loadExercises(exerciseTypeId));
     }
   });
 

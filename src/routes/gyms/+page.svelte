@@ -26,7 +26,7 @@
 
   onMount(() => {
     chrome.setBreadcrumbItems([{ label: 'Gyms', href: '/gyms' }]);
-    model.loadData();
+    return model.loadData();
   });
 
   async function createGym() {

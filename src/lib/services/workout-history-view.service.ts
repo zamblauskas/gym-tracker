@@ -109,10 +109,6 @@ export class WorkoutHistoryViewService {
       throw new Error(`Failed to load workout history detail: ${error.message}`);
     }
 
-    if (!workout) {
-      throw new Error('Workout not found');
-    }
-
     const exercises: Workout.HistoryExerciseDetail[] = workout.workout_exercises.map((we) => {
       return {
         id: we.id,

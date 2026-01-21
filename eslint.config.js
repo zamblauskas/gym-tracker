@@ -40,5 +40,24 @@ export default defineConfig(
         svelteConfig
       }
     }
+  },
+  {
+    files: ['**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true
+      }
+    }
+  },
+  {
+    files: ['**/*.ts', '**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'error'
+    }
   }
 );

@@ -55,12 +55,8 @@ export class RoutineViewService {
   private async calculateNextRoutineForProgram(
     program: ProgramWithRoutines
   ): Promise<Routine.Compact | null> {
-    if (!program.routines || program.routines.length === 0) {
-      return null;
-    }
-
     const lastWorkout = await this.getLastWorkout(program.id);
-    const nextRoutine = this.determineNextRoutine(program.routines, lastWorkout?.routines?.id);
+    const nextRoutine = this.determineNextRoutine(program.routines, lastWorkout?.routines.id);
 
     if (!nextRoutine) {
       return null;

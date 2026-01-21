@@ -66,10 +66,6 @@ export class WorkoutViewService {
       throw new Error(`Failed to load workout: ${error.message}`);
     }
 
-    if (!workout) {
-      throw new Error('Workout not found');
-    }
-
     const exercise = workout.workout_exercises[0];
 
     if (!exercise) {

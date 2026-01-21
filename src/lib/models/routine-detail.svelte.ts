@@ -40,8 +40,7 @@ export class RoutineDetailModel {
       this.routine = routineDetail;
       this.allExerciseTypes = allExerciseTypesData;
 
-      const exerciseTypeIds = this.routine?.exerciseTypeIds ?? [];
-      this.exerciseTypes = exerciseTypeIds
+      this.exerciseTypes = this.routine.exerciseTypeIds
         .map((id) => allExerciseTypesData.find((et) => et.id === id))
         .filter((et) => et !== undefined);
 

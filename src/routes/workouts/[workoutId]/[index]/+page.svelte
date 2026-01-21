@@ -70,7 +70,7 @@
     // Load data when model changes (identity changes due to params change)
     const activeModel = model;
     untrack(() => {
-      activeModel.loadData();
+      void activeModel.loadData();
     });
 
     // Reset local UI state on navigation
@@ -139,8 +139,8 @@
     deletingSetId = null;
   }
 
-  function saveNotes() {
-    model.updateNotes();
+  async function saveNotes() {
+    await model.updateNotes();
   }
 </script>
 
@@ -298,16 +298,16 @@
         <ChevronLeft class="h-8 w-8" />
       </Button>
 
-      {#if model.view?.exerciseCount > 0}
+      {#if model.view.exerciseCount > 0}
         <span class="text-sm text-muted-foreground">
-          {index + 1} / {model.view?.exerciseCount}
+          {index + 1} / {model.view.exerciseCount}
         </span>
       {/if}
 
       <Button
         variant="ghost"
         size="icon"
-        disabled={index >= model.view?.exerciseCount - 1 || model.isActionInProgress}
+        disabled={index >= model.view.exerciseCount - 1 || model.isActionInProgress}
         href={resolve(`/workouts/${workoutId}/${index + 1}`)}
       >
         <ChevronRight class="h-8 w-8" />

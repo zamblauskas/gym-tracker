@@ -149,7 +149,7 @@
   </div>
 {:else if model.exerciseType}
   <div class="flex w-full flex-col gap-4 p-4">
-    {#if model.exerciseType.targetRepRange && (model.exerciseType.targetRepRange.min || model.exerciseType.targetRepRange.max)}
+    {#if model.exerciseType.targetRepRange.min || model.exerciseType.targetRepRange.max}
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Target Rep Range</span>
         <span>{model.exerciseType.targetRepRange.min}–{model.exerciseType.targetRepRange.max}</span>
