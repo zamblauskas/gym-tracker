@@ -1,5 +1,6 @@
 <script lang="ts">
   import '../app.css';
+  import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
   import favicon from '$lib/assets/favicon.svg';
   import { onDestroy, onMount, setContext } from 'svelte';
   import { User } from 'lucide-svelte';
@@ -97,6 +98,8 @@
       userDialogOpen = false;
     }
   }
+
+  const queryClient = new QueryClient();
 </script>
 
 <svelte:head>
@@ -155,7 +158,9 @@
       <Spinner class="mx-auto h-8 w-8" />
     </div>
   {:else if auth.isSignedIn}
-    {@render children()}
+    <QueryClientProvider client={queryClient}>
+      {@render children()}
+    </QueryClientProvider>
   {:else}
     <!-- Sign In -->
     <div class="p-4">

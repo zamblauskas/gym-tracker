@@ -2,12 +2,10 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onMount } from 'svelte';
   import { getContext } from 'svelte';
   import { Pencil, Trash2, CircleAlert, MapPinned, NotebookPen } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
-  import { ExerciseDetailModel } from '$lib/models/exercise-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -19,17 +17,11 @@
   import AddEditExercise from '$lib/components/AddEditExercise.svelte';
   import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
   import { formatRepRange } from '$lib/utils/range';
+  import { ExerciseDetailModel } from '$lib/models/exercise-detail.svelte';
 
   const exerciseId = page.params.exerciseId || '';
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
-  const model = new ExerciseDetailModel(
-    exerciseId,
-    services.exerciseViewService,
-    services.exerciseCommandService,
-    services.gymViewService,
-    services.workoutViewService
-  );
+  const model = new ExerciseDetailModel(exerciseId);
 
   let editDialogOpen = $state(false);
   let editedExercise = $state({
@@ -61,22 +53,14 @@
     chrome.breadcrumbItems = breadcrumbItems;
   });
 
-  onMount(async () => {
-    if (exerciseId) {
-      await model.loadData();
-    } else {
-      model.isLoading = false;
-    }
-  });
-
   function openEditDialog() {
     if (!model.exercise) return;
     editedExercise = {
       name: model.exercise.name,
       machineBrand: model.exercise.machineBrand,
       notes: model.exercise.notes,
-      targetRepRangeMin: model.exercise.targetRepRange?.min,
-      targetRepRangeMax: model.exercise.targetRepRange?.max,
+      targetRepRangeMin: model.exercise.targetRepRange.min,
+      targetRepRangeMax: model.exercise.targetRepRange.max,
       targetRepsInReserve: model.exercise.targetRepsInReserve
     };
     selectedGymIds = model.exercise.gyms.map((g) => g.id);
@@ -92,26 +76,27 @@
   }
 
   async function updateExercise() {
-    if (!model.exercise) return;
     if (!editedExercise.name.trim()) return;
 
-    const didUpdate = await model.updateExercise(
-      editedExercise.name,
-      editedExercise.machineBrand,
-      editedExercise.notes,
-      { min: editedExercise.targetRepRangeMin, max: editedExercise.targetRepRangeMax },
-      editedExercise.targetRepsInReserve,
-      selectedGymIds
-    );
-    if (!didUpdate) return;
+    await model.update({
+      name: editedExercise.name,
+      machineBrand: editedExercise.machineBrand,
+      notes: editedExercise.notes,
+      targetRepRange: {
+        min: editedExercise.targetRepRangeMin,
+        max: editedExercise.targetRepRangeMax
+      },
+      targetRepsInReserve: editedExercise.targetRepsInReserve,
+      gymIds: selectedGymIds
+    });
+
     editDialogOpen = false;
   }
 
   async function deleteExercise() {
     if (!model.exercise) return;
 
-    const didDelete = await model.deleteExercise();
-    if (!didDelete) return;
+    await model.delete();
     await goto(resolve(`/exercise-types/${model.exercise.exerciseType.id}`));
   }
 </script>
@@ -166,7 +151,7 @@
       <div class="flex flex-col gap-1">
         <span class="text-sm text-muted-foreground">Available at</span>
         <div class="flex flex-wrap gap-2">
-          {#each model.allGyms.filter( (g) => model.exercise?.gyms.find((g2) => g2.id === g.id) ) as gym (gym.id)}
+          {#each model.gyms.filter( (g) => model.exercise?.gyms.find((g2) => g2.id === g.id) ) as gym (gym.id)}
             <div class="flex items-center gap-1 rounded-md border px-2 py-1 text-sm">
               <MapPinned class="size-3" />
               <span>{gym.name}</span>
@@ -176,7 +161,9 @@
       </div>
     {/if}
 
-    <ExerciseHistory history={model.history} showEmptyState={true} />
+    {#if model.history}
+      <ExerciseHistory history={model.history} showEmptyState={true} />
+    {/if}
   </div>
 {/if}
 <div class="p-4">
@@ -187,7 +174,11 @@
   <ButtonGroup.Root class="w-full gap-1">
     <Dialog.Root bind:open={editDialogOpen}>
       <Dialog.Trigger class="flex-1" onclick={openEditDialog}>
-        <Button class="w-full" variant="outline" disabled={model.isActionInProgress}>
+        <Button
+          class="w-full"
+          variant="outline"
+          disabled={model.isActionInProgress || !model.exercise}
+        >
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
@@ -201,7 +192,7 @@
         </Dialog.Header>
         <AddEditExercise
           bind:formData={editedExercise}
-          allGyms={model.allGyms}
+          allGyms={model.gyms}
           {selectedGymIds}
           onGymToggle={toggleGym}
         />
@@ -211,7 +202,7 @@
             onclick={updateExercise}
             disabled={editedExercise.name.trim() === '' || model.isActionInProgress}
           >
-            {#if model.isSaving}
+            {#if model.isSavingExercise}
               <Spinner class="mr-2" />
             {/if}
             Save
@@ -221,7 +212,11 @@
     </Dialog.Root>
     <AlertDialog.Root>
       <AlertDialog.Trigger>
-        <Button variant="outline" size="icon" disabled={model.isActionInProgress}>
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={model.isActionInProgress || !model.exercise}
+        >
           <Trash2 />
         </Button>
       </AlertDialog.Trigger>
@@ -235,7 +230,7 @@
         <AlertDialog.Footer>
           <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
           <AlertDialog.Action onclick={deleteExercise}>
-            {#if model.isDeleting}
+            {#if model.isDeletingExercise}
               <Spinner class="mr-2" />
             {/if}
             Delete
