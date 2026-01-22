@@ -202,7 +202,7 @@
             onclick={updateExercise}
             disabled={editedExercise.name.trim() === '' || model.isActionInProgress}
           >
-            {#if model.isSavingExercise}
+            {#if model.isExerciseSaving}
               <Spinner class="mr-2" />
             {/if}
             Save
@@ -230,7 +230,7 @@
         <AlertDialog.Footer>
           <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
           <AlertDialog.Action onclick={deleteExercise}>
-            {#if model.isDeletingExercise}
+            {#if model.isExerciseDeleting}
               <Spinner class="mr-2" />
             {/if}
             Delete

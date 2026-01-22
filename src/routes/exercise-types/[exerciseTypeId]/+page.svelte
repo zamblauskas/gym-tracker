@@ -2,10 +2,9 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onMount } from 'svelte';
   import { getContext } from 'svelte';
   import { Pencil, Plus, Trash2, Dumbbell } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { ExerciseTypeDetailModel } from '$lib/models/exercise-type-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
@@ -24,15 +23,8 @@
   const exerciseTypeId = page.params.exerciseTypeId || '';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
 
-  const model = new ExerciseTypeDetailModel(
-    exerciseTypeId,
-    services.exerciseTypeViewService,
-    services.exerciseTypeCommandService,
-    services.exerciseCommandService,
-    services.gymViewService
-  );
+  const model = new ExerciseTypeDetailModel(exerciseTypeId);
 
   let editDialogOpen = $state(false);
 
@@ -56,18 +48,11 @@
   let breadcrumbItems = $derived(
     !model.exerciseType
       ? []
-      : [
-          { label: 'Exercise Types', href: '/exercise-types' },
-          { label: model.exerciseType.name, href: `/exercise-types/${exerciseTypeId}` }
-        ]
+      : [{ label: 'Exercise Types', href: '/exercise-types' }, { label: model.exerciseType.name }]
   );
 
   $effect(() => {
     chrome.breadcrumbItems = breadcrumbItems;
-  });
-
-  onMount(async () => {
-    await model.loadData();
   });
 
   function openEditDialog() {
@@ -81,18 +66,19 @@
   }
 
   async function updateExerciseType() {
-    const didUpdate = await model.updateExerciseType(
-      editedExerciseType.name,
-      { min: editedExerciseType.targetRepRangeMin, max: editedExerciseType.targetRepRangeMax },
-      editedExerciseType.targetRepsInReserve
-    );
-    if (!didUpdate) return;
+    await model.updateExerciseType({
+      name: editedExerciseType.name,
+      targetRepRange: {
+        min: editedExerciseType.targetRepRangeMin,
+        max: editedExerciseType.targetRepRangeMax
+      },
+      targetRepsInReserve: editedExerciseType.targetRepsInReserve
+    });
     editDialogOpen = false;
   }
 
   async function deleteExerciseType() {
-    const didDelete = await model.deleteExerciseType();
-    if (!didDelete) return;
+    await model.deleteExerciseType();
     await goto(resolve('/exercise-types'));
   }
 
@@ -117,15 +103,18 @@
   }
 
   async function createExercise() {
-    const didCreate = await model.createExercise(
-      newExercise.name,
-      newExercise.machineBrand,
-      newExercise.notes,
-      { min: newExercise.targetRepRangeMin, max: newExercise.targetRepRangeMax },
-      newExercise.targetRepsInReserve,
-      newExerciseGymIds
-    );
-    if (!didCreate) return;
+    await model.createExercise({
+      exerciseTypeId,
+      name: newExercise.name,
+      machineBrand: newExercise.machineBrand,
+      notes: newExercise.notes,
+      targetRepRange: {
+        min: newExercise.targetRepRangeMin,
+        max: newExercise.targetRepRangeMax
+      },
+      targetRepsInReserve: newExercise.targetRepsInReserve,
+      gymIds: newExerciseGymIds
+    });
     resetNewExercise();
     addExerciseDialogOpen = false;
   }
@@ -205,7 +194,7 @@
         </Dialog.Header>
         <AddEditExercise
           bind:formData={newExercise}
-          allGyms={model.allGyms}
+          allGyms={model.gyms}
           selectedGymIds={newExerciseGymIds}
           onGymToggle={toggleNewExerciseGym}
         />
@@ -215,7 +204,7 @@
             onclick={createExercise}
             disabled={newExercise.name.trim() === '' || model.isActionInProgress}
           >
-            {#if model.isCreating}
+            {#if model.isExerciseCreating}
               <Spinner class="mr-2" />
             {/if}
             Create
@@ -241,7 +230,7 @@
             onclick={updateExerciseType}
             disabled={editedExerciseType.name.trim() === '' || model.isActionInProgress}
           >
-            {#if model.isSaving}
+            {#if model.isExerciseTypeSaving}
               <Spinner class="mr-2" />
             {/if}
             Save
@@ -265,7 +254,7 @@
         <AlertDialog.Footer>
           <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
           <AlertDialog.Action onclick={deleteExerciseType}>
-            {#if model.isDeleting}
+            {#if model.isExerciseTypeDeleting}
               <Spinner class="mr-2" />
             {/if}
             Delete

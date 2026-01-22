@@ -21,3 +21,11 @@ Todo:
 - [x] Refactor Model to use queries and mutations
 - [x] Optimistic update
 - [x] Type-safe query keys
+
+### Future tasks
+
+- Fix Hardcoded Paths in Breadcrumbs
+
+```
+You are using hardcoded strings for breadcrumbs. If the app base path changes, breadcrumbs will break. Refactoring Opportunity: Consistently use resolve() for all internal links or abstract breadcrumb generation.
+```

@@ -31,11 +31,11 @@ export class ExerciseDetailModel {
     this.exerciseQuery = createQuery(() => ({
       queryKey: Keys.exercise(this.exerciseId),
       queryFn: async () => {
-        logger.info('Fetching exercise detail', { exerciseId: this.exerciseId });
+        logger.info('Loading exercise detail', { exerciseId: this.exerciseId });
         const result = await this.services.exerciseViewService.getExerciseDetailById(
           this.exerciseId
         );
-        logger.info('Fetched exercise detail', { exerciseId: this.exerciseId, result });
+        logger.info('Exercise detail loaded', { result });
         return result;
       }
     }));
@@ -43,9 +43,9 @@ export class ExerciseDetailModel {
     this.gymsQuery = createQuery(() => ({
       queryKey: Keys.gyms,
       queryFn: async () => {
-        logger.info('Fetching gyms');
+        logger.info('Loading gyms');
         const result = await this.services.gymViewService.listGyms();
-        logger.info('Fetched gyms', { result });
+        logger.info('Gyms loaded', { result });
         return result;
       }
     }));
@@ -53,9 +53,9 @@ export class ExerciseDetailModel {
     this.historyQuery = createQuery(() => ({
       queryKey: Keys.exerciseHistory(this.exerciseId),
       queryFn: async () => {
-        logger.info('Fetching exercise history', { exerciseId: this.exerciseId });
+        logger.info('Loading exercise history', { exerciseId: this.exerciseId });
         const result = await this.services.workoutViewService.getExerciseHistory(this.exerciseId);
-        logger.info('Fetched exercise history', { exerciseId: this.exerciseId, result });
+        logger.info('Exercise history loaded', { exerciseId: this.exerciseId, result });
         return result;
       }
     }));
@@ -64,7 +64,7 @@ export class ExerciseDetailModel {
       mutationFn: async (exercise: ExerciseCommand.Update) => {
         logger.info('Updating exercise', { exerciseId: this.exerciseId, exercise });
         await this.services.exerciseCommandService.updateExercise(this.exerciseId, exercise);
-        logger.info('Updated exercise', { exerciseId: this.exerciseId });
+        logger.info('Exercise updated', { exerciseId: this.exerciseId });
       },
       onMutate: async (exercise: ExerciseCommand.Update) => {
         await this.queryClient.cancelQueries({ queryKey: Keys.exercise(this.exerciseId) });
@@ -110,7 +110,7 @@ export class ExerciseDetailModel {
       mutationFn: async () => {
         logger.info('Deleting exercise', { exerciseId: this.exerciseId });
         await this.services.exerciseCommandService.deleteExercise(this.exerciseId);
-        logger.info('Deleted exercise', { exerciseId: this.exerciseId });
+        logger.info('Exercise deleted', { exerciseId: this.exerciseId });
       },
       onSuccess: () => {
         return this.queryClient.invalidateQueries({ queryKey: Keys.exercise(this.exerciseId) });
@@ -138,26 +138,18 @@ export class ExerciseDetailModel {
   }
 
   get isActionInProgress() {
-    const exerciseIsLoading = this.exerciseQuery.isLoading;
-    const gymsIsLoading = this.gymsQuery.isLoading;
-    const historyIsLoading = this.historyQuery.isLoading;
+    const isLoading = this.isLoading;
     const updateMutationIsPending = this.updateMutation.isPending;
     const deleteMutationIsPending = this.deleteMutation.isPending;
 
-    return (
-      exerciseIsLoading ||
-      gymsIsLoading ||
-      historyIsLoading ||
-      updateMutationIsPending ||
-      deleteMutationIsPending
-    );
+    return isLoading || updateMutationIsPending || deleteMutationIsPending;
   }
 
-  get isSavingExercise() {
+  get isExerciseSaving() {
     return this.updateMutation.isPending;
   }
 
-  get isDeletingExercise() {
+  get isExerciseDeleting() {
     return this.deleteMutation.isPending;
   }
 

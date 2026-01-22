@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: src/**/*.svelte
+globs: src/**/*.svelte.ts
 ---
 
 - When iterating with `each` always provide a unique key, i.e. `{#each exercises as exercise (exercise.id)}...{/each}`
@@ -19,3 +19,26 @@ $effect(() => {
 ```
 
 - All destructive actions must have a confirmation popup
+
+- When a method compare multiple Svelte runes (signals) each one must be captured with a concrete const, otherwise compiler might never reach and register following runes signals as method dependencies
+
+```
+// Bug `isExerciseCreating` might not be registered as dependency
+  get isActionInProgress() {
+    return (
+      this.isLoading ||
+      this.isExerciseCreating
+    );
+  }
+```
+
+```
+// Correct
+
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const isExerciseCreating = this.isExerciseCreating;
+
+    return isLoading || isExerciseCreating;
+  }
+```
