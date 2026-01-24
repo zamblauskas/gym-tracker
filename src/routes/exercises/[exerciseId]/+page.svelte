@@ -75,10 +75,11 @@
     }
   }
 
-  async function updateExercise() {
+  function updateExercise() {
     if (!editedExercise.name.trim()) return;
 
-    await model.update({
+    // optimistic update
+    void model.update({
       name: editedExercise.name,
       machineBrand: editedExercise.machineBrand,
       notes: editedExercise.notes,

@@ -65,8 +65,9 @@
     editDialogOpen = true;
   }
 
-  async function updateExerciseType() {
-    await model.updateExerciseType({
+  function updateExerciseType() {
+    // optimistic update
+    void model.updateExerciseType({
       name: editedExerciseType.name,
       targetRepRange: {
         min: editedExerciseType.targetRepRangeMin,

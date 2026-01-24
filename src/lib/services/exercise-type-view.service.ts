@@ -12,6 +12,7 @@ export class ExerciseTypeViewService {
         'id,name,exercises(count),target_rep_range_min,target_rep_range_max,target_reps_in_reserve'
       )
       .is('deleted_at', null)
+      .is('exercises.deleted_at', null)
       .order('name');
 
     if (error) {

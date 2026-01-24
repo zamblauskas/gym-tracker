@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-
   import { getContext } from 'svelte';
   import { Plus, PersonStanding } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import { ExerciseTypeListModel } from '$lib/models/exercise-type-list.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
 
@@ -19,12 +17,8 @@
   import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
 
-  const model = new ExerciseTypeListModel(
-    services.exerciseTypeViewService,
-    services.exerciseTypeCommandService
-  );
+  const model = new ExerciseTypeListModel();
 
   let dialogOpen = $state(false);
   let newExerciseType = $state({
@@ -36,17 +30,15 @@
 
   chrome.setBreadcrumbItems([{ label: 'Exercise Types', href: '/exercise-types' }]);
 
-  onMount(async () => {
-    await model.loadData();
-  });
-
   async function createExerciseType() {
-    const didCreate = await model.createExerciseType(
-      newExerciseType.name,
-      { min: newExerciseType.targetRepRangeMin, max: newExerciseType.targetRepRangeMax },
-      newExerciseType.targetRepsInReserve
-    );
-    if (!didCreate) return;
+    await model.createExerciseType({
+      name: newExerciseType.name,
+      targetRepRange: {
+        min: newExerciseType.targetRepRangeMin,
+        max: newExerciseType.targetRepRangeMax
+      },
+      targetRepsInReserve: newExerciseType.targetRepsInReserve
+    });
 
     newExerciseType = {
       name: '',

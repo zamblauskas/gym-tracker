@@ -1,136 +1,53 @@
-import { logger } from '$lib/logger';
-import {
-  createMutation,
-  createQuery,
-  useQueryClient,
-  type CreateMutationResult,
-  type CreateQueryResult
-} from '@tanstack/svelte-query';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
 import { SERVICES_KEY, type Services } from '$lib/context';
 import { getContext } from 'svelte';
 import { Keys } from '$lib/query-keys';
 import type { ExerciseType, Gym } from '$lib/types/views';
 import { ExerciseType as ExerciseTypeCommand } from '$lib/types/commands';
 import { Exercise as ExerciseCommand } from '$lib/types/commands';
+import { createMutation, updateMutation, deleteMutation, fetchQuery } from '$lib/utils/query';
 
 export class ExerciseTypeDetailModel {
   private services = getContext<Services>(SERVICES_KEY);
-  private queryClient = useQueryClient();
   private exerciseTypeId: string;
 
   exerciseTypeQuery: CreateQueryResult<ExerciseType.Detail>;
   gymsQuery: CreateQueryResult<Gym.Compact[]>;
 
-  updateMutation: CreateMutationResult<void, Error, ExerciseTypeCommand.Update>;
-  deleteMutation: CreateMutationResult<void, Error>;
+  updateExerciseTypeMutation: CreateMutationResult<void, Error, ExerciseTypeCommand.Update>;
+  deleteExerciseTypeMutation: CreateMutationResult<void, Error>;
   createExerciseMutation: CreateMutationResult<string, Error, ExerciseCommand.Create>;
 
   constructor(exerciseTypeId: string) {
     this.exerciseTypeId = exerciseTypeId;
 
-    this.exerciseTypeQuery = createQuery(() => ({
-      queryKey: Keys.exerciseType(this.exerciseTypeId),
-      queryFn: async () => {
-        logger.info('Loading exercise type data', { exerciseTypeId: this.exerciseTypeId });
-        const result = await this.services.exerciseTypeViewService.getExerciseTypeDetailById(
-          this.exerciseTypeId
-        );
-        logger.info('Exercise type data loaded', { result });
-        return result;
-      }
-    }));
+    this.exerciseTypeQuery = fetchQuery({
+      key: Keys.exerciseTypeDetail(this.exerciseTypeId),
+      fn: () => this.services.exerciseTypeViewService.getExerciseTypeDetailById(this.exerciseTypeId)
+    });
 
-    this.gymsQuery = createQuery(() => ({
-      queryKey: Keys.gyms,
-      queryFn: async () => {
-        logger.info('Loading gyms');
-        const result = await this.services.gymViewService.listGyms();
-        logger.info('Gyms loaded', { result });
-        return result;
-      }
-    }));
+    this.gymsQuery = fetchQuery({
+      key: Keys.gyms,
+      fn: () => this.services.gymViewService.listGyms()
+    });
 
-    this.updateMutation = createMutation(() => ({
-      mutationFn: async (exerciseType: ExerciseTypeCommand.Update) => {
-        logger.info('Updating exercise type', {
-          exerciseTypeId: this.exerciseTypeId,
-          exerciseType
-        });
-        await this.services.exerciseTypeCommandService.updateExerciseType(
-          this.exerciseTypeId,
-          exerciseType
-        );
-        logger.info('Exercise type updated', { exerciseTypeId: this.exerciseTypeId });
-      },
-      onMutate: async (exerciseType: ExerciseTypeCommand.Update) => {
-        await this.queryClient.cancelQueries({ queryKey: Keys.exerciseType(this.exerciseTypeId) });
+    this.updateExerciseTypeMutation = updateMutation({
+      key: Keys.exerciseTypeDetail(this.exerciseTypeId),
+      fn: (data: ExerciseTypeCommand.Update) =>
+        this.services.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, data),
+      invalidateKeys: [Keys.exerciseTypes, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+    });
 
-        const previousExerciseType = this.queryClient.getQueryData<ExerciseType.Detail>(
-          Keys.exerciseType(this.exerciseTypeId)
-        );
+    this.deleteExerciseTypeMutation = deleteMutation({
+      fn: () => this.services.exerciseTypeCommandService.deleteExerciseType(this.exerciseTypeId),
+      invalidateKeys: [Keys.exerciseTypes, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+    });
 
-        if (!previousExerciseType) {
-          return;
-        }
-
-        const newExerciseType = {
-          ...previousExerciseType,
-          name: exerciseType.name,
-          targetRepRange: exerciseType.targetRepRange,
-          targetRepsInReserve: exerciseType.targetRepsInReserve
-        };
-        this.queryClient.setQueryData<ExerciseType.Detail>(
-          Keys.exerciseType(this.exerciseTypeId),
-          newExerciseType
-        );
-
-        return { previousExerciseType };
-      },
-      onError: (error, _, context) => {
-        logger.error('Failed to update exercise type', {
-          exerciseTypeId: this.exerciseTypeId,
-          error
-        });
-        if (context?.previousExerciseType) {
-          this.queryClient.setQueryData<ExerciseType.Detail>(
-            Keys.exerciseType(this.exerciseTypeId),
-            context.previousExerciseType
-          );
-        }
-      },
-      onSettled: () => {
-        return this.queryClient.invalidateQueries({
-          queryKey: Keys.exerciseType(this.exerciseTypeId)
-        });
-      }
-    }));
-
-    this.deleteMutation = createMutation(() => ({
-      mutationFn: async () => {
-        logger.info('Deleting exercise type', { exerciseTypeId: this.exerciseTypeId });
-        await this.services.exerciseTypeCommandService.deleteExerciseType(this.exerciseTypeId);
-        logger.info('Exercise type deleted', { exerciseTypeId: this.exerciseTypeId });
-      },
-      onSuccess: () => {
-        return this.queryClient.invalidateQueries({
-          queryKey: Keys.exerciseType(this.exerciseTypeId)
-        });
-      }
-    }));
-
-    this.createExerciseMutation = createMutation(() => ({
-      mutationFn: async (exercise: ExerciseCommand.Create) => {
-        logger.info('Creating exercise', { exercise });
-        const exerciseId = await this.services.exerciseCommandService.createExercise(exercise);
-        logger.info('Exercise created', { exerciseId });
-        return exerciseId;
-      },
-      onSuccess: () => {
-        return this.queryClient.invalidateQueries({
-          queryKey: Keys.exerciseType(this.exerciseTypeId)
-        });
-      }
-    }));
+    this.createExerciseMutation = createMutation({
+      fn: (data: ExerciseCommand.Create) =>
+        this.services.exerciseCommandService.createExercise(data),
+      invalidateKeys: [Keys.exerciseTypes, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+    });
   }
 
   get exerciseType() {
@@ -153,11 +70,11 @@ export class ExerciseTypeDetailModel {
   }
 
   get isExerciseTypeSaving() {
-    return this.updateMutation.isPending;
+    return this.updateExerciseTypeMutation.isPending;
   }
 
   get isExerciseTypeDeleting() {
-    return this.deleteMutation.isPending;
+    return this.deleteExerciseTypeMutation.isPending;
   }
 
   get isActionInProgress() {
@@ -172,8 +89,8 @@ export class ExerciseTypeDetailModel {
   get errorMessage() {
     const exerciseTypeError = this.exerciseTypeQuery.error;
     const gymsError = this.gymsQuery.error;
-    const updateError = this.updateMutation.error;
-    const deleteError = this.deleteMutation.error;
+    const updateError = this.updateExerciseTypeMutation.error;
+    const deleteError = this.deleteExerciseTypeMutation.error;
     const createExerciseError = this.createExerciseMutation.error;
 
     return (
@@ -187,11 +104,11 @@ export class ExerciseTypeDetailModel {
   }
 
   updateExerciseType(exerciseType: ExerciseTypeCommand.Update) {
-    return this.updateMutation.mutateAsync(exerciseType);
+    return this.updateExerciseTypeMutation.mutateAsync(exerciseType);
   }
 
   deleteExerciseType() {
-    return this.deleteMutation.mutateAsync(undefined);
+    return this.deleteExerciseTypeMutation.mutateAsync(undefined);
   }
 
   createExercise(exercise: ExerciseCommand.Create) {

@@ -1,61 +1,59 @@
-import type { ExerciseTypeViewService } from '$lib/services/exercise-type-view.service';
-import type { ExerciseTypeCommandService } from '$lib/services/exercise-type-command.service';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
 import * as ExerciseType from '$lib/types/views/exercise-type';
-import { logger } from '$lib/logger';
-import type { Range } from '$lib/types/range';
+import { getContext } from 'svelte';
+import type { Services } from '$lib/context';
+import { SERVICES_KEY } from '$lib/context';
+import { Keys } from '$lib/query-keys';
+import { ExerciseType as ExerciseTypeCommand } from '$lib/types/commands';
+import { createMutation, fetchQuery } from '$lib/utils/query';
 
 export class ExerciseTypeListModel {
-  exerciseTypes = $state<ExerciseType.Compact[]>([]);
-  isLoading = $state(true);
-  isCreating = $state(false);
-  isActionInProgress = $derived(this.isLoading || this.isCreating);
-  errorMessage = $state('');
+  private services = getContext<Services>(SERVICES_KEY);
 
-  constructor(
-    private viewService: ExerciseTypeViewService,
-    private commandService: ExerciseTypeCommandService
-  ) {}
+  exerciseTypesQuery: CreateQueryResult<ExerciseType.Compact[]>;
+  createExerciseTypeMutation: CreateMutationResult<string, Error, ExerciseTypeCommand.Create>;
 
-  async loadData() {
-    logger.info('Loading exercise types');
+  constructor() {
+    this.exerciseTypesQuery = fetchQuery({
+      key: Keys.exerciseTypes,
+      fn: () => this.services.exerciseTypeViewService.listExerciseTypes()
+    });
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    try {
-      this.exerciseTypes = await this.viewService.listExerciseTypes();
-      logger.info('Exercise types loaded', { exerciseTypes: $state.snapshot(this.exerciseTypes) });
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to load exercise types';
-      logger.error('Failed to load exercise types', { error });
-    } finally {
-      this.isLoading = false;
-    }
+    this.createExerciseTypeMutation = createMutation({
+      fn: (data) => this.services.exerciseTypeCommandService.createExerciseType(data),
+      invalidateKeys: [Keys.exerciseTypes]
+    });
   }
 
-  async createExerciseType(
-    name: string,
-    targetRepRange: Range<number>,
-    targetRepsInReserve: number | null
-  ): Promise<boolean> {
-    logger.info('Creating exercise type', { name });
+  get exerciseTypes() {
+    return this.exerciseTypesQuery.data ?? [];
+  }
 
-    this.isCreating = true;
-    this.errorMessage = '';
-    try {
-      const exerciseTypeId = await this.commandService.createExerciseType({
-        name,
-        targetRepRange,
-        targetRepsInReserve
-      });
-      logger.info('Exercise type created', { exerciseTypeId });
-      await this.loadData();
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to create exercise type';
-      logger.error('Failed to create exercise type', { name, error });
-      return false;
-    } finally {
-      this.isCreating = false;
-    }
+  get isLoading() {
+    return this.exerciseTypesQuery.isLoading;
+  }
+
+  get isFetching() {
+    return this.exerciseTypesQuery.isFetching;
+  }
+
+  get isCreating() {
+    return this.createExerciseTypeMutation.isPending;
+  }
+
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const isCreating = this.isCreating;
+    return isLoading || isCreating;
+  }
+
+  get errorMessage() {
+    const queryError = this.exerciseTypesQuery.error;
+    const mutationError = this.createExerciseTypeMutation.error;
+    return queryError?.message || mutationError?.message || '';
+  }
+
+  createExerciseType(exerciseType: ExerciseTypeCommand.Create) {
+    return this.createExerciseTypeMutation.mutateAsync(exerciseType);
   }
 }

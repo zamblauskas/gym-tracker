@@ -16,6 +16,7 @@
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as Alert from '$lib/components/ui/alert/index.js';
   import { Spinner } from '$lib/components/ui/spinner/index.js';
+  import { LoadingBar } from '$lib/components/ui/loading-bar/index.js';
   import { ExerciseTypeViewService } from '$lib/services/exercise-type-view.service';
   import { ExerciseTypeCommandService } from '$lib/services/exercise-type-command.service';
   import { ExerciseViewService } from '$lib/services/exercise-view.service';
@@ -35,7 +36,16 @@
 
   const supabase = getSupabaseClient();
   const auth = new AuthModel(supabase);
-  const chrome = new PageChromeModel();
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 60 * 1000 // 1 hour
+      }
+    }
+  });
+
+  const chrome = new PageChromeModel(queryClient);
 
   const exerciseTypeViewService = new ExerciseTypeViewService(supabase);
   const exerciseTypeCommandService = new ExerciseTypeCommandService(supabase);
@@ -98,15 +108,13 @@
       userDialogOpen = false;
     }
   }
-
-  const queryClient = new QueryClient();
 </script>
 
 <svelte:head>
   <link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="border-b">
+<div>
   <div class="flex items-center gap-3 p-4">
     <div class="min-w-0 flex-1">
       <Breadcrumb items={chrome.breadcrumbItems} />
@@ -151,6 +159,12 @@
     {/if}
   </div>
 </div>
+
+{#if chrome.isLoading}
+  <LoadingBar />
+{:else}
+  <div class="mt-1"></div>
+{/if}
 
 <div>
   {#if auth.isLoading}
