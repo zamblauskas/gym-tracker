@@ -27,7 +27,7 @@ export class ExerciseDetailModel {
     });
 
     this.gymsQuery = fetchQuery({
-      key: Keys.gyms,
+      key: Keys.gymList,
       fn: () => this.services.gymViewService.listGyms()
     });
 
@@ -60,7 +60,7 @@ export class ExerciseDetailModel {
       invalidateKeys: [
         Keys.exerciseTypeDetail(this.exercise?.exerciseType.id ?? ''),
         Keys.exerciseDetail(this.exerciseId),
-        Keys.exerciseTypes
+        Keys.exerciseTypeList
       ]
     });
   }
@@ -84,13 +84,6 @@ export class ExerciseDetailModel {
     return exerciseIsLoading || gymsIsLoading || historyIsLoading;
   }
 
-  get isRefetching() {
-    const exerciseIsRefetching = this.exerciseQuery.isRefetching;
-    const gymsIsRefetching = this.gymsQuery.isRefetching;
-    const historyIsRefetching = this.historyQuery.isRefetching;
-    return exerciseIsRefetching || gymsIsRefetching || historyIsRefetching;
-  }
-
   get isActionInProgress() {
     const isLoading = this.isLoading;
     const updateMutationIsPending = this.updateExerciseMutation.isPending;
@@ -108,18 +101,18 @@ export class ExerciseDetailModel {
   }
 
   get errorMessage() {
-    const exerciseError = this.exerciseQuery.error;
-    const gymsError = this.gymsQuery.error;
-    const historyError = this.historyQuery.error;
-    const updateMutationError = this.updateExerciseMutation.error;
-    const deleteMutationError = this.deleteExerciseMutation.error;
+    const exerciseError = this.exerciseQuery.error?.message;
+    const gymsError = this.gymsQuery.error?.message;
+    const historyError = this.historyQuery.error?.message;
+    const updateMutationError = this.updateExerciseMutation.error?.message;
+    const deleteMutationError = this.deleteExerciseMutation.error?.message;
 
     return (
-      exerciseError?.message ||
-      gymsError?.message ||
-      historyError?.message ||
-      updateMutationError?.message ||
-      deleteMutationError?.message ||
+      exerciseError ||
+      gymsError ||
+      historyError ||
+      updateMutationError ||
+      deleteMutationError ||
       null
     );
   }

@@ -2,10 +2,9 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onMount } from 'svelte';
   import { getContext } from 'svelte';
   import { Pencil, Trash2, CircleAlert } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { GymDetailModel } from '$lib/models/gym-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
@@ -21,8 +20,7 @@
 
   const gymId = page.params.gymId || '';
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
-  const model = new GymDetailModel(gymId, services.gymViewService, services.gymCommandService);
+  const model = new GymDetailModel(gymId);
 
   let editDialogOpen = $state(false);
   let editName = $state('');
@@ -39,15 +37,7 @@
   );
 
   $effect(() => {
-    chrome.setBreadcrumbItems(breadcrumbItems);
-  });
-
-  onMount(async () => {
-    if (gymId) {
-      await model.loadData();
-    } else {
-      model.isLoading = false;
-    }
+    chrome.breadcrumbItems = breadcrumbItems;
   });
 
   function openEditDialog() {
@@ -56,20 +46,18 @@
     editDialogOpen = true;
   }
 
-  async function updateGym() {
-    if (!model.gym) return;
+  function updateGym() {
     if (!editName.trim()) return;
 
-    const didUpdate = await model.updateGym(editName);
-    if (!didUpdate) return;
+    // optimistic update
+    void model.update({ name: editName });
     editDialogOpen = false;
   }
 
   async function deleteGym() {
     if (!model.gym) return;
 
-    const didDelete = await model.deleteGym();
-    if (!didDelete) return;
+    await model.delete();
     await goto(resolve('/gyms'));
   }
 </script>
@@ -108,7 +96,7 @@
   <ButtonGroup.Root class="w-full gap-1">
     <Dialog.Root bind:open={editDialogOpen}>
       <Dialog.Trigger class="flex-1" onclick={openEditDialog}>
-        <Button class="w-full" variant="outline" disabled={model.isActionInProgress}>
+        <Button class="w-full" variant="outline" disabled={model.isActionInProgress || !model.gym}>
           <Pencil /> Edit
         </Button>
       </Dialog.Trigger>
@@ -125,7 +113,7 @@
         </div>
         <Dialog.Footer>
           <Button onclick={updateGym} disabled={editName.trim() === '' || model.isActionInProgress}>
-            {#if model.isUpdating}
+            {#if model.isGymSaving}
               <Spinner class="mr-2" />
             {/if}
             Save
@@ -136,7 +124,7 @@
 
     <AlertDialog.Root>
       <AlertDialog.Trigger>
-        <Button variant="outline" size="icon" disabled={model.isActionInProgress}>
+        <Button variant="outline" size="icon" disabled={model.isActionInProgress || !model.gym}>
           <Trash2 />
         </Button>
       </AlertDialog.Trigger>
@@ -148,7 +136,7 @@
         <AlertDialog.Footer>
           <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
           <AlertDialog.Action onclick={deleteGym}>
-            {#if model.isDeleting}
+            {#if model.isGymDeleting}
               <Spinner class="mr-2" />
             {/if}
             Delete

@@ -15,13 +15,13 @@ export class ExerciseTypeListModel {
 
   constructor() {
     this.exerciseTypesQuery = fetchQuery({
-      key: Keys.exerciseTypes,
+      key: Keys.exerciseTypeList,
       fn: () => this.services.exerciseTypeViewService.listExerciseTypes()
     });
 
     this.createExerciseTypeMutation = createMutation({
       fn: (data) => this.services.exerciseTypeCommandService.createExerciseType(data),
-      invalidateKeys: [Keys.exerciseTypes]
+      invalidateKeys: [Keys.exerciseTypeList]
     });
   }
 
@@ -48,9 +48,9 @@ export class ExerciseTypeListModel {
   }
 
   get errorMessage() {
-    const queryError = this.exerciseTypesQuery.error;
-    const mutationError = this.createExerciseTypeMutation.error;
-    return queryError?.message || mutationError?.message || '';
+    const queryError = this.exerciseTypesQuery.error?.message;
+    const mutationError = this.createExerciseTypeMutation.error?.message;
+    return queryError || mutationError || null;
   }
 
   createExerciseType(exerciseType: ExerciseTypeCommand.Create) {

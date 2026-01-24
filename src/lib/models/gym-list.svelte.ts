@@ -1,52 +1,57 @@
-import type { GymViewService } from '$lib/services/gym-view.service';
-import type { GymCommandService } from '$lib/services/gym-command.service';
-import * as Gym from '$lib/types/views/gym';
-import { logger } from '$lib/logger';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { Gym as GymCommand } from '$lib/types/commands';
+import { SERVICES_KEY } from '$lib/context';
+import { getContext } from 'svelte';
+import type { Services } from '$lib/context';
+import type { Gym } from '$lib/types/views';
+import { Keys } from '$lib/query-keys';
+import { createMutation, fetchQuery } from '$lib/utils/query';
 
 export class GymListModel {
-  gyms = $state<Gym.Compact[]>([]);
-  isLoading = $state(true);
-  isCreating = $state(false);
-  isActionInProgress = $derived(this.isLoading || this.isCreating);
-  errorMessage = $state('');
+  private services = getContext<Services>(SERVICES_KEY);
 
-  constructor(
-    private viewSvc: GymViewService,
-    private commandSvc: GymCommandService
-  ) {}
+  gymsQuery: CreateQueryResult<Gym.Compact[]>;
+  createGymMutation: CreateMutationResult<string, Error, GymCommand.Create>;
 
-  async loadData() {
-    logger.info('Loading gyms');
+  constructor() {
+    this.gymsQuery = fetchQuery({
+      key: Keys.gymList,
+      fn: () => this.services.gymViewService.listGyms()
+    });
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    try {
-      this.gyms = await this.viewSvc.listGyms();
-      logger.info('Gyms loaded', { gyms: $state.snapshot(this.gyms) });
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to load gyms';
-      logger.error('Failed to load gyms', { error });
-    } finally {
-      this.isLoading = false;
-    }
+    this.createGymMutation = createMutation<GymCommand.Create>({
+      fn: (data: GymCommand.Create) => this.services.gymCommandService.createGym(data),
+      invalidateKeys: [Keys.gymList]
+    });
   }
 
-  async createGym(name: string): Promise<boolean> {
-    logger.info('Creating gym', { name });
+  get gyms() {
+    return this.gymsQuery.data ?? [];
+  }
 
-    this.isCreating = true;
-    this.errorMessage = '';
-    try {
-      const gymId = await this.commandSvc.createGym({ name });
-      logger.info('Gym created', { gymId });
-      await this.loadData();
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to create gym';
-      logger.error('Failed to create gym', { name, error });
-      return false;
-    } finally {
-      this.isCreating = false;
-    }
+  get isLoading() {
+    return this.gymsQuery.isLoading;
+  }
+
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const createMutationIsPending = this.createGymMutation.isPending;
+
+    return isLoading || createMutationIsPending;
+  }
+
+  get isGymCreating() {
+    return this.createGymMutation.isPending;
+  }
+
+  get errorMessage() {
+    const gymsError = this.gymsQuery.error?.message;
+    const createMutationError = this.createGymMutation.error?.message;
+
+    return gymsError || createMutationError || null;
+  }
+
+  create(gym: GymCommand.Create) {
+    return this.createGymMutation.mutateAsync(gym);
   }
 }

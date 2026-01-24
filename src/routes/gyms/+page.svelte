@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   import { getContext } from 'svelte';
   import { MapPinned, Plus, ChevronRight } from 'lucide-svelte';
-  import { SERVICES_KEY, PAGE_CHROME_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import { GymListModel } from '$lib/models/gym-list.svelte';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
@@ -16,24 +15,18 @@
   import * as Item from '$lib/components/ui/item/index.js';
   import * as Empty from '$lib/components/ui/empty/index.js';
 
-  const services = getContext<Services>(SERVICES_KEY);
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-
-  const model = new GymListModel(services.gymViewService, services.gymCommandService);
+  const model = new GymListModel();
 
   let isCreateDialogOpen = $state(false);
   let createName = $state('');
 
-  onMount(() => {
-    chrome.setBreadcrumbItems([{ label: 'Gyms', href: '/gyms' }]);
-    return model.loadData();
-  });
+  chrome.setBreadcrumbItems([{ label: 'Gyms' }]);
 
   async function createGym() {
-    if (await model.createGym(createName)) {
-      isCreateDialogOpen = false;
-      createName = '';
-    }
+    await model.create({ name: createName });
+    isCreateDialogOpen = false;
+    createName = '';
   }
 </script>
 
@@ -105,7 +98,7 @@
       <Dialog.Footer>
         <Button variant="outline" onclick={() => (isCreateDialogOpen = false)}>Cancel</Button>
         <Button onclick={createGym} disabled={model.isActionInProgress || !createName.trim()}>
-          {#if model.isCreating}
+          {#if model.isGymCreating}
             <Spinner class="mr-2" />
           {/if}
           Create

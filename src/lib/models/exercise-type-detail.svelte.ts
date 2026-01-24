@@ -27,7 +27,7 @@ export class ExerciseTypeDetailModel {
     });
 
     this.gymsQuery = fetchQuery({
-      key: Keys.gyms,
+      key: Keys.gymList,
       fn: () => this.services.gymViewService.listGyms()
     });
 
@@ -35,18 +35,18 @@ export class ExerciseTypeDetailModel {
       key: Keys.exerciseTypeDetail(this.exerciseTypeId),
       fn: (data: ExerciseTypeCommand.Update) =>
         this.services.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, data),
-      invalidateKeys: [Keys.exerciseTypes, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+      invalidateKeys: [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
     });
 
     this.deleteExerciseTypeMutation = deleteMutation({
       fn: () => this.services.exerciseTypeCommandService.deleteExerciseType(this.exerciseTypeId),
-      invalidateKeys: [Keys.exerciseTypes, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+      invalidateKeys: [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
     });
 
     this.createExerciseMutation = createMutation({
       fn: (data: ExerciseCommand.Create) =>
         this.services.exerciseCommandService.createExercise(data),
-      invalidateKeys: [Keys.exerciseTypes, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+      invalidateKeys: [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
     });
   }
 
@@ -87,19 +87,14 @@ export class ExerciseTypeDetailModel {
   }
 
   get errorMessage() {
-    const exerciseTypeError = this.exerciseTypeQuery.error;
-    const gymsError = this.gymsQuery.error;
-    const updateError = this.updateExerciseTypeMutation.error;
-    const deleteError = this.deleteExerciseTypeMutation.error;
-    const createExerciseError = this.createExerciseMutation.error;
+    const exerciseTypeError = this.exerciseTypeQuery.error?.message;
+    const gymsError = this.gymsQuery.error?.message;
+    const updateError = this.updateExerciseTypeMutation.error?.message;
+    const deleteError = this.deleteExerciseTypeMutation.error?.message;
+    const createExerciseError = this.createExerciseMutation.error?.message;
 
     return (
-      exerciseTypeError?.message ||
-      gymsError?.message ||
-      updateError?.message ||
-      deleteError?.message ||
-      createExerciseError?.message ||
-      null
+      exerciseTypeError || gymsError || updateError || deleteError || createExerciseError || null
     );
   }
 

@@ -26,8 +26,8 @@ Todo:
   - [x] Show refetching or pending state indicator even for background queries
 - [x] Refactor exercise-type-detail model and page
 - [x] Refactor exercise-type-list model and page
-- [ ] Refactor gym-detail model and page
-- [ ] Refactor gym-list model and page
+- [x] Refactor gym-detail model and page
+- [x] Refactor gym-list model and page
 - [ ] Refactor routine-detail model and page
 - [ ] Refactor routine-list model and page
 - [ ] Refactor program-detail model and page

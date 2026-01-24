@@ -1,72 +1,78 @@
-import type { GymViewService } from '$lib/services/gym-view.service';
-import type { GymCommandService } from '$lib/services/gym-command.service';
-import * as Gym from '$lib/types/views/gym';
-import { logger } from '$lib/logger';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { Gym as GymCommand } from '$lib/types/commands';
+import { SERVICES_KEY } from '$lib/context';
+import { getContext } from 'svelte';
+import type { Services } from '$lib/context';
+import type { Gym } from '$lib/types/views';
+import { Keys } from '$lib/query-keys';
+import { updateMutation, deleteMutation, fetchQuery } from '$lib/utils/query';
 
 export class GymDetailModel {
-  gym = $state<Gym.Detail | null>(null);
-  isLoading = $state(true);
-  isUpdating = $state(false);
-  isDeleting = $state(false);
-  isActionInProgress = $derived(this.isLoading || this.isUpdating || this.isDeleting);
-  errorMessage = $state('');
+  private services = getContext<Services>(SERVICES_KEY);
 
-  constructor(
-    private gymId: string,
-    private viewSvc: GymViewService,
-    private commandSvc: GymCommandService
-  ) {}
+  private gymId: string;
 
-  async loadData() {
-    logger.info('Loading gym', { gymId: this.gymId });
+  gymQuery: CreateQueryResult<Gym.Detail>;
+  updateGymMutation: CreateMutationResult<void, Error, GymCommand.Update>;
+  deleteGymMutation: CreateMutationResult<void, Error>;
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    try {
-      this.gym = await this.viewSvc.getGymById(this.gymId);
-      logger.info('Gym loaded', { gym: $state.snapshot(this.gym) });
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to load gym';
-      logger.error('Failed to load gym', { gymId: this.gymId, error });
-    } finally {
-      this.isLoading = false;
-    }
+  constructor(gymId: string) {
+    this.gymId = gymId;
+
+    this.gymQuery = fetchQuery({
+      key: Keys.gymDetail(this.gymId),
+      fn: () => this.services.gymViewService.getGymById(this.gymId)
+    });
+
+    this.updateGymMutation = updateMutation<GymCommand.Update, Gym.Detail>({
+      key: Keys.gymDetail(this.gymId),
+      fn: (data: GymCommand.Update) => this.services.gymCommandService.updateGym(this.gymId, data),
+      invalidateKeys: [Keys.gymList, Keys.gymDetail(this.gymId), Keys.exercises, Keys.exerciseTypes]
+    });
+
+    this.deleteGymMutation = deleteMutation({
+      fn: () => this.services.gymCommandService.deleteGym(this.gymId),
+      invalidateKeys: [Keys.gymList, Keys.gymDetail(this.gymId), Keys.exercises, Keys.exerciseTypes]
+    });
   }
 
-  async updateGym(name: string): Promise<boolean> {
-    logger.info('Updating gym', { gymId: this.gymId, name });
-
-    this.isUpdating = true;
-    this.errorMessage = '';
-    try {
-      await this.commandSvc.updateGym(this.gymId, { name });
-      logger.info('Gym updated', { gymId: this.gymId });
-      await this.loadData();
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to update gym';
-      logger.error('Failed to update gym', { gymId: this.gymId, error });
-      return false;
-    } finally {
-      this.isUpdating = false;
-    }
+  get gym() {
+    return this.gymQuery.data;
   }
 
-  async deleteGym(): Promise<boolean> {
-    logger.info('Deleting gym', { gymId: this.gymId });
+  get isLoading() {
+    return this.gymQuery.isLoading;
+  }
 
-    this.isDeleting = true;
-    this.errorMessage = '';
-    try {
-      await this.commandSvc.deleteGym(this.gymId);
-      logger.info('Gym deleted', { gymId: this.gymId });
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to delete gym';
-      logger.error('Failed to delete gym', { gymId: this.gymId, error });
-      return false;
-    } finally {
-      this.isDeleting = false;
-    }
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const updateMutationIsPending = this.updateGymMutation.isPending;
+    const deleteMutationIsPending = this.deleteGymMutation.isPending;
+
+    return isLoading || updateMutationIsPending || deleteMutationIsPending;
+  }
+
+  get isGymSaving() {
+    return this.updateGymMutation.isPending;
+  }
+
+  get isGymDeleting() {
+    return this.deleteGymMutation.isPending;
+  }
+
+  get errorMessage() {
+    const gymError = this.gymQuery.error?.message;
+    const updateMutationError = this.updateGymMutation.error?.message;
+    const deleteMutationError = this.deleteGymMutation.error?.message;
+
+    return gymError || updateMutationError || deleteMutationError || null;
+  }
+
+  update(gym: GymCommand.Update) {
+    return this.updateGymMutation.mutateAsync(gym);
+  }
+
+  delete() {
+    return this.deleteGymMutation.mutateAsync({});
   }
 }
