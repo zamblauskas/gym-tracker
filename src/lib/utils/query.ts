@@ -22,7 +22,7 @@ export function fetchQuery<TData>({
 }): CreateQueryResult<TData> {
   return query(() => ({
     queryKey: key(),
-    queryFn: () => log(`fetching [${key}]`, () => fn()),
+    queryFn: () => log(`fetching [${key()}]`, () => fn()),
     enabled: enabled?.() ?? true
   }));
 }
@@ -59,7 +59,7 @@ export function updateMutation<TUpdate, TData>({
   const client = useQueryClient();
   return mutation(() => ({
     mutationFn: async (update: TUpdate) => {
-      return log(`updating [${key}]`, () => fn(update));
+      return log(`updating [${key()}]`, () => fn(update));
     },
     onMutate: (update) => {
       return client.setQueryData<TData>(key(), (previousData) => {
