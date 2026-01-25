@@ -60,6 +60,7 @@ export class WorkoutViewService {
       .is('workout_exercises.exercises.gyms.deleted_at', null)
       .is('workout_exercises.workout_sets.deleted_at', null)
       .order('index', { referencedTable: 'workout_exercises', ascending: true })
+      .order('created_at', { referencedTable: 'workout_exercises.workout_sets', ascending: true })
       .single();
 
     if (error) {

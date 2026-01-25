@@ -59,6 +59,17 @@
 
   let deletingSetId = $state<string | null>(null);
 
+  let notes = $state('');
+  let lastExerciseId = $state<string | undefined>(undefined);
+
+  $effect(() => {
+    const exerciseId = model.workout?.exercise?.id;
+    if (exerciseId && exerciseId !== lastExerciseId) {
+      lastExerciseId = exerciseId;
+      notes = model.workout?.exercise?.notes ?? '';
+    }
+  });
+
   let breadcrumbItems = $derived(
     !model.workout
       ? []
@@ -128,8 +139,8 @@
   }
 
   async function saveNotes() {
-    if (!model.workout?.exercise.notes) return;
-    await model.updateNotes(model.workout.exercise.notes);
+    if (!model.workout?.exercise) return;
+    await model.updateNotes(notes);
   }
 </script>
 
@@ -257,7 +268,7 @@
         <div class="mt-4">
           <Textarea
             placeholder="Add notes..."
-            bind:value={model.workout.exercise.notes}
+            bind:value={notes}
             onchange={saveNotes}
           />
         </div>
