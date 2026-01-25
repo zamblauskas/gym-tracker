@@ -1,12 +1,13 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { getContext, untrack } from 'svelte';
+  import { getContext } from 'svelte';
   import { resolve } from '$app/paths';
   import { PUBLIC_TIMER_DURATION } from '$env/static/public';
   import { ChevronLeft, ChevronRight, X, Repeat, Plus, Pencil, NotebookPen } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY, TIMER_KEY } from '$lib/context';
 
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
+  import type { TimerModel } from '$lib/models/timer.svelte';
   import { WorkoutDetailModel } from '$lib/models/workout-detail.svelte';
   import * as Workout from '$lib/types/views/workout';
   import Button from '$lib/components/ui/button/button.svelte';
@@ -30,20 +31,22 @@
   const index = $derived(Number(page.params.index!));
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
+  const timer = getContext<TimerModel>(TIMER_KEY);
 
-  const viewService = services.workoutViewService;
-  const commandService = services.workoutCommandService;
-
-  let model = $derived(new WorkoutDetailModel(viewService, commandService, workoutId, index));
+  const model = new WorkoutDetailModel(
+    () => workoutId,
+    () => index
+  );
 
   let chooseExerciseDialogOpen = $state(false);
   let addSetDialogOpen = $state(false);
   let editSetDialogOpen = $state(false);
   let deleteSetConfirmOpen = $state(false);
 
-  let showTimer = $state(false);
   let timerDuration = Number(PUBLIC_TIMER_DURATION);
+  let activeTimer = $derived(
+    model.workout?.exercise?.id ? timer.get(model.workout.exercise.id) : undefined
+  );
 
   let newSetWeight = $state<number | null>(null);
   let newSetReps = $state<number | null>(null);
@@ -57,39 +60,22 @@
   let deletingSetId = $state<string | null>(null);
 
   let breadcrumbItems = $derived(
-    !model.view
+    !model.workout
       ? []
       : [
           {
-            label: `Workout • ${model.view.routine.program.name} • ${model.view.routine.name}`
+            label: `Workout • ${model.workout.routine.program.name} • ${model.workout.routine.name}`
           }
         ]
   );
-
-  $effect(() => {
-    // Load data when model changes (identity changes due to params change)
-    const activeModel = model;
-    untrack(() => {
-      void activeModel.loadData();
-    });
-
-    // Reset local UI state on navigation
-    chooseExerciseDialogOpen = false;
-    addSetDialogOpen = false;
-    editSetDialogOpen = false;
-    deleteSetConfirmOpen = false;
-    showTimer = false;
-    editingSetId = null;
-    deletingSetId = null;
-  });
 
   $effect(() => {
     chrome.breadcrumbItems = breadcrumbItems;
   });
 
   function openAddSetDialog() {
-    if (model.currentExerciseLog && model.currentExerciseLog.sets.length > 0) {
-      const lastSet = model.currentExerciseLog.sets[model.currentExerciseLog.sets.length - 1];
+    if (model.workout?.exercise && model.workout.exercise.sets.length > 0) {
+      const lastSet = model.workout.exercise.sets[model.workout.exercise.sets.length - 1];
       if (lastSet) {
         newSetWeight = lastSet.weight;
         newSetReps = lastSet.reps;
@@ -108,7 +94,9 @@
 
     await model.addSet(newSetReps, newSetWeight, newSetRepsInReserve);
     addSetDialogOpen = false;
-    showTimer = true;
+    if (model.workout?.exercise?.id) {
+      timer.start(model.workout.exercise.id, timerDuration);
+    }
   }
 
   function openEditSetDialog(set: Workout.SetDetail) {
@@ -140,7 +128,8 @@
   }
 
   async function saveNotes() {
-    await model.updateNotes();
+    if (!model.workout?.exercise.notes) return;
+    await model.updateNotes(model.workout.exercise.notes);
   }
 </script>
 
@@ -159,23 +148,24 @@
     <Skeleton class="h-12 w-full" />
     <Skeleton class="h-64 w-full" />
   </div>
-{:else if model.view && model.currentExerciseLog}
+{:else if model.workout}
   <div class="flex flex-col">
-    <!-- Header -->
     <div class="flex flex-col gap-2 px-4 pt-4">
       <span class="text-sm text-muted-foreground">Exercise Type</span>
-      {#if model.currentExerciseLog}
-        <ExerciseTypeCard exerciseType={model.currentExerciseLog.exerciseType} />
+      {#if model.workout.exercise}
+        <ExerciseTypeCard exerciseType={model.workout.exercise.exerciseType} />
       {/if}
     </div>
-    {#if model.currentExercise}
+    {#if model.workout.exercise.exercise}
       <div class="flex flex-col gap-2 p-4">
         <span class="text-sm text-muted-foreground">Exercise</span>
-        <ExerciseCard exercise={model.currentExercise} />
-        {#if model.currentExercise.notes}
+        <ExerciseCard exercise={model.workout.exercise.exercise} />
+        {#if model.workout.exercise.exercise.notes}
           <div class="flex items-start gap-1 pl-1 text-muted-foreground">
             <NotebookPen class="mt-0.5 size-4" />
-            <span class="text-sm whitespace-pre-wrap italic">{model.currentExercise.notes}</span>
+            <span class="text-sm whitespace-pre-wrap italic"
+              >{model.workout.exercise.exercise.notes}</span
+            >
           </div>
         {/if}
       </div>
@@ -185,9 +175,8 @@
       <Separator />
     </div>
 
-    <!-- Exercise Selection / Display -->
     <div class="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-      {#if !model.currentExerciseLog.exercise}
+      {#if !model.workout.exercise.exercise}
         <div class="flex flex-col items-center justify-center gap-4 py-8">
           <Button
             variant="outline"
@@ -197,9 +186,8 @@
           >
         </div>
       {:else}
-        <!-- Sets List -->
         <div class="flex flex-col gap-2">
-          {#each model.currentExerciseLog.sets as set, i (set.id)}
+          {#each model.workout.exercise.sets as set, i (set.id)}
             <div class="flex items-center justify-between rounded-lg border bg-card p-3">
               <div class="flex gap-4">
                 <span class="w-6 font-bold text-muted-foreground">#{i + 1}</span>
@@ -233,17 +221,18 @@
           {/each}
         </div>
 
-        {#if model.currentExerciseLog.sets.length > 0}
+        {#if model.workout.exercise.sets.length > 0}
           <div class="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-            Volume: {formatVolume(calculateTotalVolume(model.currentExerciseLog.sets))}
+            Volume: {formatVolume(calculateTotalVolume(model.workout.exercise.sets))}
           </div>
         {/if}
 
-        {#if showTimer}
+        {#if activeTimer && model.workout?.exercise?.id}
           <Timer
-            duration={timerDuration}
-            onDismiss={() => (showTimer = false)}
-            onComplete={() => (showTimer = false)}
+            duration={activeTimer.duration}
+            startTime={activeTimer.startTime}
+            onDismiss={() => timer.remove(model.workout!.exercise.id)}
+            onComplete={() => timer.remove(model.workout!.exercise.id)}
           />
         {/if}
 
@@ -268,15 +257,15 @@
         <div class="mt-4">
           <Textarea
             placeholder="Add notes..."
-            bind:value={model.currentExerciseLog.notes}
+            bind:value={model.workout.exercise.notes}
             onchange={saveNotes}
           />
         </div>
 
         <ExerciseHistory
-          history={model.exerciseHistory}
-          showEmptyState={!model.currentExerciseLog.exercise &&
-            model.currentExerciseLog.sets.length > 0}
+          history={model.history}
+          showEmptyState={!model.workout.exercise.exercise &&
+            model.workout.exercise.sets.length > 0}
         />
       {/if}
     </div>
@@ -285,8 +274,7 @@
   <div class="flex items-center justify-center p-4 font-semibold">No exercises</div>
 {/if}
 
-<!-- Navigation & Actions -->
-{#if model.view}
+{#if model.workout}
   <div class="mt-auto border-t bg-background p-4">
     <div class="mb-4 flex items-center justify-between">
       <Button
@@ -298,16 +286,16 @@
         <ChevronLeft class="h-8 w-8" />
       </Button>
 
-      {#if model.view.exerciseCount > 0}
+      {#if model.workout.exerciseCount > 0}
         <span class="text-sm text-muted-foreground">
-          {index + 1} / {model.view.exerciseCount}
+          {index + 1} / {model.workout.exerciseCount}
         </span>
       {/if}
 
       <Button
         variant="ghost"
         size="icon"
-        disabled={index >= model.view.exerciseCount - 1 || model.isActionInProgress}
+        disabled={index >= model.workout.exerciseCount - 1 || model.isActionInProgress}
         href={resolve(`/workouts/${workoutId}/${index + 1}`)}
       >
         <ChevronRight class="h-8 w-8" />
@@ -365,16 +353,14 @@
   </div>
 {/if}
 
-<!-- Choose Exercise Dialog -->
-{#if model.currentExerciseLog}
+{#if model.workout?.exercise}
   <ExerciseSelector
     bind:open={chooseExerciseDialogOpen}
-    exerciseTypeId={model.currentExerciseLog.exerciseType.id}
+    exerciseTypeId={model.workout.exercise.exerciseType.id}
     onSelect={(id) => model.selectExercise(id)}
   />
 {/if}
 
-<!-- Add Set Dialog -->
 <Dialog.Root bind:open={addSetDialogOpen}>
   <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
     <Dialog.Header>
@@ -412,7 +398,6 @@
   </Dialog.Content>
 </Dialog.Root>
 
-<!-- Edit Set Dialog -->
 <Dialog.Root bind:open={editSetDialogOpen}>
   <Dialog.Content onOpenAutoFocus={(e) => e.preventDefault()}>
     <Dialog.Header>
@@ -443,7 +428,6 @@
   </Dialog.Content>
 </Dialog.Root>
 
-<!-- Delete Set Confirmation -->
 <AlertDialog.Root bind:open={deleteSetConfirmOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>

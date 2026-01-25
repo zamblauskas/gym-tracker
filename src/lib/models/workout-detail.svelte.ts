@@ -1,245 +1,228 @@
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
-import { WorkoutViewService } from '$lib/services/workout-view.service';
-import { WorkoutCommandService } from '$lib/services/workout-command.service';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { getContext } from 'svelte';
+import { SERVICES_KEY, type Services } from '$lib/context';
 import * as Workout from '$lib/types/views/workout';
-import { logger } from '$lib/logger';
+import { Workout as WorkoutCommand } from '$lib/types/commands';
+import { Keys } from '$lib/query-keys';
+import { fetchQuery, updateMutation } from '$lib/utils/query';
 
 export class WorkoutDetailModel {
-  view = $state<Workout.Detail | null>(null);
-  exerciseHistory = $state<Workout.ExerciseHistory[]>([]);
+  private services = getContext<Services>(SERVICES_KEY);
 
-  currentExerciseLog = $derived(this.view?.exercise);
-  currentExercise = $derived(this.currentExerciseLog?.exercise);
-
-  isLoading = $state(true);
-  isSelecting = $state(false);
-  isAddingSet = $state(false);
-  isUpdatingSet = $state(false);
-  isDeletingSet = $state(false);
-  isCompleting = $state(false);
-  isCancelling = $state(false);
-
-  isActionInProgress = $derived(
-    this.isLoading ||
-      this.isSelecting ||
-      this.isAddingSet ||
-      this.isUpdatingSet ||
-      this.isDeletingSet ||
-      this.isCompleting ||
-      this.isCancelling
-  );
-  errorMessage = $state<string | null>(null);
+  workoutQuery: CreateQueryResult<Workout.Detail>;
+  historyQuery: CreateQueryResult<Workout.ExerciseHistory[]>;
+  selectExerciseMutation: CreateMutationResult<void, Error, WorkoutCommand.SelectExercise>;
+  addSetMutation: CreateMutationResult<void, Error, WorkoutCommand.AddSet>;
+  updateSetMutation: CreateMutationResult<
+    void,
+    Error,
+    { setId: string; data: WorkoutCommand.UpdateSet }
+  >;
+  deleteSetMutation: CreateMutationResult<void, Error, string>;
+  updateNotesMutation: CreateMutationResult<void, Error, WorkoutCommand.UpdateNotes>;
+  completeWorkoutMutation: CreateMutationResult<void, Error, void>;
+  cancelWorkoutMutation: CreateMutationResult<void, Error, void>;
 
   constructor(
-    private viewService: WorkoutViewService,
-    private commandService: WorkoutCommandService,
-    private workoutId: string,
-    private index: number
-  ) {}
-
-  async loadData() {
-    logger.info('Loading workout data', { workoutId: this.workoutId });
-
-    this.isLoading = true;
-    this.errorMessage = null;
-    try {
-      this.view = await this.viewService.getWorkoutDetail(this.workoutId, this.index);
-      if (this.currentExerciseLog?.exercise?.id) {
-        await this.loadExerciseHistory(this.currentExerciseLog.exercise.id);
-      }
-      logger.info('Workout data loaded', {
-        view: $state.snapshot(this.view)
-      });
-    } catch (error) {
-      this.errorMessage = 'Failed to load workout data';
-      logger.error('Failed to load workout data', { workoutId: this.workoutId, error });
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  async selectExercise(exerciseId: string) {
-    if (!this.currentExerciseLog) return;
-    logger.info('Selecting exercise', {
-      workoutExerciseId: this.currentExerciseLog.id,
-      exerciseId
+    private workoutId: () => string,
+    private index: () => number
+  ) {
+    this.workoutQuery = fetchQuery({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: () => this.services.workoutViewService.getWorkoutDetail(this.workoutId(), this.index())
     });
 
-    this.isSelecting = true;
-    try {
-      await this.commandService.selectExercise({
-        exerciseLogId: this.currentExerciseLog.id,
-        exerciseId
-      });
-      logger.info('Exercise selected', { workoutExerciseId: this.currentExerciseLog.id });
-      await this.loadData();
-    } catch (error) {
-      this.errorMessage = 'Failed to select exercise';
-      logger.error('Failed to select exercise', {
-        workoutExerciseId: this.currentExerciseLog.id,
-        exerciseId,
-        error
-      });
-    } finally {
-      this.isSelecting = false;
-    }
+    this.historyQuery = fetchQuery({
+      key: () =>
+        Keys.workoutExerciseHistory(this.workoutId(), this.workout?.exercise.exercise?.id ?? ''),
+      fn: () => {
+        const exerciseId = this.workout?.exercise.exercise?.id;
+        if (!exerciseId) {
+          return Promise.resolve([]);
+        }
+        return this.services.workoutViewService.getExerciseHistory(exerciseId, this.workoutId(), 5);
+      },
+      enabled: () => !!this.workout?.exercise.exercise?.id
+    });
+
+    this.selectExerciseMutation = updateMutation<WorkoutCommand.SelectExercise, Workout.Detail>({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: (data) => this.services.workoutCommandService.selectExercise(data),
+      invalidateKeys: () => [
+        Keys.workoutDetail(this.workoutId(), this.index()),
+        Keys.workoutExerciseHistory(this.workoutId(), this.workout?.exercise.exercise?.id ?? '')
+      ]
+    });
+
+    this.addSetMutation = updateMutation<WorkoutCommand.AddSet, Workout.Detail>({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: (data) => this.services.workoutCommandService.addSet(data),
+      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+    });
+
+    this.updateSetMutation = updateMutation<
+      { setId: string; data: WorkoutCommand.UpdateSet },
+      Workout.Detail
+    >({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: ({ setId, data }) => this.services.workoutCommandService.updateSet(setId, data),
+      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+    });
+
+    this.deleteSetMutation = updateMutation<string, Workout.Detail>({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: (setId) => this.services.workoutCommandService.deleteSet(setId),
+      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+    });
+
+    this.updateNotesMutation = updateMutation<WorkoutCommand.UpdateNotes, Workout.Detail>({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: (data) => this.services.workoutCommandService.updateNotes(data),
+      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+    });
+
+    this.completeWorkoutMutation = updateMutation<void, Workout.Detail>({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: () => this.services.workoutCommandService.completeWorkout(this.workoutId()),
+      invalidateKeys: () => [Keys.workoutHistory]
+    });
+
+    this.cancelWorkoutMutation = updateMutation<void, Workout.Detail>({
+      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+      fn: () => this.services.workoutCommandService.cancelWorkout(this.workoutId()),
+      invalidateKeys: () => [Keys.workoutHistory]
+    });
   }
 
-  async loadExerciseHistory(exerciseId: string) {
-    logger.info('Loading exercise history', { exerciseId, workoutId: this.workoutId });
-
-    try {
-      this.exerciseHistory = await this.viewService.getExerciseHistory(
-        exerciseId,
-        this.workoutId,
-        5
-      );
-      logger.info('Exercise history loaded', {
-        exerciseHistory: $state.snapshot(this.exerciseHistory)
-      });
-    } catch (error) {
-      this.errorMessage = 'Failed to load exercise history';
-      logger.error('Failed to load exercise history', {
-        exerciseId,
-        workoutId: this.workoutId,
-        error
-      });
-    }
+  get workout() {
+    return this.workoutQuery.data;
   }
 
-  async addSet(reps: number, weight: number, repsInReserve: number | null) {
-    if (!this.currentExerciseLog) return;
-    logger.info('Adding set', {
-      workoutExerciseId: this.currentExerciseLog.id,
+  get history() {
+    return this.historyQuery.data ?? [];
+  }
+
+  get isLoading() {
+    const workoutIsLoading = this.workoutQuery.isLoading;
+    const historyIsLoading = this.historyQuery.isLoading;
+    return workoutIsLoading || historyIsLoading;
+  }
+
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const selectExerciseMutationIsPending = this.selectExerciseMutation.isPending;
+    const addSetMutationIsPending = this.addSetMutation.isPending;
+    const updateSetMutationIsPending = this.updateSetMutation.isPending;
+    const deleteSetMutationIsPending = this.deleteSetMutation.isPending;
+    const updateNotesMutationIsPending = this.updateNotesMutation.isPending;
+    const completeWorkoutMutationIsPending = this.completeWorkoutMutation.isPending;
+    const cancelWorkoutMutationIsPending = this.cancelWorkoutMutation.isPending;
+    return (
+      isLoading ||
+      selectExerciseMutationIsPending ||
+      addSetMutationIsPending ||
+      updateSetMutationIsPending ||
+      deleteSetMutationIsPending ||
+      updateNotesMutationIsPending ||
+      completeWorkoutMutationIsPending ||
+      cancelWorkoutMutationIsPending
+    );
+  }
+
+  get isSelecting() {
+    return this.selectExerciseMutation.isPending;
+  }
+
+  get isAddingSet() {
+    return this.addSetMutation.isPending;
+  }
+
+  get isUpdatingSet() {
+    return this.updateSetMutation.isPending;
+  }
+
+  get isDeletingSet() {
+    return this.deleteSetMutation.isPending;
+  }
+
+  get isCompleting() {
+    return this.completeWorkoutMutation.isPending;
+  }
+
+  get isCancelling() {
+    return this.cancelWorkoutMutation.isPending;
+  }
+
+  get errorMessage() {
+    const workoutError = this.workoutQuery.error?.message;
+    const historyError = this.historyQuery.error?.message;
+    const selectExerciseMutationError = this.selectExerciseMutation.error?.message;
+    const addSetMutationError = this.addSetMutation.error?.message;
+    const updateSetMutationError = this.updateSetMutation.error?.message;
+    const deleteSetMutationError = this.deleteSetMutation.error?.message;
+    const updateNotesMutationError = this.updateNotesMutation.error?.message;
+    const completeWorkoutMutationError = this.completeWorkoutMutation.error?.message;
+    const cancelWorkoutMutationError = this.cancelWorkoutMutation.error?.message;
+    return (
+      workoutError ||
+      historyError ||
+      selectExerciseMutationError ||
+      addSetMutationError ||
+      updateSetMutationError ||
+      deleteSetMutationError ||
+      updateNotesMutationError ||
+      completeWorkoutMutationError ||
+      cancelWorkoutMutationError ||
+      null
+    );
+  }
+
+  selectExercise(exerciseId: string) {
+    if (!this.workout?.exercise) return;
+    return this.selectExerciseMutation.mutateAsync({
+      exerciseLogId: this.workout.exercise.id,
+      exerciseId
+    });
+  }
+
+  addSet(reps: number, weight: number, repsInReserve: number | null) {
+    if (!this.workout?.exercise) return;
+    return this.addSetMutation.mutateAsync({
+      exerciseLogId: this.workout.exercise.id,
       reps,
       weight,
       repsInReserve
     });
-
-    this.isAddingSet = true;
-    try {
-      await this.commandService.addSet({
-        exerciseLogId: this.currentExerciseLog.id,
-        reps,
-        weight,
-        repsInReserve
-      });
-      logger.info('Set added', { workoutExerciseId: this.currentExerciseLog.id });
-      await this.loadData();
-    } catch (error) {
-      this.errorMessage = 'Failed to add set';
-      logger.error('Failed to add set', {
-        workoutExerciseId: this.currentExerciseLog.id,
-        reps,
-        weight,
-        repsInReserve,
-        error
-      });
-    } finally {
-      this.isAddingSet = false;
-    }
   }
 
-  async updateSet(setId: string, reps: number, weight: number, repsInReserve: number | null) {
-    if (!this.currentExerciseLog) return;
-    logger.info('Updating set', { setId, reps, weight, repsInReserve });
-
-    this.isUpdatingSet = true;
-    try {
-      await this.commandService.updateSet(setId, { reps, weight, repsInReserve });
-      logger.info('Set updated', { setId });
-      await this.loadData();
-    } catch (error) {
-      this.errorMessage = 'Failed to update set';
-      logger.error('Failed to update set', { setId, reps, weight, repsInReserve, error });
-    } finally {
-      this.isUpdatingSet = false;
-    }
-  }
-
-  async deleteSet(setId: string) {
-    if (!this.currentExerciseLog) return;
-    logger.info('Deleting set', { setId });
-
-    this.isDeletingSet = true;
-    try {
-      await this.commandService.deleteSet(setId);
-      logger.info('Set deleted', { setId });
-      await this.loadData();
-    } catch (error) {
-      this.errorMessage = 'Failed to delete set';
-      logger.error('Failed to delete set', { setId, error });
-    } finally {
-      this.isDeletingSet = false;
-    }
-  }
-
-  /*
-   * We don't track isSavingNotes state to prevent blocking user input while saving notes.
-   * If we track it we get into a situation:
-   * - User is typing in the notes <Textarea>
-   * - User taps the next/previous navigation button
-   * - This causes the textarea to lose focus
-   * - The onchange event fires, triggering updateNotes()
-   * - This makes isActionInProgress = true
-   * - The button becomes disabled before the tap/click event is processed
-   * - Result: The navigation doesn't happen
-   */
-  async updateNotes() {
-    if (!this.currentExerciseLog) return;
-    logger.info('Updating notes', {
-      workoutExerciseId: this.currentExerciseLog.id,
-      notes: this.currentExerciseLog.notes
+  updateSet(setId: string, reps: number, weight: number, repsInReserve: number | null) {
+    return this.updateSetMutation.mutateAsync({
+      setId,
+      data: { reps, weight, repsInReserve }
     });
+  }
 
-    try {
-      await this.commandService.updateNotes({
-        exerciseLogId: this.currentExerciseLog.id,
-        notes: this.currentExerciseLog.notes ?? ''
-      });
-      logger.info('Notes updated', { workoutExerciseId: this.currentExerciseLog.id });
-    } catch (error) {
-      this.errorMessage = 'Failed to update notes';
-      logger.error('Failed to update notes', {
-        workoutExerciseId: this.currentExerciseLog.id,
-        notes: this.currentExerciseLog.notes,
-        error
-      });
-    }
+  deleteSet(setId: string) {
+    return this.deleteSetMutation.mutateAsync(setId);
+  }
+
+  updateNotes(notes: string) {
+    if (!this.workout?.exercise) return;
+    return this.updateNotesMutation.mutateAsync({
+      exerciseLogId: this.workout.exercise.id,
+      notes
+    });
   }
 
   async completeWorkout() {
-    if (!this.view) return;
-    logger.info('Completing workout', { workoutId: this.view.id });
-
-    this.isCompleting = true;
-    try {
-      await this.commandService.completeWorkout(this.view.id);
-      logger.info('Workout completed', { workoutId: this.view.id });
-      await goto(resolve('/'));
-    } catch (error) {
-      this.errorMessage = 'Failed to complete workout';
-      logger.error('Failed to complete workout', { workoutId: this.view.id, error });
-    } finally {
-      this.isCompleting = false;
-    }
+    await this.completeWorkoutMutation.mutateAsync(undefined);
+    await goto(resolve('/'));
   }
 
   async cancelWorkout() {
-    if (!this.view) return;
-    logger.info('Cancelling workout', { workoutId: this.view.id });
-
-    this.isCancelling = true;
-    try {
-      await this.commandService.cancelWorkout(this.view.id);
-      logger.info('Workout cancelled', { workoutId: this.view.id });
-      await goto(resolve('/'));
-    } catch (error) {
-      this.errorMessage = 'Failed to cancel workout';
-      logger.error('Failed to cancel workout', { workoutId: this.view.id, error });
-    } finally {
-      this.isCancelling = false;
-    }
+    await this.cancelWorkoutMutation.mutateAsync(undefined);
+    await goto(resolve('/'));
   }
 }

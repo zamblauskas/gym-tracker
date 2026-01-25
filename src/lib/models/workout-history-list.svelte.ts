@@ -13,7 +13,7 @@ export class WorkoutHistoryListModel {
 
   constructor() {
     this.historyQuery = fetchQuery({
-      key: Keys.workoutHistoryList,
+      key: () => Keys.workoutHistoryList,
       fn: () => this.services.workoutHistoryViewService.getHistory()
     });
   }

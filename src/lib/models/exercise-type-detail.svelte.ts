@@ -22,17 +22,17 @@ export class ExerciseTypeDetailModel {
     this.exerciseTypeId = exerciseTypeId;
 
     this.exerciseTypeQuery = fetchQuery({
-      key: Keys.exerciseTypeDetail(this.exerciseTypeId),
+      key: () => Keys.exerciseTypeDetail(this.exerciseTypeId),
       fn: () => this.services.exerciseTypeViewService.getExerciseTypeDetailById(this.exerciseTypeId)
     });
 
     this.gymsQuery = fetchQuery({
-      key: Keys.gymList,
+      key: () => Keys.gymList,
       fn: () => this.services.gymViewService.listGyms()
     });
 
     this.updateExerciseTypeMutation = updateMutation({
-      key: Keys.exerciseTypeDetail(this.exerciseTypeId),
+      key: () => Keys.exerciseTypeDetail(this.exerciseTypeId),
       fn: (data: ExerciseTypeCommand.Update) =>
         this.services.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, data),
       invalidateKeys: () => [

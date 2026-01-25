@@ -1,37 +1,37 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
   import { X, Timer as TimerIcon } from 'lucide-svelte';
   import Button from '$lib/components/ui/button/button.svelte';
 
   interface Props {
+    startTime: number;
     duration: number;
     onComplete: () => void;
     onDismiss: () => void;
   }
 
-  let { duration, onComplete, onDismiss }: Props = $props();
+  let { startTime, duration, onComplete, onDismiss }: Props = $props();
 
   let timeLeft = $state(0);
-  let interval: NodeJS.Timeout | null = null;
 
-  onMount(() => {
-    timeLeft = duration;
-    const startedAt = new Date();
-    interval = setInterval(() => {
-      timeLeft = duration - secondsFrom(startedAt);
-      if (timeLeft <= 0) {
-        if (interval) clearInterval(interval);
-        onComplete();
-      }
+  $effect(() => {
+    calculateTimeLeft();
+
+    const interval = setInterval(() => {
+      calculateTimeLeft();
     }, 1000);
+
+    return () => clearInterval(interval);
   });
 
-  onDestroy(() => {
-    if (interval) clearInterval(interval);
-  });
-
-  function secondsFrom(start: Date): number {
-    return Math.floor((new Date().getTime() - start.getTime()) / 1000);
+  function calculateTimeLeft() {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const left = duration - elapsed;
+    if (left <= 0) {
+      timeLeft = 0;
+      onComplete();
+    } else {
+      timeLeft = left;
+    }
   }
 
   function formatTime(seconds: number): string {

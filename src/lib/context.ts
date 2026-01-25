@@ -16,6 +16,7 @@ import type { WorkoutHistoryCommandService } from './services/workout-history-co
 
 export const AUTH_KEY = Symbol('auth');
 export const PAGE_CHROME_KEY = Symbol('pageChrome');
+export const TIMER_KEY = Symbol('timer');
 export const SERVICES_KEY = Symbol('services');
 
 export interface Services {

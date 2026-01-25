@@ -19,5 +19,10 @@ export const Keys = {
 
   workoutHistory: ['workout-history'] as const,
   workoutHistoryList: ['workout-history', 'list'] as const,
-  workoutHistoryDetail: (id: string) => ['workout-history', id, 'detail'] as const
+  workoutHistoryDetail: (id: string) => ['workout-history', id, 'detail'] as const,
+
+  workouts: ['workouts'] as const,
+  workoutDetail: (id: string, index: number) => ['workouts', id, index, 'detail'] as const,
+  workoutExerciseHistory: (workoutId: string, exerciseId: string) =>
+    ['workouts', workoutId, 'exercise-history', exerciseId] as const
 };

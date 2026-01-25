@@ -22,22 +22,22 @@ export class ExerciseDetailModel {
     this.exerciseId = exerciseId;
 
     this.exerciseQuery = fetchQuery({
-      key: Keys.exerciseDetail(this.exerciseId),
+      key: () => Keys.exerciseDetail(this.exerciseId),
       fn: () => this.services.exerciseViewService.getExerciseDetailById(this.exerciseId)
     });
 
     this.gymsQuery = fetchQuery({
-      key: Keys.gymList,
+      key: () => Keys.gymList,
       fn: () => this.services.gymViewService.listGyms()
     });
 
     this.historyQuery = fetchQuery({
-      key: Keys.exerciseHistory(this.exerciseId),
+      key: () => Keys.exerciseHistory(this.exerciseId),
       fn: () => this.services.workoutViewService.getExerciseHistory(this.exerciseId)
     });
 
     this.updateExerciseMutation = updateMutation<ExerciseCommand.Update, Exercise.Detail>({
-      key: Keys.exerciseDetail(this.exerciseId),
+      key: () => Keys.exerciseDetail(this.exerciseId),
       fn: (data: ExerciseCommand.Update) =>
         this.services.exerciseCommandService.updateExercise(this.exerciseId, data),
       invalidateKeys: () => [

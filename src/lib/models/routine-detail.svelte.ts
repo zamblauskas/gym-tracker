@@ -18,17 +18,17 @@ export class RoutineDetailModel {
 
   constructor(private routineId: string) {
     this.routineQuery = fetchQuery({
-      key: Keys.routineDetail(this.routineId),
+      key: () => Keys.routineDetail(this.routineId),
       fn: () => this.services.routineViewService.getRoutineDetailById(this.routineId)
     });
 
     this.exerciseTypesQuery = fetchQuery({
-      key: Keys.exerciseTypeList,
+      key: () => Keys.exerciseTypeList,
       fn: () => this.services.exerciseTypeViewService.listExerciseTypes()
     });
 
     this.updateRoutineMutation = updateMutation<RoutineCommand.Update, Routine.Detail>({
-      key: Keys.routineDetail(this.routineId),
+      key: () => Keys.routineDetail(this.routineId),
       fn: (data) => this.services.routineCommandService.updateRoutine(this.routineId, data),
       invalidateKeys: () => [
         Keys.programDetail(this.routine?.program.id ?? ''),

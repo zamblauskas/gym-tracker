@@ -15,7 +15,7 @@ export class GymListModel {
 
   constructor() {
     this.gymsQuery = fetchQuery({
-      key: Keys.gymList,
+      key: () => Keys.gymList,
       fn: () => this.services.gymViewService.listGyms()
     });
 

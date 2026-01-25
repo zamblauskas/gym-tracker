@@ -15,7 +15,7 @@ export class ExerciseTypeListModel {
 
   constructor() {
     this.exerciseTypesQuery = fetchQuery({
-      key: Keys.exerciseTypeList,
+      key: () => Keys.exerciseTypeList,
       fn: () => this.services.exerciseTypeViewService.listExerciseTypes()
     });
 

@@ -34,7 +34,7 @@ Todo:
 - [x] Refactor program-list model and page
 - [x] Refactor workout-history-list model and page
 - [x] Refactor workout-history-detail model and page
-- [ ] Refactor workout-detail model and page
+- [x] Refactor workout-detail model and page
 
 ### Future tasks
 

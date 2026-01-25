@@ -8,7 +8,8 @@
   import { getSupabaseClient } from '$lib/supabase/client';
   import { AuthModel } from '$lib/models/auth.svelte';
   import { PageChromeModel } from '$lib/models/page-chrome.svelte';
-  import { AUTH_KEY, PAGE_CHROME_KEY, SERVICES_KEY } from '$lib/context';
+  import { TimerModel } from '$lib/models/timer.svelte';
+  import { AUTH_KEY, PAGE_CHROME_KEY, TIMER_KEY, SERVICES_KEY } from '$lib/context';
 
   import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
@@ -46,6 +47,7 @@
   });
 
   const chrome = new PageChromeModel(queryClient);
+  const timer = new TimerModel();
 
   const exerciseTypeViewService = new ExerciseTypeViewService(supabase);
   const exerciseTypeCommandService = new ExerciseTypeCommandService(supabase);
@@ -68,6 +70,7 @@
 
   setContext(AUTH_KEY, auth);
   setContext(PAGE_CHROME_KEY, chrome);
+  setContext(TIMER_KEY, timer);
   setContext(SERVICES_KEY, {
     exerciseTypeViewService,
     exerciseTypeCommandService,

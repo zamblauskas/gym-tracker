@@ -13,7 +13,7 @@ export class WorkoutHistoryDetailModel {
 
   constructor(private workoutId: string) {
     this.workoutQuery = fetchQuery({
-      key: Keys.workoutHistoryDetail(this.workoutId),
+      key: () => Keys.workoutHistoryDetail(this.workoutId),
       fn: () => this.services.workoutHistoryViewService.getHistoryDetail(this.workoutId)
     });
 

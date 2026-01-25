@@ -13,14 +13,17 @@ import { logger } from '$lib/logger';
 
 export function fetchQuery<TData>({
   key,
-  fn
+  fn,
+  enabled
 }: {
-  key: QueryKey;
+  key: () => QueryKey;
   fn: () => Promise<TData>;
+  enabled?: () => boolean;
 }): CreateQueryResult<TData> {
   return query(() => ({
-    queryKey: key,
-    queryFn: () => log(`fetching [${key}]`, () => fn())
+    queryKey: key(),
+    queryFn: () => log(`fetching [${key}]`, () => fn()),
+    enabled: enabled?.() ?? true
   }));
 }
 
@@ -48,7 +51,7 @@ export function updateMutation<TUpdate, TData>({
   invalidateKeys,
   merge
 }: {
-  key: QueryKey;
+  key: () => QueryKey;
   fn: (data: TUpdate) => Promise<void>;
   invalidateKeys?: () => QueryKey[];
   merge?: (previousData: TData, update: TUpdate) => TData;
@@ -59,7 +62,7 @@ export function updateMutation<TUpdate, TData>({
       return log(`updating [${key}]`, () => fn(update));
     },
     onMutate: (update) => {
-      return client.setQueryData<TData>(key, (previousData) => {
+      return client.setQueryData<TData>(key(), (previousData) => {
         if (!previousData) {
           return;
         }

@@ -17,12 +17,12 @@ export class ProgramDetailModel {
 
   constructor(private programId: string) {
     this.programQuery = fetchQuery({
-      key: Keys.programDetail(this.programId),
+      key: () => Keys.programDetail(this.programId),
       fn: () => this.services.programViewService.getProgramDetailById(this.programId)
     });
 
     this.updateProgramMutation = updateMutation<ProgramCommand.Update, Program.Detail>({
-      key: Keys.programDetail(this.programId),
+      key: () => Keys.programDetail(this.programId),
       fn: (data) => this.services.programCommandService.updateProgram(this.programId, data),
       invalidateKeys: () => [
         Keys.programDetail(this.programId),
@@ -32,7 +32,7 @@ export class ProgramDetailModel {
     });
 
     this.reorderRoutinesMutation = updateMutation<RoutineCommand.UpdatePositions, Program.Detail>({
-      key: Keys.programDetail(this.programId),
+      key: () => Keys.programDetail(this.programId),
       fn: (data) => this.services.routineCommandService.updateRoutinePositions(data),
       invalidateKeys: () => [Keys.programDetail(this.programId)],
       merge: (prev, update) => {

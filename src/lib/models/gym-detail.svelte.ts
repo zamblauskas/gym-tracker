@@ -20,12 +20,12 @@ export class GymDetailModel {
     this.gymId = gymId;
 
     this.gymQuery = fetchQuery({
-      key: Keys.gymDetail(this.gymId),
+      key: () => Keys.gymDetail(this.gymId),
       fn: () => this.services.gymViewService.getGymById(this.gymId)
     });
 
     this.updateGymMutation = updateMutation<GymCommand.Update, Gym.Detail>({
-      key: Keys.gymDetail(this.gymId),
+      key: () => Keys.gymDetail(this.gymId),
       fn: (data: GymCommand.Update) => this.services.gymCommandService.updateGym(this.gymId, data),
       invalidateKeys: () => [
         Keys.gymList,

@@ -15,7 +15,7 @@ export class ProgramListModel {
 
   constructor() {
     this.programsQuery = fetchQuery({
-      key: Keys.programList,
+      key: () => Keys.programList,
       fn: () => this.services.programViewService.listPrograms()
     });
 
