@@ -42,7 +42,8 @@ export class ExerciseDetailModel {
         this.services.exerciseCommandService.updateExercise(this.exerciseId, data),
       invalidateKeys: () => [
         Keys.exerciseTypeDetail(this.exercise?.exerciseType.id ?? ''),
-        Keys.exerciseDetail(this.exerciseId)
+        Keys.exerciseDetail(this.exerciseId),
+        Keys.workoutHistory
       ],
       merge: (previousData, update) => {
         const gyms = (this.gymsQuery.data ?? []).filter((g) => update.gymIds.includes(g.id));

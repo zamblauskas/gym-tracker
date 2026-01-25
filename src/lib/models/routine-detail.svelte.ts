@@ -33,7 +33,7 @@ export class RoutineDetailModel {
       invalidateKeys: () => [
         Keys.programDetail(this.routine?.program.id ?? ''),
         Keys.routineDetail(this.routineId),
-        Keys.workoutHistoryList
+        Keys.workoutHistory
       ]
     });
 

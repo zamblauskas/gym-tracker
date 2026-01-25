@@ -1,9 +1,10 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { onMount, getContext } from 'svelte';
+  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { getContext } from 'svelte';
   import { Trash2, Clock, CheckCircle } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { WorkoutHistoryDetailModel } from '$lib/models/workout-history-detail.svelte';
   import { timeAgo } from '$lib/utils/time-ago';
@@ -20,24 +21,22 @@
   import ExerciseHistoryDetail from '$lib/components/ExerciseHistoryDetail.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
   const workoutId = page.params.id ?? '';
-  const model = new WorkoutHistoryDetailModel(
-    workoutId,
-    services.workoutHistoryViewService,
-    services.workoutHistoryCommandService
-  );
+  const model = new WorkoutHistoryDetailModel(workoutId);
 
-  chrome.setBreadcrumbItems([
+  let breadcrumbItems = $derived([
     { label: 'Workout History', href: resolve('/workout-history') },
     { label: 'Detail' }
   ]);
 
-  onMount(async () => {
-    if (workoutId) {
-      await model.loadData();
-    }
+  $effect(() => {
+    chrome.breadcrumbItems = breadcrumbItems;
   });
+
+  async function deleteWorkout() {
+    await model.delete();
+    await goto(resolve('/workout-history'));
+  }
 </script>
 
 {#if model.errorMessage}
@@ -135,7 +134,7 @@
           </AlertDialog.Header>
           <AlertDialog.Footer>
             <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-            <AlertDialog.Action onclick={() => model.delete()}>
+            <AlertDialog.Action onclick={deleteWorkout}>
               {#if model.isDeleting}
                 <Spinner class="mr-2" />
               {/if}

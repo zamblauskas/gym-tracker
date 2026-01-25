@@ -1,59 +1,53 @@
-import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
-import type { WorkoutHistoryCommandService } from '$lib/services/workout-history-command.service';
-import type { WorkoutHistoryViewService } from '$lib/services/workout-history-view.service';
-import type { HistoryDetail } from '$lib/types/views/workout';
-import { logger } from '$lib/logger';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { SERVICES_KEY, type Services } from '$lib/context';
+import { getContext } from 'svelte';
+import type { Workout } from '$lib/types/views';
+import { Keys } from '$lib/query-keys';
+import { fetchQuery, deleteMutation } from '$lib/utils/query';
 
 export class WorkoutHistoryDetailModel {
-  workout = $state<HistoryDetail | null>(null);
-  isLoading = $state(true);
-  isDeleting = $state(false);
-  isActionInProgress = $derived(this.isLoading || this.isDeleting);
-  errorMessage = $state('');
+  private services = getContext<Services>(SERVICES_KEY);
 
-  constructor(
-    private workoutId: string,
-    private viewService: WorkoutHistoryViewService,
-    private commandService: WorkoutHistoryCommandService
-  ) {}
+  workoutQuery: CreateQueryResult<Workout.HistoryDetail>;
+  deleteWorkoutMutation: CreateMutationResult<void, Error>;
 
-  async loadData() {
-    logger.info('Loading workout history', { workoutId: this.workoutId });
+  constructor(private workoutId: string) {
+    this.workoutQuery = fetchQuery({
+      key: Keys.workoutHistoryDetail(this.workoutId),
+      fn: () => this.services.workoutHistoryViewService.getHistoryDetail(this.workoutId)
+    });
 
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    try {
-      this.workout = await this.viewService.getHistoryDetail(this.workoutId);
-      logger.info('Workout history loaded', {
-        workout: $state.snapshot(this.workout)
-      });
-    } catch (e) {
-      this.errorMessage = e instanceof Error ? e.message : 'Failed to load workout history';
-      logger.error('Failed to load workout history', { workoutId: this.workoutId, error: e });
-    } finally {
-      this.isLoading = false;
-    }
+    this.deleteWorkoutMutation = deleteMutation({
+      fn: () => this.services.workoutHistoryCommandService.deleteWorkout(this.workoutId),
+      invalidateKeys: () => [Keys.workoutHistoryList, Keys.workoutHistoryDetail(this.workoutId)]
+    });
   }
 
-  async delete() {
-    if (!this.workout) return;
+  get workout() {
+    return this.workoutQuery.data;
+  }
 
-    logger.info('Deleting workout', { workoutId: this.workoutId });
+  get isLoading() {
+    return this.workoutQuery.isLoading;
+  }
 
-    this.isDeleting = true;
-    this.errorMessage = '';
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const deleteWorkoutMutationIsPending = this.deleteWorkoutMutation.isPending;
+    return isLoading || deleteWorkoutMutationIsPending;
+  }
 
-    try {
-      await this.commandService.deleteWorkout(this.workout.id);
-      logger.info('Workout deleted', { workoutId: this.workoutId });
-      await goto(resolve('/workout-history'));
-    } catch (e) {
-      this.errorMessage = e instanceof Error ? e.message : 'Failed to delete workout';
-      logger.error('Failed to delete workout', { workoutId: this.workoutId, error: e });
-    } finally {
-      this.isDeleting = false;
-    }
+  get isDeleting() {
+    return this.deleteWorkoutMutation.isPending;
+  }
+
+  get errorMessage() {
+    const workoutError = this.workoutQuery.error?.message;
+    const deleteWorkoutMutationError = this.deleteWorkoutMutation.error?.message;
+    return workoutError || deleteWorkoutMutationError || null;
+  }
+
+  delete() {
+    return this.deleteWorkoutMutation.mutateAsync(undefined);
   }
 }

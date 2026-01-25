@@ -27,7 +27,7 @@ export class ProgramDetailModel {
       invalidateKeys: () => [
         Keys.programDetail(this.programId),
         Keys.programList,
-        Keys.workoutHistoryList
+        Keys.workoutHistory
       ]
     });
 
