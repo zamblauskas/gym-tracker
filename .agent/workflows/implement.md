@@ -22,4 +22,4 @@ Implement requested change, then make a summary:
 - NEW conventions, code style, architecture choices or design patterns you had to introduce
 - NEW features or changes to existing features
 
-Only implement requested change - do NOT run tests, linter or checks in the browser.
+Only implement requested change - do NOT run tests, linter or checks in the browser. Leave testing and verification to me.

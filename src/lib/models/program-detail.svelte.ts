@@ -24,7 +24,11 @@ export class ProgramDetailModel {
     this.updateProgramMutation = updateMutation<ProgramCommand.Update, Program.Detail>({
       key: Keys.programDetail(this.programId),
       fn: (data) => this.services.programCommandService.updateProgram(this.programId, data),
-      invalidateKeys: () => [Keys.programDetail(this.programId), Keys.programList]
+      invalidateKeys: () => [
+        Keys.programDetail(this.programId),
+        Keys.programList,
+        Keys.workoutHistoryList
+      ]
     });
 
     this.reorderRoutinesMutation = updateMutation<RoutineCommand.UpdatePositions, Program.Detail>({

@@ -1,26 +1,34 @@
-import type { WorkoutHistoryViewService } from '$lib/services/workout-history-view.service';
-import * as Workout from '$lib/types/views/workout';
-import { logger } from '$lib/logger';
+import { type CreateQueryResult } from '@tanstack/svelte-query';
+import { SERVICES_KEY } from '$lib/context';
+import { getContext } from 'svelte';
+import type { Services } from '$lib/context';
+import type { Workout } from '$lib/types/views';
+import { Keys } from '$lib/query-keys';
+import { fetchQuery } from '$lib/utils/query';
 
 export class WorkoutHistoryListModel {
-  historyItems = $state<Workout.HistoryItem[]>([]);
-  isLoading = $state(true);
-  errorMessage = $state('');
+  private services = getContext<Services>(SERVICES_KEY);
 
-  constructor(private viewSvc: WorkoutHistoryViewService) {}
+  historyQuery: CreateQueryResult<Workout.HistoryItem[]>;
 
-  async loadData() {
-    logger.info('Loading workout history');
-    this.isLoading = true;
-    this.errorMessage = '';
-    try {
-      this.historyItems = await this.viewSvc.getHistory();
-      logger.info('Workout history loaded', { historyItems: $state.snapshot(this.historyItems) });
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to load workout history';
-      logger.error('Failed to load workout history', { error });
-    } finally {
-      this.isLoading = false;
-    }
+  constructor() {
+    this.historyQuery = fetchQuery({
+      key: Keys.workoutHistoryList,
+      fn: () => this.services.workoutHistoryViewService.getHistory()
+    });
+  }
+
+  get historyItems() {
+    return this.historyQuery.data ?? [];
+  }
+
+  get isLoading() {
+    return this.historyQuery.isLoading;
+  }
+
+  get errorMessage() {
+    const historyError = this.historyQuery.error?.message;
+
+    return historyError || null;
   }
 }

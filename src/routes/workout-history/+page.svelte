@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   import { getContext } from 'svelte';
   import { ChevronRight, History } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { WorkoutHistoryListModel } from '$lib/models/workout-history-list.svelte';
   import { timeAgo } from '$lib/utils/time-ago';
@@ -15,14 +14,9 @@
   import Badge from '$lib/components/ui/badge/badge.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
-  const model = new WorkoutHistoryListModel(services.workoutHistoryViewService);
+  const model = new WorkoutHistoryListModel();
 
   chrome.setBreadcrumbItems([{ label: 'Workout History' }]);
-
-  onMount(async () => {
-    await model.loadData();
-  });
 </script>
 
 {#if model.errorMessage}

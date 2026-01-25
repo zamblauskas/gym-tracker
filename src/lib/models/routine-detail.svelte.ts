@@ -32,7 +32,8 @@ export class RoutineDetailModel {
       fn: (data) => this.services.routineCommandService.updateRoutine(this.routineId, data),
       invalidateKeys: () => [
         Keys.programDetail(this.routine?.program.id ?? ''),
-        Keys.routineDetail(this.routineId)
+        Keys.routineDetail(this.routineId),
+        Keys.workoutHistoryList
       ]
     });
 
