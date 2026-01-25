@@ -44,6 +44,7 @@ You select an Exercise Type (e.g., Lat Pulldown) but log a specific Exercise Var
 | Language  | TypeScript ^5.9 (strict mode)         |
 | Styling   | Tailwind CSS ^4.1 + shadcn-svelte     |
 | Icons     | lucide-svelte                         |
+| State     | @tanstack/svelte-query ^6.0           |
 | Backend   | Supabase (PostgreSQL)                 |
 | Testing   | Vitest ^4.0                           |
 
@@ -72,9 +73,11 @@ src/
 │   │   ├── commands/        # Input types for mutations
 │   │   └── views/           # Output types for queries
 │   ├── utils/
+│   │   ├── query.ts         # Svelte Query helpers (fetchQuery, updateMutation...)
 │   │   └── time-ago.ts      # Human-readable timestamps
 │   ├── context.ts           # Service container definition
 │   ├── logger.ts            # Custom logger
+│   ├── query-keys.ts        # Type-safe query keys
 │   └── utils.ts             # Tailwind utilities (cn)
 ├── routes/
 │   ├── +layout.svelte       # Root layout, service initialization
@@ -95,8 +98,7 @@ src/
 Separates read (queries) and write (commands) operations:
 
 ```
-Page → Model → ViewService (reads)
-           └→ CommandService (writes)
+Page → Model → query/mutation → Service
 ```
 
 **Services** (`src/lib/services/`):
@@ -106,19 +108,19 @@ Page → Model → ViewService (reads)
 
 **Models** (`src/lib/models/*.svelte.ts`):
 
-- Hold reactive view state using `$state`
-- Derive computed properties using `$derived`
-- Call command services for mutations
-- Reload view after commands to reflect changes
-- Handle loading/error states
+- Encapsulate data fetching and mutation logic using `@tanstack/svelte-query`
+- Expose `CreateQueryResult` and `CreateMutationResult` objects
+- Aggregate loading and error states
+- Provide clean methods for UI interactions (e.g. `update`, `delete`)
+- Manage cache invalidation and optimistic updates via helper utils
 
 **Example flow:**
 
 ```
-WorkoutDetailPage
-  └→ WorkoutDetailModel
-       ├→ WorkoutViewService.getWorkoutDetail()
-       └→ WorkoutCommandService.addSet()
+Page
+ └→ Model
+      ├→ query → ViewService.get()
+      └→ mutation → CommandService.update()
 ```
 
 ### Type Conventions

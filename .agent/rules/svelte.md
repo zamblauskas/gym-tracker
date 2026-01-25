@@ -42,3 +42,12 @@ $effect(() => {
     return isLoading || isExerciseCreating;
   }
 ```
+
+## Svelte Query (TanStack Query)
+
+- Use helper utils from `$lib/utils/query.ts` for consistency:
+  - `fetchQuery` for read operations (queries)
+  - `updateMutation` / `deleteMutation` / `createMutation` for write operations (mutations)
+- Always use the `Keys` object from `$lib/query-keys.ts` for query keys to ensure type safety and consistency across the app.
+- When invalidating keys, prefer returning an array of keys from the `invalidateKeys` callback in mutation helpers.
+- Models should aggregate `isLoading`, `isPending`, and `error` states from all internal queries and mutations to provide a unified state to the UI.
