@@ -21,7 +21,11 @@ export class WorkoutDetailModel {
     { setId: string; data: WorkoutCommand.UpdateSet }
   >;
   deleteSetMutation: CreateMutationResult<void, Error, string>;
-  updateNotesMutation: CreateMutationResult<void, Error, WorkoutCommand.UpdateNotes>;
+  updateNotesMutation: CreateMutationResult<
+    void,
+    Error,
+    { data: WorkoutCommand.UpdateNotes; index: number }
+  >;
   completeWorkoutMutation: CreateMutationResult<void, Error, void>;
   cancelWorkoutMutation: CreateMutationResult<void, Error, void>;
 
@@ -77,10 +81,22 @@ export class WorkoutDetailModel {
       invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
     });
 
-    this.updateNotesMutation = updateMutation<WorkoutCommand.UpdateNotes, Workout.Detail>({
+    this.updateNotesMutation = updateMutation<
+      { data: WorkoutCommand.UpdateNotes; index: number },
+      Workout.Detail
+    >({
       key: () => Keys.workoutDetail(this.workoutId(), this.index()),
-      fn: (data) => this.services.workoutCommandService.updateNotes(data),
-      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+      fn: ({ data }) => this.services.workoutCommandService.updateNotes(data),
+      invalidateKeys: ({ index }) => [Keys.workoutDetail(this.workoutId(), index)],
+      merge(previousData, update): Workout.Detail {
+        return {
+          ...previousData,
+          exercise: {
+            ...previousData.exercise,
+            notes: update.data.notes
+          }
+        };
+      }
     });
 
     this.completeWorkoutMutation = updateMutation<void, Workout.Detail>({
@@ -211,8 +227,8 @@ export class WorkoutDetailModel {
   updateNotes(notes: string) {
     if (!this.workout?.exercise) return;
     return this.updateNotesMutation.mutateAsync({
-      exerciseLogId: this.workout.exercise.id,
-      notes
+      data: { exerciseLogId: this.workout.exercise.id, notes },
+      index: this.index()
     });
   }
 

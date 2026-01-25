@@ -138,9 +138,9 @@
     deletingSetId = null;
   }
 
-  async function saveNotes() {
-    if (!model.workout?.exercise) return;
-    await model.updateNotes(notes);
+  function saveNotes() {
+    // Optimistic update
+    void model.updateNotes(notes);
   }
 </script>
 
@@ -266,11 +266,7 @@
         </Button>
 
         <div class="mt-4">
-          <Textarea
-            placeholder="Add notes..."
-            bind:value={notes}
-            onchange={saveNotes}
-          />
+          <Textarea placeholder="Add notes..." bind:value={notes} onchange={saveNotes} />
         </div>
 
         <ExerciseHistory

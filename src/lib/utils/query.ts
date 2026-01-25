@@ -32,15 +32,15 @@ export function createMutation<TData>({
   invalidateKeys
 }: {
   fn: (data: TData) => Promise<string>;
-  invalidateKeys?: () => QueryKey[];
+  invalidateKeys?: (variables: TData) => QueryKey[];
 }): CreateMutationResult<string, Error, TData> {
   const client = useQueryClient();
   return mutation(() => ({
     mutationFn: async (data) => {
       return log(`creating`, () => fn(data));
     },
-    onSettled: async () => {
-      await invalidateQueries(client, invalidateKeys);
+    onSettled: async (_data, _error, variables) => {
+      await invalidateQueries(client, invalidateKeys?.(variables));
     }
   }));
 }
@@ -53,7 +53,7 @@ export function updateMutation<TUpdate, TData>({
 }: {
   key: () => QueryKey;
   fn: (data: TUpdate) => Promise<void>;
-  invalidateKeys?: () => QueryKey[];
+  invalidateKeys?: (variables: TUpdate) => QueryKey[];
   merge?: (previousData: TData, update: TUpdate) => TData;
 }): CreateMutationResult<void, Error, TUpdate> {
   const client = useQueryClient();
@@ -76,8 +76,8 @@ export function updateMutation<TUpdate, TData>({
         }
       });
     },
-    onSettled: async () => {
-      await invalidateQueries(client, invalidateKeys);
+    onSettled: async (_data, _error, variables) => {
+      await invalidateQueries(client, invalidateKeys?.(variables));
     }
   }));
 }
@@ -95,13 +95,12 @@ export function deleteMutation({
       return log(`deleting`, () => fn());
     },
     onSettled: async () => {
-      await invalidateQueries(client, invalidateKeys);
+      await invalidateQueries(client, invalidateKeys?.());
     }
   }));
 }
 
-async function invalidateQueries(client: QueryClient, keysFn?: () => QueryKey[]) {
-  const keys = keysFn?.();
+async function invalidateQueries(client: QueryClient, keys?: QueryKey[]) {
   if (!keys) return;
   logger.debug(`Invalidating queries ${keys.map((key) => '[' + key + ']').join(', ')}`);
   for (const queryKey of keys) {
