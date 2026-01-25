@@ -1,0 +1,25 @@
+description = "Creates implementation for a given feature or change"
+prompt = """
+Your task is to create a plan for the implementation of a given feature or change.
+Feature or change description: {{args}}
+
+Investigate the codebase to understand the current implementation and the dependencies of the feature or change.
+
+Create a plan that includes the following:
+- Options to implement the feature or change:
+  - Option 1 (Recommended):
+    - Description of option 1
+    - Pros and cons of option 1
+    - Implementation steps for option 1
+  - Option 2:
+    - Description of option 2
+    - Pros and cons of option 2
+    - Implementation steps for option 2
+
+Provide code snippets if possible.
+Provide architecture diagrams if possible.
+
+Write the plan in markdown format to a file named plan-<timestamp>.md
+
+DO NOT EXECUTE THE PLAN until I confirm it is correct.
+"""
