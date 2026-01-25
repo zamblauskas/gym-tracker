@@ -40,7 +40,8 @@ export class RoutineDetailModel {
       fn: () => this.services.routineCommandService.deleteRoutine(this.routineId),
       invalidateKeys: () => [
         Keys.programDetail(this.routine?.program.id ?? ''),
-        Keys.routineDetail(this.routineId)
+        Keys.routineDetail(this.routineId),
+        Keys.programList
       ]
     });
 

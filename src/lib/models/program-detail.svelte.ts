@@ -41,7 +41,7 @@ export class ProgramDetailModel {
 
     this.createRoutineMutation = createMutation<RoutineCommand.Create>({
       fn: (data) => this.services.routineCommandService.createRoutine(data),
-      invalidateKeys: () => [Keys.programDetail(this.programId)]
+      invalidateKeys: () => [Keys.programDetail(this.programId), Keys.programList]
     });
 
     this.deleteProgramMutation = deleteMutation({

@@ -1,52 +1,57 @@
-import type { ProgramViewService } from '$lib/services/program-view.service';
-import type { ProgramCommandService } from '$lib/services/program-command.service';
-import * as Program from '$lib/types/views/program';
-import { logger } from '$lib/logger';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { Program as ProgramCommand } from '$lib/types/commands';
+import { SERVICES_KEY } from '$lib/context';
+import { getContext } from 'svelte';
+import type { Services } from '$lib/context';
+import type { Program } from '$lib/types/views';
+import { Keys } from '$lib/query-keys';
+import { createMutation, fetchQuery } from '$lib/utils/query';
 
 export class ProgramListModel {
-  programs = $state<Program.Compact[]>([]);
-  isLoading = $state(true);
-  isCreating = $state(false);
-  isActionInProgress = $derived(this.isLoading || this.isCreating);
-  errorMessage = $state('');
+  private services = getContext<Services>(SERVICES_KEY);
 
-  constructor(
-    private viewSvc: ProgramViewService,
-    private commandSvc: ProgramCommandService
-  ) {}
+  programsQuery: CreateQueryResult<Program.Compact[]>;
+  createProgramMutation: CreateMutationResult<string, Error, ProgramCommand.Create>;
 
-  async loadData() {
-    logger.info('Loading programs');
+  constructor() {
+    this.programsQuery = fetchQuery({
+      key: Keys.programList,
+      fn: () => this.services.programViewService.listPrograms()
+    });
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    try {
-      this.programs = await this.viewSvc.listPrograms();
-      logger.info('Programs loaded', { programs: $state.snapshot(this.programs) });
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to load programs';
-      logger.error('Failed to load programs', { error });
-    } finally {
-      this.isLoading = false;
-    }
+    this.createProgramMutation = createMutation<ProgramCommand.Create>({
+      fn: (data: ProgramCommand.Create) => this.services.programCommandService.createProgram(data),
+      invalidateKeys: () => [Keys.programList]
+    });
   }
 
-  async createProgram(name: string): Promise<boolean> {
-    logger.info('Creating program', { name });
+  get programs() {
+    return this.programsQuery.data ?? [];
+  }
 
-    this.isCreating = true;
-    this.errorMessage = '';
-    try {
-      const programId = await this.commandSvc.createProgram({ name });
-      logger.info('Program created', { programId });
-      await this.loadData();
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to create program';
-      logger.error('Failed to create program', { name, error });
-      return false;
-    } finally {
-      this.isCreating = false;
-    }
+  get isLoading() {
+    return this.programsQuery.isLoading;
+  }
+
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const createMutationIsPending = this.createProgramMutation.isPending;
+
+    return isLoading || createMutationIsPending;
+  }
+
+  get isProgramCreating() {
+    return this.createProgramMutation.isPending;
+  }
+
+  get errorMessage() {
+    const programsError = this.programsQuery.error?.message;
+    const createMutationError = this.createProgramMutation.error?.message;
+
+    return programsError || createMutationError || null;
+  }
+
+  create(program: ProgramCommand.Create) {
+    return this.createProgramMutation.mutateAsync(program);
   }
 }

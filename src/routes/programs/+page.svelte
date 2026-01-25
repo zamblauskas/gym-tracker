@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { onMount, getContext } from 'svelte';
+  import { getContext } from 'svelte';
   import { Plus, Folder } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { ProgramListModel } from '$lib/models/program-list.svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -15,23 +15,17 @@
   import ProgramCard from '$lib/components/ProgramCard.svelte';
 
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
-  const model = new ProgramListModel(services.programViewService, services.programCommandService);
+  const model = new ProgramListModel();
 
-  let dialogOpen = $state(false);
-  let newProgramName = $state('');
+  let isCreateDialogOpen = $state(false);
+  let createName = $state('');
 
   chrome.setBreadcrumbItems([{ label: 'Programs' }]);
 
-  onMount(async () => {
-    await model.loadData();
-  });
-
   async function createProgram() {
-    const didCreate = await model.createProgram(newProgramName);
-    if (!didCreate) return;
-    newProgramName = '';
-    dialogOpen = false;
+    await model.create({ name: createName });
+    isCreateDialogOpen = false;
+    createName = '';
   }
 </script>
 
@@ -74,7 +68,7 @@
 </div>
 
 <div class="p-4">
-  <Dialog.Root bind:open={dialogOpen}>
+  <Dialog.Root bind:open={isCreateDialogOpen}>
     <Dialog.Trigger class="w-full">
       <Button class="w-full" variant="outline" disabled={model.isActionInProgress}>
         <Plus /> Create a new program
@@ -85,13 +79,10 @@
         <Dialog.Title>Create a new program</Dialog.Title>
         <Dialog.Description>Enter a name for your new program.</Dialog.Description>
       </Dialog.Header>
-      <Input placeholder="Program name" bind:value={newProgramName} />
+      <Input placeholder="Program name" bind:value={createName} />
       <Dialog.Footer>
-        <Button
-          onclick={createProgram}
-          disabled={newProgramName.trim() === '' || model.isActionInProgress}
-        >
-          {#if model.isCreating}
+        <Button onclick={createProgram} disabled={model.isActionInProgress || !createName.trim()}>
+          {#if model.isProgramCreating}
             <Spinner class="mr-2" />
           {/if}
           Create
