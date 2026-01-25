@@ -154,21 +154,6 @@ WorkoutDetailPage
 
 - `routine_exercise_types` uses hard delete (no `deleted_at`)
 
-### Logging
-
-Import: `import { logger } from '$lib/logger'`
-
-Log full data after loading.
-Pattern:
-
-```typescript
-logger.info('Updating routine', { routineId, input });
-// ... operation
-logger.info('Routine updated', { routineId });
-// ... after reload
-logger.info('Routine data loaded', { view: $state.snapshot(this.view) });
-```
-
 ### Svelte 5 Runes
 
 - `$state<T>(initial)` - reactive state

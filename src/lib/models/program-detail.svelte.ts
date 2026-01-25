@@ -1,118 +1,129 @@
-import type { ProgramViewService } from '$lib/services/program-view.service';
-import type { ProgramCommandService } from '$lib/services/program-command.service';
-import type { RoutineCommandService } from '$lib/services/routine-command.service';
-import * as Program from '$lib/types/views/program';
-import { logger } from '$lib/logger';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { getContext } from 'svelte';
+import { SERVICES_KEY, type Services } from '$lib/context';
+import type * as Program from '$lib/types/views/program';
+import { Keys } from '$lib/query-keys';
+import { fetchQuery, updateMutation, deleteMutation, createMutation } from '$lib/utils/query';
+import type { Routine as RoutineCommand, Program as ProgramCommand } from '$lib/types/commands';
 
 export class ProgramDetailModel {
-  program = $state<Program.Detail | null>(null);
-  isLoading = $state(true);
-  isCreating = $state(false);
-  isSaving = $state(false);
-  isReordering = $state(false);
-  isDeleting = $state(false);
+  private services = getContext<Services>(SERVICES_KEY);
 
-  isActionInProgress = $derived(
-    this.isLoading || this.isCreating || this.isSaving || this.isReordering || this.isDeleting
-  );
+  programQuery: CreateQueryResult<Program.Detail>;
+  updateProgramMutation: CreateMutationResult<void, Error, ProgramCommand.Update>;
+  reorderRoutinesMutation: CreateMutationResult<void, Error, RoutineCommand.UpdatePositions>;
+  createRoutineMutation: CreateMutationResult<string, Error, RoutineCommand.Create>;
+  deleteProgramMutation: CreateMutationResult<void, Error>;
 
-  errorMessage = $state('');
+  constructor(private programId: string) {
+    this.programQuery = fetchQuery({
+      key: Keys.programDetail(this.programId),
+      fn: () => this.services.programViewService.getProgramDetailById(this.programId)
+    });
 
-  constructor(
-    private programId: string,
-    private programViewSvc: ProgramViewService,
-    private programCommandSvc: ProgramCommandService,
-    private routineCommandSvc: RoutineCommandService
-  ) {}
+    this.updateProgramMutation = updateMutation<ProgramCommand.Update, Program.Detail>({
+      key: Keys.programDetail(this.programId),
+      fn: (data) => this.services.programCommandService.updateProgram(this.programId, data),
+      invalidateKeys: () => [Keys.programDetail(this.programId), Keys.programList]
+    });
 
-  async loadData(): Promise<void> {
-    logger.info('Loading program data', { programId: this.programId });
+    this.reorderRoutinesMutation = updateMutation<RoutineCommand.UpdatePositions, Program.Detail>({
+      key: Keys.programDetail(this.programId),
+      fn: (data) => this.services.routineCommandService.updateRoutinePositions(data),
+      invalidateKeys: () => [Keys.programDetail(this.programId)],
+      merge: (prev, update) => {
+        const newRoutines = update.orderedRoutineIds
+          .map((id) => prev.routines.find((r) => r.id === id))
+          .filter((r): r is Program.RoutineDetail => r !== undefined);
+        return { ...prev, routines: newRoutines };
+      }
+    });
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    try {
-      this.program = await this.programViewSvc.getProgramDetailById(this.programId);
-      logger.info('Program data loaded', { program: $state.snapshot(this.program) });
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to load program';
-      logger.error('Failed to load program', { programId: this.programId, error });
-    } finally {
-      this.isLoading = false;
-    }
+    this.createRoutineMutation = createMutation<RoutineCommand.Create>({
+      fn: (data) => this.services.routineCommandService.createRoutine(data),
+      invalidateKeys: () => [Keys.programDetail(this.programId)]
+    });
+
+    this.deleteProgramMutation = deleteMutation({
+      fn: () => this.services.programCommandService.deleteProgram(this.programId),
+      invalidateKeys: () => [Keys.programDetail(this.programId), Keys.programList]
+    });
   }
 
-  async updateProgram(name: string, routineOrder: string[]): Promise<boolean> {
-    logger.info('Updating program', { programId: this.programId, name, routineOrder });
+  get program() {
+    return this.programQuery.data;
+  }
 
-    this.isSaving = true;
-    this.errorMessage = '';
-    try {
-      await this.programCommandSvc.updateProgram(this.programId, { name });
-      if (this.hasOrderChanged(routineOrder)) {
-        await this.routineCommandSvc.updateRoutinePositions({
+  get isLoading() {
+    return this.programQuery.isLoading;
+  }
+
+  get isCreating() {
+    return this.createRoutineMutation.isPending;
+  }
+
+  get isSaving() {
+    const updateProgramMutationIsPending = this.updateProgramMutation.isPending;
+    const reorderRoutinesMutationIsPending = this.reorderRoutinesMutation.isPending;
+    return updateProgramMutationIsPending || reorderRoutinesMutationIsPending;
+  }
+
+  get isDeleting() {
+    return this.deleteProgramMutation.isPending;
+  }
+
+  get isActionInProgress() {
+    const isLoading = this.isLoading;
+    const isCreating = this.isCreating;
+    const isSaving = this.isSaving;
+    const isDeleting = this.isDeleting;
+    return isLoading || isCreating || isSaving || isDeleting;
+  }
+
+  get errorMessage() {
+    const programError = this.programQuery.error?.message;
+    const updateProgramMutationError = this.updateProgramMutation.error?.message;
+    const reorderRoutinesMutationError = this.reorderRoutinesMutation.error?.message;
+    const createRoutineMutationError = this.createRoutineMutation.error?.message;
+    const deleteProgramMutationError = this.deleteProgramMutation.error?.message;
+    return (
+      programError ||
+      updateProgramMutationError ||
+      reorderRoutinesMutationError ||
+      createRoutineMutationError ||
+      deleteProgramMutationError ||
+      null
+    );
+  }
+
+  updateProgram(program: ProgramCommand.Update, routineOrder: string[]) {
+    const promises = [];
+    if (this.program && this.program.name !== program.name) {
+      promises.push(this.updateProgramMutation.mutateAsync(program));
+    }
+
+    const currentOrder = this.program?.routines.map((r) => r.id) || [];
+    const orderChanged =
+      currentOrder.length !== routineOrder.length ||
+      currentOrder.some((id, i) => id !== routineOrder[i]);
+
+    if (orderChanged) {
+      promises.push(
+        this.reorderRoutinesMutation.mutateAsync({
           programId: this.programId,
           orderedRoutineIds: routineOrder
-        });
-      }
-      logger.info('Program updated', { programId: this.programId });
-      await this.loadData();
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to update program';
-      logger.error('Failed to update program', {
-        programId: this.programId,
-        name,
-        routineOrder,
-        error
-      });
-      return false;
-    } finally {
-      this.isSaving = false;
+        })
+      );
     }
+
+    return Promise.all(promises);
   }
 
-  private hasOrderChanged(updated: string[]): boolean {
-    const original = this.program?.routines.map((r) => r.id) || [];
-    return JSON.stringify(original) !== JSON.stringify(updated);
+  createRoutine(routine: RoutineCommand.Create) {
+    return this.createRoutineMutation.mutateAsync(routine);
   }
 
-  async createRoutine(name: string): Promise<boolean> {
-    logger.info('Creating routine', { programId: this.programId, name });
-
-    this.isCreating = true;
-    this.errorMessage = '';
-    try {
-      const routineId = await this.routineCommandSvc.createRoutine({
-        programId: this.programId,
-        name
-      });
-      logger.info('Routine created', { routineId });
-      await this.loadData();
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to create routine';
-      logger.error('Failed to create routine', { programId: this.programId, name, error });
-      return false;
-    } finally {
-      this.isCreating = false;
-    }
-  }
-
-  async deleteProgram(): Promise<boolean> {
-    logger.info('Deleting program', { programId: this.programId });
-
-    this.isDeleting = true;
-    this.errorMessage = '';
-    try {
-      await this.programCommandSvc.deleteProgram(this.programId);
-      logger.info('Program deleted', { programId: this.programId });
-      return true;
-    } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Failed to delete program';
-      logger.error('Failed to delete program', { programId: this.programId, error });
-      return false;
-    } finally {
-      this.isDeleting = false;
-    }
+  deleteProgram() {
+    return this.deleteProgramMutation.mutateAsync(undefined);
   }
 }

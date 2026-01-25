@@ -2,7 +2,6 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onMount } from 'svelte';
   import { getContext } from 'svelte';
   import {
     Pencil,
@@ -13,7 +12,7 @@
     ChevronDown,
     ScrollText
   } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { ProgramDetailModel } from '$lib/models/program-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
@@ -31,13 +30,7 @@
 
   const programId = page.params.programId || '';
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const services = getContext<Services>(SERVICES_KEY);
-  const model = new ProgramDetailModel(
-    programId,
-    services.programViewService,
-    services.programCommandService,
-    services.routineCommandService
-  );
+  const model = new ProgramDetailModel(programId);
 
   let editDialogOpen = $state(false);
   let editedProgramName = $state('');
@@ -53,21 +46,17 @@
     chrome.breadcrumbItems = breadcrumbItems;
   });
 
-  onMount(async () => {
-    await model.loadData();
-  });
-
   function openEditDialog() {
     editedProgramName = model.program?.name || '';
     editedRoutineOrder = model.program?.routines ? [...model.program.routines] : [];
     editDialogOpen = true;
   }
 
-  async function updateProgram() {
+  function updateProgram() {
     const newOrder = editedRoutineOrder.map((r) => r.id);
-    const didUpdate = await model.updateProgram(editedProgramName, newOrder);
-    if (!didUpdate) return;
 
+    // optimistic update
+    void model.updateProgram({ name: editedProgramName }, newOrder);
     editDialogOpen = false;
   }
 
@@ -96,15 +85,13 @@
   }
 
   async function createRoutine() {
-    const didCreate = await model.createRoutine(newRoutineName);
-    if (!didCreate) return;
+    await model.createRoutine({ programId, name: newRoutineName });
     newRoutineName = '';
     addRoutineDialogOpen = false;
   }
 
   async function deleteProgram() {
-    const didDelete = await model.deleteProgram();
-    if (!didDelete) return;
+    await model.deleteProgram();
     await goto(resolve('/programs'));
   }
 </script>

@@ -40,7 +40,7 @@ export class ExerciseDetailModel {
       key: Keys.exerciseDetail(this.exerciseId),
       fn: (data: ExerciseCommand.Update) =>
         this.services.exerciseCommandService.updateExercise(this.exerciseId, data),
-      invalidateKeys: [
+      invalidateKeys: () => [
         Keys.exerciseTypeDetail(this.exercise?.exerciseType.id ?? ''),
         Keys.exerciseDetail(this.exerciseId)
       ],
@@ -57,7 +57,7 @@ export class ExerciseDetailModel {
 
     this.deleteExerciseMutation = deleteMutation({
       fn: () => this.services.exerciseCommandService.deleteExercise(this.exerciseId),
-      invalidateKeys: [
+      invalidateKeys: () => [
         Keys.exerciseTypeDetail(this.exercise?.exerciseType.id ?? ''),
         Keys.exerciseDetail(this.exerciseId),
         Keys.exerciseTypeList
@@ -86,10 +86,10 @@ export class ExerciseDetailModel {
 
   get isActionInProgress() {
     const isLoading = this.isLoading;
-    const updateMutationIsPending = this.updateExerciseMutation.isPending;
-    const deleteMutationIsPending = this.deleteExerciseMutation.isPending;
+    const updateExerciseMutationIsPending = this.updateExerciseMutation.isPending;
+    const deleteExerciseMutationIsPending = this.deleteExerciseMutation.isPending;
 
-    return isLoading || updateMutationIsPending || deleteMutationIsPending;
+    return isLoading || updateExerciseMutationIsPending || deleteExerciseMutationIsPending;
   }
 
   get isExerciseSaving() {
@@ -104,15 +104,15 @@ export class ExerciseDetailModel {
     const exerciseError = this.exerciseQuery.error?.message;
     const gymsError = this.gymsQuery.error?.message;
     const historyError = this.historyQuery.error?.message;
-    const updateMutationError = this.updateExerciseMutation.error?.message;
-    const deleteMutationError = this.deleteExerciseMutation.error?.message;
+    const updateExerciseMutationError = this.updateExerciseMutation.error?.message;
+    const deleteExerciseMutationError = this.deleteExerciseMutation.error?.message;
 
     return (
       exerciseError ||
       gymsError ||
       historyError ||
-      updateMutationError ||
-      deleteMutationError ||
+      updateExerciseMutationError ||
+      deleteExerciseMutationError ||
       null
     );
   }

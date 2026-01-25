@@ -21,7 +21,7 @@ export class GymListModel {
 
     this.createGymMutation = createMutation<GymCommand.Create>({
       fn: (data: GymCommand.Create) => this.services.gymCommandService.createGym(data),
-      invalidateKeys: [Keys.gymList]
+      invalidateKeys: () => [Keys.gymList]
     });
   }
 

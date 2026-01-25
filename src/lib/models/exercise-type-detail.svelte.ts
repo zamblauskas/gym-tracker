@@ -35,18 +35,18 @@ export class ExerciseTypeDetailModel {
       key: Keys.exerciseTypeDetail(this.exerciseTypeId),
       fn: (data: ExerciseTypeCommand.Update) =>
         this.services.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, data),
-      invalidateKeys: [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+      invalidateKeys: () => [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
     });
 
     this.deleteExerciseTypeMutation = deleteMutation({
       fn: () => this.services.exerciseTypeCommandService.deleteExerciseType(this.exerciseTypeId),
-      invalidateKeys: [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+      invalidateKeys: () => [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
     });
 
     this.createExerciseMutation = createMutation({
       fn: (data: ExerciseCommand.Create) =>
         this.services.exerciseCommandService.createExercise(data),
-      invalidateKeys: [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
+      invalidateKeys: () => [Keys.exerciseTypeList, Keys.exerciseTypeDetail(this.exerciseTypeId)]
     });
   }
 

@@ -21,7 +21,7 @@ export class ExerciseTypeListModel {
 
     this.createExerciseTypeMutation = createMutation({
       fn: (data) => this.services.exerciseTypeCommandService.createExerciseType(data),
-      invalidateKeys: [Keys.exerciseTypeList]
+      invalidateKeys: () => [Keys.exerciseTypeList]
     });
   }
 

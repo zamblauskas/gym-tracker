@@ -27,12 +27,22 @@ export class GymDetailModel {
     this.updateGymMutation = updateMutation<GymCommand.Update, Gym.Detail>({
       key: Keys.gymDetail(this.gymId),
       fn: (data: GymCommand.Update) => this.services.gymCommandService.updateGym(this.gymId, data),
-      invalidateKeys: [Keys.gymList, Keys.gymDetail(this.gymId), Keys.exercises, Keys.exerciseTypes]
+      invalidateKeys: () => [
+        Keys.gymList,
+        Keys.gymDetail(this.gymId),
+        Keys.exercises,
+        Keys.exerciseTypes
+      ]
     });
 
     this.deleteGymMutation = deleteMutation({
       fn: () => this.services.gymCommandService.deleteGym(this.gymId),
-      invalidateKeys: [Keys.gymList, Keys.gymDetail(this.gymId), Keys.exercises, Keys.exerciseTypes]
+      invalidateKeys: () => [
+        Keys.gymList,
+        Keys.gymDetail(this.gymId),
+        Keys.exercises,
+        Keys.exerciseTypes
+      ]
     });
   }
 

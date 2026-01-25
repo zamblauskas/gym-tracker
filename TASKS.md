@@ -28,9 +28,9 @@ Todo:
 - [x] Refactor exercise-type-list model and page
 - [x] Refactor gym-detail model and page
 - [x] Refactor gym-list model and page
-- [ ] Refactor routine-detail model and page
-- [ ] Refactor routine-list model and page
-- [ ] Refactor program-detail model and page
+- [x] Refactor routine-detail model and page
+- [x] Refactor routine-list model and page
+- [x] Refactor program-detail model and page
 - [ ] Refactor program-list model and page
 - [ ] Refactor workout-detail model and page
 - [ ] Refactor workout-history-detail model and page

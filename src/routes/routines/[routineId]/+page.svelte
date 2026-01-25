@@ -2,7 +2,6 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onMount } from 'svelte';
   import { getContext } from 'svelte';
   import {
     Pencil,
@@ -14,7 +13,7 @@
     Plus,
     Minus
   } from 'lucide-svelte';
-  import { PAGE_CHROME_KEY, SERVICES_KEY, type Services } from '$lib/context';
+  import { PAGE_CHROME_KEY } from '$lib/context';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { RoutineDetailModel } from '$lib/models/routine-detail.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
@@ -30,15 +29,8 @@
   import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
 
   const routineId = page.params.routineId || '';
-  const services = getContext<Services>(SERVICES_KEY);
   const chrome = getContext<PageChromeModel>(PAGE_CHROME_KEY);
-  const model = new RoutineDetailModel(
-    services.routineViewService,
-    services.routineCommandService,
-    services.workoutCommandService,
-    services.exerciseTypeViewService,
-    routineId
-  );
+  const model = new RoutineDetailModel(routineId);
 
   let editDialogOpen = $state(false);
   let editedRoutineName = $state('');
@@ -56,10 +48,6 @@
 
   $effect(() => {
     chrome.breadcrumbItems = breadcrumbItems;
-  });
-
-  onMount(async () => {
-    await model.loadData();
   });
 
   function openEditDialog() {
@@ -105,19 +93,18 @@
     model.allExerciseTypes.filter((et) => !selectedExerciseTypeIds.includes(et.id))
   );
 
-  async function updateRoutine() {
+  function updateRoutine() {
     if (!model.routine) return;
 
-    const didUpdate = await model.updateRoutine(editedRoutineName, selectedExerciseTypeIds);
-    if (!didUpdate) return;
+    // optimistic update
+    void model.updateRoutine({ name: editedRoutineName, exerciseTypeIds: selectedExerciseTypeIds });
     editDialogOpen = false;
   }
 
   async function deleteRoutine() {
     if (!model.routine) return;
 
-    const didDelete = await model.deleteRoutine();
-    if (!didDelete) return;
+    await model.deleteRoutine();
     await goto(resolve(`/programs/${model.routine.program.id}`));
   }
 
