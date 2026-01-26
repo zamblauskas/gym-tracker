@@ -1,12 +1,12 @@
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+import { SERVICES_KEY, type Services } from '$lib/context';
+import { Keys } from '$lib/query-keys';
+import { Workout as WorkoutCommand } from '$lib/types/commands';
+import * as Workout from '$lib/types/views/workout';
+import { createMutation, fetchQuery, updateMutation } from '$lib/utils/query';
 import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
 import { getContext } from 'svelte';
-import { SERVICES_KEY, type Services } from '$lib/context';
-import * as Workout from '$lib/types/views/workout';
-import { Workout as WorkoutCommand } from '$lib/types/commands';
-import { Keys } from '$lib/query-keys';
-import { createMutation, fetchQuery, updateMutation } from '$lib/utils/query';
 
 export class WorkoutDetailModel {
   private services = getContext<Services>(SERVICES_KEY);

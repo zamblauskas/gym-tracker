@@ -1,6 +1,6 @@
+import { logger } from '$lib/logger';
 import type { Database } from '$lib/supabase/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { logger } from '$lib/logger';
 
 type Unsubscribe = () => void;
 

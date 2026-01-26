@@ -1,7 +1,7 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '$lib/supabase/types';
 import type { ExerciseTypeInsert, ExerciseTypeUpdate } from '$lib/supabase/client';
+import type { Database } from '$lib/supabase/types';
 import type { ExerciseType } from '$lib/types/commands';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ExerciseTypeCommandService {
   constructor(private client: SupabaseClient<Database>) {}

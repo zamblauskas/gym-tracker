@@ -1,10 +1,10 @@
-import { type CreateQueryResult } from '@tanstack/svelte-query';
-import { SERVICES_KEY } from '$lib/context';
-import { getContext } from 'svelte';
 import type { Services } from '$lib/context';
-import type { Workout } from '$lib/types/views';
+import { SERVICES_KEY } from '$lib/context';
 import { Keys } from '$lib/query-keys';
+import type { Workout } from '$lib/types/views';
 import { fetchQuery } from '$lib/utils/query';
+import { type CreateQueryResult } from '@tanstack/svelte-query';
+import { getContext } from 'svelte';
 
 export class WorkoutHistoryListModel {
   private services = getContext<Services>(SERVICES_KEY);

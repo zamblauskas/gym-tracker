@@ -1,6 +1,6 @@
 import type { Database } from '$lib/supabase/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as Program from '$lib/types/views/program';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ProgramViewService {
   constructor(private client: SupabaseClient<Database>) {}

@@ -1,10 +1,10 @@
+import { SERVICES_KEY, type Services } from '$lib/context';
+import { Keys } from '$lib/query-keys';
+import type { Program as ProgramCommand, Routine as RoutineCommand } from '$lib/types/commands';
+import type * as Program from '$lib/types/views/program';
+import { createMutation, deleteMutation, fetchQuery, updateMutation } from '$lib/utils/query';
 import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
 import { getContext } from 'svelte';
-import { SERVICES_KEY, type Services } from '$lib/context';
-import type * as Program from '$lib/types/views/program';
-import { Keys } from '$lib/query-keys';
-import { fetchQuery, updateMutation, deleteMutation, createMutation } from '$lib/utils/query';
-import type { Routine as RoutineCommand, Program as ProgramCommand } from '$lib/types/commands';
 
 export class ProgramDetailModel {
   private services = getContext<Services>(SERVICES_KEY);

@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
 import {
   calculateSetVolume,
   calculateTotalVolume,
   formatVolume,
   type SetInput
 } from '$lib/utils/volume';
+import { describe, expect, it } from 'vitest';
 
 describe('volume calculations', () => {
   describe('calculateSetVolume', () => {

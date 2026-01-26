@@ -10,7 +10,8 @@
   import { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import { TimerModel } from '$lib/models/timer.svelte';
   import { AUTH_KEY, PAGE_CHROME_KEY, TIMER_KEY, SERVICES_KEY } from '$lib/context';
-
+  import { dev } from '$app/environment';
+  import { injectAnalytics } from '@vercel/analytics/sveltekit';
   import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
@@ -32,6 +33,8 @@
   import { WorkoutCommandService } from '$lib/services/workout-command.service';
   import { WorkoutHistoryViewService } from '$lib/services/workout-history-view.service';
   import { WorkoutHistoryCommandService } from '$lib/services/workout-history-command.service';
+
+  injectAnalytics({ mode: dev ? 'development' : 'production' });
 
   let { children } = $props();
 

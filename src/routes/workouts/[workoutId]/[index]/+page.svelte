@@ -118,7 +118,7 @@
     editSetDialogOpen = true;
   }
 
-  async function updateSet() {
+  function updateSet() {
     if (!editingSetId || !editSetReps || !editSetWeight) return;
 
     // Optimistic update
@@ -132,7 +132,7 @@
     deleteSetConfirmOpen = true;
   }
 
-  async function confirmDeleteSet() {
+  function confirmDeleteSet() {
     if (!deletingSetId) return;
     // Optimistic update
     void model.deleteSet(deletingSetId);

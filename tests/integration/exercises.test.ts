@@ -1,9 +1,9 @@
-import { describe, beforeAll, expect, it } from 'vitest';
-import { TestContext } from '../utils/context';
-import { data } from '../utils/test-data';
+import * as ExerciseTypeCmd from '$lib/types/commands/exercise-type';
 import type { Range } from '$lib/types/range';
 import * as Exercise from '$lib/types/views/exercise';
-import * as ExerciseTypeCmd from '$lib/types/commands/exercise-type';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { TestContext } from '../utils/context';
+import { data } from '../utils/test-data';
 
 describe('Exercise view and command services', () => {
   let context: TestContext;

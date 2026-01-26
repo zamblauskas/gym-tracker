@@ -1,11 +1,11 @@
+import { SERVICES_KEY, type Services } from '$lib/context';
+import { Keys } from '$lib/query-keys';
+import type { Routine as RoutineCommand } from '$lib/types/commands';
+import type * as ExerciseType from '$lib/types/views/exercise-type';
+import type * as Routine from '$lib/types/views/routine';
+import { createMutation, deleteMutation, fetchQuery, updateMutation } from '$lib/utils/query';
 import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
 import { getContext } from 'svelte';
-import { SERVICES_KEY, type Services } from '$lib/context';
-import type * as Routine from '$lib/types/views/routine';
-import type * as ExerciseType from '$lib/types/views/exercise-type';
-import { Keys } from '$lib/query-keys';
-import { fetchQuery, updateMutation, deleteMutation, createMutation } from '$lib/utils/query';
-import type { Routine as RoutineCommand } from '$lib/types/commands';
 
 export class RoutineDetailModel {
   private services = getContext<Services>(SERVICES_KEY);

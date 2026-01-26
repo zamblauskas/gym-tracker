@@ -1,6 +1,6 @@
 import type { Database } from '$lib/supabase/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as Routine from '$lib/types/views/routine';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 interface ProgramWithRoutines {
   id: string;

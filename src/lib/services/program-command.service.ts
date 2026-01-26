@@ -1,7 +1,7 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '$lib/supabase/types';
 import type { ProgramInsert, ProgramUpdate } from '$lib/supabase/client';
+import type { Database } from '$lib/supabase/types';
 import type { Program } from '$lib/types/commands';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ProgramCommandService {
   constructor(private client: SupabaseClient<Database>) {}

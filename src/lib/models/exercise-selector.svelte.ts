@@ -1,6 +1,6 @@
+import { logger } from '$lib/logger';
 import type { ExerciseViewService } from '$lib/services/exercise-view.service';
 import * as Exercise from '$lib/types/views/exercise';
-import { logger } from '$lib/logger';
 import { SvelteMap } from 'svelte/reactivity';
 
 export class ExerciseSelectorModel {

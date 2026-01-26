@@ -1,5 +1,3 @@
-import type { Database } from '$lib/supabase/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   WorkoutExerciseInsert,
   WorkoutInsert,
@@ -7,7 +5,9 @@ import type {
   WorkoutSetUpdate,
   WorkoutUpdate
 } from '$lib/supabase/client';
+import type { Database } from '$lib/supabase/types';
 import type { Workout } from '$lib/types/commands';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class WorkoutCommandService {
   constructor(private client: SupabaseClient<Database>) {}

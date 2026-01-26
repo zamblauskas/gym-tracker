@@ -1,9 +1,9 @@
-import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
 import { SERVICES_KEY, type Services } from '$lib/context';
-import { getContext } from 'svelte';
-import type { Workout } from '$lib/types/views';
 import { Keys } from '$lib/query-keys';
-import { fetchQuery, deleteMutation } from '$lib/utils/query';
+import type { Workout } from '$lib/types/views';
+import { deleteMutation, fetchQuery } from '$lib/utils/query';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { getContext } from 'svelte';
 
 export class WorkoutHistoryDetailModel {
   private services = getContext<Services>(SERVICES_KEY);

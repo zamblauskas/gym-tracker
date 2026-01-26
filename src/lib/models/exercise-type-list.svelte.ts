@@ -1,11 +1,11 @@
-import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
-import * as ExerciseType from '$lib/types/views/exercise-type';
-import { getContext } from 'svelte';
 import type { Services } from '$lib/context';
 import { SERVICES_KEY } from '$lib/context';
 import { Keys } from '$lib/query-keys';
 import { ExerciseType as ExerciseTypeCommand } from '$lib/types/commands';
+import * as ExerciseType from '$lib/types/views/exercise-type';
 import { createMutation, fetchQuery } from '$lib/utils/query';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { getContext } from 'svelte';
 
 export class ExerciseTypeListModel {
   private services = getContext<Services>(SERVICES_KEY);

@@ -8,8 +8,8 @@ import {
   type QueryKey
 } from '@tanstack/svelte-query';
 
-import { log } from '$lib/utils/log';
 import { logger } from '$lib/logger';
+import { log } from '$lib/utils/log';
 
 export function fetchQuery<TData>({
   key,

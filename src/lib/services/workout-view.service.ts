@@ -1,6 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/supabase/types';
 import * as Workout from '$lib/types/views/workout';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class WorkoutViewService {
   constructor(private client: SupabaseClient<Database>) {}

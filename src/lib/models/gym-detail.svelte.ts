@@ -1,11 +1,11 @@
-import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
-import { Gym as GymCommand } from '$lib/types/commands';
-import { SERVICES_KEY } from '$lib/context';
-import { getContext } from 'svelte';
 import type { Services } from '$lib/context';
-import type { Gym } from '$lib/types/views';
+import { SERVICES_KEY } from '$lib/context';
 import { Keys } from '$lib/query-keys';
-import { updateMutation, deleteMutation, fetchQuery } from '$lib/utils/query';
+import { Gym as GymCommand } from '$lib/types/commands';
+import type { Gym } from '$lib/types/views';
+import { deleteMutation, fetchQuery, updateMutation } from '$lib/utils/query';
+import { type CreateMutationResult, type CreateQueryResult } from '@tanstack/svelte-query';
+import { getContext } from 'svelte';
 
 export class GymDetailModel {
   private services = getContext<Services>(SERVICES_KEY);

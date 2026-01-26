@@ -1,7 +1,7 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { RoutineExerciseTypeInsert, RoutineInsert, RoutineUpdate } from '$lib/supabase/client';
 import type { Database } from '$lib/supabase/types';
-import type { RoutineInsert, RoutineUpdate, RoutineExerciseTypeInsert } from '$lib/supabase/client';
 import type { Routine } from '$lib/types/commands';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class RoutineCommandService {
   constructor(private client: SupabaseClient<Database>) {}
