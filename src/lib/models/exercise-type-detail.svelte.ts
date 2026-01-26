@@ -39,7 +39,15 @@ export class ExerciseTypeDetailModel {
         Keys.exerciseTypeList,
         Keys.exerciseTypeDetail(this.exerciseTypeId),
         Keys.workoutHistory
-      ]
+      ],
+      merge: (previousData, update): ExerciseType.Detail => {
+        return {
+          ...previousData,
+          name: update.name,
+          targetRepRange: update.targetRepRange,
+          targetRepsInReserve: update.targetRepsInReserve
+        };
+      }
     });
 
     this.deleteExerciseTypeMutation = deleteMutation({

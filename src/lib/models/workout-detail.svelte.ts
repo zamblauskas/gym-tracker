@@ -6,7 +6,7 @@ import { SERVICES_KEY, type Services } from '$lib/context';
 import * as Workout from '$lib/types/views/workout';
 import { Workout as WorkoutCommand } from '$lib/types/commands';
 import { Keys } from '$lib/query-keys';
-import { fetchQuery, updateMutation } from '$lib/utils/query';
+import { createMutation, fetchQuery, updateMutation } from '$lib/utils/query';
 
 export class WorkoutDetailModel {
   private services = getContext<Services>(SERVICES_KEY);
@@ -14,7 +14,7 @@ export class WorkoutDetailModel {
   workoutQuery: CreateQueryResult<Workout.Detail>;
   historyQuery: CreateQueryResult<Workout.ExerciseHistory[]>;
   selectExerciseMutation: CreateMutationResult<void, Error, WorkoutCommand.SelectExercise>;
-  addSetMutation: CreateMutationResult<void, Error, WorkoutCommand.AddSet>;
+  addSetMutation: CreateMutationResult<string, Error, WorkoutCommand.AddSet>;
   updateSetMutation: CreateMutationResult<
     void,
     Error,
@@ -60,8 +60,7 @@ export class WorkoutDetailModel {
       ]
     });
 
-    this.addSetMutation = updateMutation<WorkoutCommand.AddSet, Workout.Detail>({
-      key: () => Keys.workoutDetail(this.workoutId(), this.index()),
+    this.addSetMutation = createMutation<WorkoutCommand.AddSet>({
       fn: (data) => this.services.workoutCommandService.addSet(data),
       invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
     });
@@ -72,13 +71,40 @@ export class WorkoutDetailModel {
     >({
       key: () => Keys.workoutDetail(this.workoutId(), this.index()),
       fn: ({ setId, data }) => this.services.workoutCommandService.updateSet(setId, data),
-      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())],
+      merge: (previousData, { setId, data }): Workout.Detail => {
+        return {
+          ...previousData,
+          exercise: {
+            ...previousData.exercise,
+            sets: previousData.exercise.sets.map((s) =>
+              s.id === setId
+                ? {
+                    ...s,
+                    reps: data.reps,
+                    weight: data.weight,
+                    repsInReserve: data.repsInReserve
+                  }
+                : s
+            )
+          }
+        };
+      }
     });
 
     this.deleteSetMutation = updateMutation<string, Workout.Detail>({
       key: () => Keys.workoutDetail(this.workoutId(), this.index()),
       fn: (setId) => this.services.workoutCommandService.deleteSet(setId),
-      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())]
+      invalidateKeys: () => [Keys.workoutDetail(this.workoutId(), this.index())],
+      merge: (previousData, setId): Workout.Detail => {
+        return {
+          ...previousData,
+          exercise: {
+            ...previousData.exercise,
+            sets: previousData.exercise.sets.filter((s) => s.id !== setId)
+          }
+        };
+      }
     });
 
     this.updateNotesMutation = updateMutation<
@@ -88,7 +114,7 @@ export class WorkoutDetailModel {
       key: () => Keys.workoutDetail(this.workoutId(), this.index()),
       fn: ({ data }) => this.services.workoutCommandService.updateNotes(data),
       invalidateKeys: ({ index }) => [Keys.workoutDetail(this.workoutId(), index)],
-      merge(previousData, update): Workout.Detail {
+      merge: (previousData, update): Workout.Detail => {
         return {
           ...previousData,
           exercise: {

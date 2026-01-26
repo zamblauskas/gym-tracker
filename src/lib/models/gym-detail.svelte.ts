@@ -32,7 +32,13 @@ export class GymDetailModel {
         Keys.gymDetail(this.gymId),
         Keys.exercises,
         Keys.exerciseTypes
-      ]
+      ],
+      merge: (previousData, update): Gym.Detail => {
+        return {
+          ...previousData,
+          name: update.name
+        };
+      }
     });
 
     this.deleteGymMutation = deleteMutation({

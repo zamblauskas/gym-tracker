@@ -63,17 +63,10 @@ export function updateMutation<TUpdate, TData>({
     },
     onMutate: (update) => {
       return client.setQueryData<TData>(key(), (previousData) => {
-        if (!previousData) {
+        if (!previousData || !merge) {
           return;
         }
-        if (merge) {
-          return merge(previousData, update);
-        } else {
-          return {
-            ...previousData,
-            ...update
-          };
-        }
+        return merge(previousData, update);
       });
     },
     onSettled: async (_data, _error, variables) => {

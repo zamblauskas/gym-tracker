@@ -34,7 +34,14 @@ export class RoutineDetailModel {
         Keys.programDetail(this.routine?.program.id ?? ''),
         Keys.routineDetail(this.routineId),
         Keys.workoutHistory
-      ]
+      ],
+      merge: (previousData, update): Routine.Detail => {
+        return {
+          ...previousData,
+          name: update.name,
+          exerciseTypeIds: update.exerciseTypeIds
+        };
+      }
     });
 
     this.deleteRoutineMutation = deleteMutation({

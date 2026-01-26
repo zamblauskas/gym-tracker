@@ -82,7 +82,7 @@ export class WorkoutCommandService {
     }
   }
 
-  async addSet(input: Workout.AddSet): Promise<void> {
+  async addSet(input: Workout.AddSet): Promise<string> {
     const setInsert: WorkoutSetInsert = {
       workout_exercise_id: input.exerciseLogId,
       reps: input.reps,
@@ -90,13 +90,17 @@ export class WorkoutCommandService {
       reps_in_reserve: input.repsInReserve
     };
 
-    const { error } = await this.client
+    const { data, error } = await this.client
       .from('workout_sets')
-      .insert(setInsert as Database['public']['Tables']['workout_sets']['Insert']);
+      .insert(setInsert as Database['public']['Tables']['workout_sets']['Insert'])
+      .select('id')
+      .single();
 
     if (error) {
       throw new Error(`Failed to add set: ${error.message}`);
     }
+
+    return data.id;
   }
 
   async updateSet(setId: string, input: Workout.UpdateSet): Promise<void> {

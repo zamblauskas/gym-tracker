@@ -45,12 +45,16 @@ export class ExerciseDetailModel {
         Keys.exerciseDetail(this.exerciseId),
         Keys.workoutHistory
       ],
-      merge: (previousData, update) => {
+      merge: (previousData, update): Exercise.Detail => {
         const gyms = (this.gymsQuery.data ?? []).filter((g) => update.gymIds.includes(g.id));
 
         return {
           ...previousData,
-          ...update,
+          name: update.name,
+          machineBrand: update.machineBrand,
+          notes: update.notes,
+          targetRepRange: update.targetRepRange,
+          targetRepsInReserve: update.targetRepsInReserve,
           gyms
         };
       }

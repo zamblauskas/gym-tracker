@@ -45,7 +45,7 @@
 
   let timerDuration = Number(PUBLIC_TIMER_DURATION);
   let activeTimer = $derived(
-    model.workout?.exercise?.id ? timer.get(model.workout.exercise.id) : undefined
+    model.workout?.exercise.id ? timer.get(model.workout.exercise.id) : undefined
   );
 
   let newSetWeight = $state<number | null>(null);
@@ -63,10 +63,10 @@
   let lastExerciseId = $state<string | undefined>(undefined);
 
   $effect(() => {
-    const exerciseId = model.workout?.exercise?.id;
+    const exerciseId = model.workout?.exercise.id;
     if (exerciseId && exerciseId !== lastExerciseId) {
       lastExerciseId = exerciseId;
-      notes = model.workout?.exercise?.notes ?? '';
+      notes = model.workout.exercise.notes ?? '';
     }
   });
 
@@ -105,7 +105,7 @@
 
     await model.addSet(newSetReps, newSetWeight, newSetRepsInReserve);
     addSetDialogOpen = false;
-    if (model.workout?.exercise?.id) {
+    if (model.workout?.exercise.id) {
       timer.start(model.workout.exercise.id, timerDuration);
     }
   }
@@ -121,7 +121,8 @@
   async function updateSet() {
     if (!editingSetId || !editSetReps || !editSetWeight) return;
 
-    await model.updateSet(editingSetId, editSetReps, editSetWeight, editSetRepsInReserve);
+    // Optimistic update
+    void model.updateSet(editingSetId, editSetReps, editSetWeight, editSetRepsInReserve);
     editSetDialogOpen = false;
     editingSetId = null;
   }
@@ -133,7 +134,8 @@
 
   async function confirmDeleteSet() {
     if (!deletingSetId) return;
-    await model.deleteSet(deletingSetId);
+    // Optimistic update
+    void model.deleteSet(deletingSetId);
     deleteSetConfirmOpen = false;
     deletingSetId = null;
   }
@@ -238,7 +240,7 @@
           </div>
         {/if}
 
-        {#if activeTimer && model.workout?.exercise?.id}
+        {#if activeTimer && model.workout.exercise.id}
           <Timer
             duration={activeTimer.duration}
             startTime={activeTimer.startTime}

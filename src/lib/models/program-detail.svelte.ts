@@ -28,18 +28,27 @@ export class ProgramDetailModel {
         Keys.programDetail(this.programId),
         Keys.programList,
         Keys.workoutHistory
-      ]
+      ],
+      merge: (previousData, update): Program.Detail => {
+        return {
+          ...previousData,
+          name: update.name
+        };
+      }
     });
 
     this.reorderRoutinesMutation = updateMutation<RoutineCommand.UpdatePositions, Program.Detail>({
       key: () => Keys.programDetail(this.programId),
       fn: (data) => this.services.routineCommandService.updateRoutinePositions(data),
       invalidateKeys: () => [Keys.programDetail(this.programId)],
-      merge: (prev, update) => {
+      merge: (previousData, update): Program.Detail => {
         const newRoutines = update.orderedRoutineIds
-          .map((id) => prev.routines.find((r) => r.id === id))
+          .map((id) => previousData.routines.find((r) => r.id === id))
           .filter((r): r is Program.RoutineDetail => r !== undefined);
-        return { ...prev, routines: newRoutines };
+        return {
+          ...previousData,
+          routines: newRoutines
+        };
       }
     });
 
