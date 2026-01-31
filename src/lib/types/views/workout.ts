@@ -16,6 +16,12 @@ export interface SetDetail {
 export interface ExerciseHistory {
   workoutExerciseId: string;
   workoutDate: Date;
+  routine: {
+    name: string;
+    program: {
+      name: string;
+    };
+  };
   sets: SetDetail[];
   notes: string | null;
 }

@@ -95,6 +95,9 @@
             {formatDate(item.workoutDate)}
             <span class="text-muted-foreground">({timeAgo(item.workoutDate)})</span>
           </div>
+          <div class="text-sm text-muted-foreground">
+            {item.routine.program.name} • {item.routine.name}
+          </div>
           <ExerciseHistoryDetail sets={item.sets} notes={item.notes} />
           {#if i < history.length - 1}
             <Separator class="mt-3" />

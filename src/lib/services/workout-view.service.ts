@@ -196,7 +196,13 @@ export class WorkoutViewService {
         workouts!inner (
           id,
           completed_at,
-          status
+          status,
+          routines!inner (
+            name,
+            programs!inner (
+              name
+            )
+          )
         ),
         workout_sets (
           id,
@@ -228,6 +234,12 @@ export class WorkoutViewService {
       return {
         workoutExerciseId: log.id,
         workoutDate: new Date(log.workouts.completed_at ?? ''),
+        routine: {
+          name: log.workouts.routines.name,
+          program: {
+            name: log.workouts.routines.programs.name
+          }
+        },
         sets: log.workout_sets.map((s) => ({
           id: s.id,
           weight: s.weight,
