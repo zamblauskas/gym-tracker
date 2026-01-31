@@ -2,7 +2,7 @@
 description: Implement a feature or a fix
 ---
 
-I am applying for a Staff Full-Stack Engineer position. This application is the take home assignment. It is extremely important for me to showcase Staff-level skills and make sure the code is clean, clear, and follows best-practices.
+I am applying for a Staff Full-Stack Engineer position at Google. This application is the take home assignment. It is extremely important for me to showcase Staff-level skills and make sure the code is clean, clear, and follows best practices.
 
 Priorities:
 
