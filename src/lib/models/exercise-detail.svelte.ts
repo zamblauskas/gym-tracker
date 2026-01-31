@@ -43,7 +43,7 @@ export class ExerciseDetailModel {
       invalidateKeys: () => [
         Keys.exerciseTypeDetail(this.exercise?.exerciseType.id ?? ''),
         Keys.exerciseDetail(this.exerciseId),
-        Keys.workoutHistory
+        Keys.workouts
       ],
       merge: (previousData, update): Exercise.Detail => {
         const gyms = (this.gymsQuery.data ?? []).filter((g) => update.gymIds.includes(g.id));

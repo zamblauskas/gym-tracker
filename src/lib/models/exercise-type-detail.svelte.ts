@@ -38,9 +38,11 @@ export class ExerciseTypeDetailModel {
       fn: (data: ExerciseTypeCommand.Update) =>
         this.services.exerciseTypeCommandService.updateExerciseType(this.exerciseTypeId, data),
       invalidateKeys: () => [
-        Keys.exerciseTypeList,
         Keys.exerciseTypeDetail(this.exerciseTypeId),
-        Keys.workoutHistory
+        Keys.exerciseTypeList,
+        Keys.workouts,
+        Keys.exercises,
+        Keys.routines
       ],
       merge: (previousData, update): ExerciseType.Detail => {
         return {
