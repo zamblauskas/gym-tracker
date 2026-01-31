@@ -20,7 +20,7 @@ $effect(() => {
 
 - All destructive actions must have a confirmation popup
 
-- When a method compare multiple Svelte runes (signals) each one must be captured with a concrete const, otherwise compiler might never reach and register following runes signals as method dependencies
+- When a method compares multiple Svelte runes (signals) each one must be captured with a concrete const, otherwise compiler might never reach and register following runes signals as method dependencies
 
 ```
 // Bug `isExerciseCreating` might not be registered as dependency
