@@ -77,7 +77,7 @@
             <span>{formatVolume(calculateTotalVolume(history[0].sets))}</span>
           </div>
           {#if history[0].notes}
-            <div class="flex gap-1 text-sm text-muted-foreground italic">
+            <div class="flex gap-1 text-left text-sm text-muted-foreground italic">
               <MessageCircle class="size-4" />
               {history[0].notes}
             </div>

@@ -1,30 +1,30 @@
 <script lang="ts">
-  import { page } from '$app/state';
-  import { getContext } from 'svelte';
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
   import { PUBLIC_TIMER_DURATION } from '$env/static/public';
-  import { ChevronLeft, ChevronRight, X, Repeat, Plus, Pencil, NotebookPen } from 'lucide-svelte';
   import { PAGE_CHROME_KEY, TIMER_KEY } from '$lib/context';
+  import { ArrowLeft, ArrowRight, NotebookPen, Pencil, Plus, Repeat, X } from 'lucide-svelte';
+  import { getContext } from 'svelte';
 
+  import ExerciseCard from '$lib/components/ExerciseCard.svelte';
+  import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
+  import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
+  import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
+  import Timer from '$lib/components/Timer.svelte';
+  import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+  import * as Alert from '$lib/components/ui/alert/index.js';
+  import Button from '$lib/components/ui/button/button.svelte';
+  import * as Dialog from '$lib/components/ui/dialog/index.js';
+  import Input from '$lib/components/ui/input/input.svelte';
+  import Label from '$lib/components/ui/label/label.svelte';
+  import Separator from '$lib/components/ui/separator/separator.svelte';
+  import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
+  import { Spinner } from '$lib/components/ui/spinner/index.js';
+  import { Textarea } from '$lib/components/ui/textarea';
   import type { PageChromeModel } from '$lib/models/page-chrome.svelte';
   import type { TimerModel } from '$lib/models/timer.svelte';
   import { WorkoutDetailModel } from '$lib/models/workout-detail.svelte';
   import * as Workout from '$lib/types/views/workout';
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Separator from '$lib/components/ui/separator/separator.svelte';
-  import { Textarea } from '$lib/components/ui/textarea';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-  import Input from '$lib/components/ui/input/input.svelte';
-  import Label from '$lib/components/ui/label/label.svelte';
-  import { Spinner } from '$lib/components/ui/spinner/index.js';
-  import * as Alert from '$lib/components/ui/alert/index.js';
-  import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
-  import ExerciseHistory from '$lib/components/ExerciseHistory.svelte';
-  import ExerciseSelector from '$lib/components/ExerciseSelector.svelte';
-  import ExerciseCard from '$lib/components/ExerciseCard.svelte';
-  import ExerciseTypeCard from '$lib/components/ExerciseTypeCard.svelte';
-  import Timer from '$lib/components/Timer.svelte';
   import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
 
   const workoutId = $derived(page.params.workoutId!);
@@ -163,16 +163,20 @@
   </div>
 {:else if model.workout}
   <div class="flex flex-col">
-    <div class="flex flex-col gap-2 px-4 pt-4">
-      <span class="text-sm text-muted-foreground">Exercise Type</span>
-      {#if model.workout.exercise}
-        <ExerciseTypeCard exerciseType={model.workout.exercise.exerciseType} />
-      {/if}
+    <div class="flex flex-col gap-2 px-4">
+      <div class="flex flex-col gap-1">
+        <span class="text-sm text-muted-foreground">Exercise Type</span>
+        {#if model.workout.exercise}
+          <ExerciseTypeCard exerciseType={model.workout.exercise.exerciseType} />
+        {/if}
+      </div>
     </div>
     {#if model.workout.exercise.exercise}
       <div class="flex flex-col gap-2 p-4">
-        <span class="text-sm text-muted-foreground">Exercise</span>
-        <ExerciseCard exercise={model.workout.exercise.exercise} />
+        <div class="flex flex-col gap-1">
+          <span class="text-sm text-muted-foreground">Exercise</span>
+          <ExerciseCard exercise={model.workout.exercise.exercise} />
+        </div>
         {#if model.workout.exercise.exercise.notes}
           <div class="flex items-start gap-1 pl-1 text-muted-foreground">
             <NotebookPen class="mt-0.5 size-4" />
@@ -181,6 +185,14 @@
             >
           </div>
         {/if}
+        <Button
+          variant="outline"
+          class="mt-2 w-full"
+          disabled={model.isActionInProgress}
+          onclick={() => (chooseExerciseDialogOpen = true)}
+        >
+          <Repeat class="mr-2 h-4 w-4 text-blue-800" />Change exercise
+        </Button>
       </div>
     {/if}
 
@@ -251,25 +263,14 @@
 
         <Button
           variant="outline"
-          class="mt-2 w-full"
+          class=" w-full"
           disabled={model.isActionInProgress}
           onclick={openAddSetDialog}
         >
-          <Plus class="mr-2 h-4 w-4" /> Create set
+          <Plus class="mr-2 h-4 w-4 text-green-800" /> Create set
         </Button>
 
-        <Button
-          variant="outline"
-          class="mt-2 w-full"
-          disabled={model.isActionInProgress}
-          onclick={() => (chooseExerciseDialogOpen = true)}
-        >
-          <Repeat class="mr-2 h-4 w-4" />Change exercise
-        </Button>
-
-        <div class="mt-4">
-          <Textarea placeholder="Add notes..." bind:value={notes} onchange={saveNotes} />
-        </div>
+        <Textarea placeholder="Add notes..." bind:value={notes} onchange={saveNotes} />
 
         <ExerciseHistory
           history={model.history}
@@ -292,7 +293,7 @@
         disabled={index === 0 || model.isActionInProgress}
         href={resolve(`/workouts/${workoutId}/${index - 1}`)}
       >
-        <ChevronLeft class="h-8 w-8" />
+        <ArrowLeft class="h-8 w-8" />
       </Button>
 
       {#if model.workout.exerciseCount > 0}
@@ -307,7 +308,7 @@
         disabled={index >= model.workout.exerciseCount - 1 || model.isActionInProgress}
         href={resolve(`/workouts/${workoutId}/${index + 1}`)}
       >
-        <ChevronRight class="h-8 w-8" />
+        <ArrowRight class="h-8 w-8" />
       </Button>
     </div>
 
