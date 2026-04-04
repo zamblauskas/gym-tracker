@@ -39,3 +39,12 @@ export function formatVolume(volume: VolumeMetrics): string {
   }
   return `${actualFormatted} kg • Potential: ${potentialFormatted} kg (${effort}%)`;
 }
+
+export function formatVolumeDifference(
+  currentVolume: VolumeMetrics,
+  lastVolume: VolumeMetrics
+): string {
+  const difference = currentVolume.actual - lastVolume.actual;
+  const sign = difference > 0 ? '+' : '';
+  return `${sign}${difference.toLocaleString()} kg`;
+}

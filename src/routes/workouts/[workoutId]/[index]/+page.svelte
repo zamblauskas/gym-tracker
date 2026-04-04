@@ -25,7 +25,8 @@
   import type { TimerModel } from '$lib/models/timer.svelte';
   import { WorkoutDetailModel } from '$lib/models/workout-detail.svelte';
   import * as Workout from '$lib/types/views/workout';
-  import { calculateTotalVolume, formatVolume } from '$lib/utils/volume';
+  import { calculateTotalVolume, formatVolume, formatVolumeDifference } from '$lib/utils/volume';
+  import { setRecommendation } from '$lib/utils/workout-recommendation';
 
   const workoutId = $derived(page.params.workoutId!);
   const index = $derived(Number(page.params.index!));
@@ -61,6 +62,9 @@
 
   let notes = $state('');
   let lastExerciseId = $state<string | undefined>(undefined);
+
+  let currentVolume = $derived(calculateTotalVolume(model.workout?.exercise.sets ?? []));
+  let lastVolume = $derived(calculateTotalVolume(model.history[0]?.sets ?? []));
 
   $effect(() => {
     const exerciseId = model.workout?.exercise.id;
@@ -248,7 +252,20 @@
 
         {#if model.workout.exercise.sets.length > 0}
           <div class="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-            Volume: {formatVolume(calculateTotalVolume(model.workout.exercise.sets))}
+            <p>Volume: {formatVolume(currentVolume)}</p>
+            {#if model.workout.exercise.sets.length > 1 && lastVolume.actual > 0}
+              {@const recommendation = setRecommendation(
+                lastVolume.actual - currentVolume.actual,
+                model.workout.exercise.sets,
+                model.history[0]?.sets ?? []
+              )}
+              <p>Volume vs previous workout: {formatVolumeDifference(currentVolume, lastVolume)}</p>
+              {#if recommendation}
+                <p>
+                  Recommended set: {recommendation.weight} kg × {recommendation.reps} reps
+                </p>
+              {/if}
+            {/if}
           </div>
         {/if}
 
