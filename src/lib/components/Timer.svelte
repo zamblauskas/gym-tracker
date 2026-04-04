@@ -50,7 +50,7 @@
     </div>
     <div class="flex flex-col">
       <span class="text-xs font-medium text-muted-foreground uppercase">Rest Timer</span>
-      <span class="font-mono text-lg leading-none font-bold tabular-nums">
+      <span class="font-mono text-2xl leading-none font-bold tabular-nums">
         {formatTime(timeLeft)}
       </span>
     </div>
